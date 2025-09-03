@@ -133,6 +133,8 @@ task.spawn(function()
 		{ name = "Looky", container = workspace:WaitForChild("ignore") },
 		{ name = "CakeMix", container = workspace },
 	}
+		task.wait(0.1)
+		votedYesEvent:FireServer()
 
 	for _, phase in ipairs(phaseOrder) do
 		if stopLoop then break end
