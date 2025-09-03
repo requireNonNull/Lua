@@ -148,10 +148,14 @@ task.spawn(function()
 		votedYesEvent:FireServer()
 	end
 
-	if not stopLoop then
-		print("🎉 ✅ All collection phases completed. Teleporting to Looky position.")
+if not stopLoop then
+	print("🎉 ✅ All collection phases completed. Looping teleport to end position.")
+	while not stopLoop do
 		humanoidRootPart.CFrame = CFrame.new(endTeleportPosition)
-	else
-		print("🛑 Script stopped before completion.")
+		task.wait(0.1)
 	end
+	print("🛑 Teleport loop stopped.")
+else
+	print("🛑 Script stopped before completion.")
+end
 end)
