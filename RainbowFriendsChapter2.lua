@@ -1,5 +1,11 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local votedYesEvent = ReplicatedStorage
+    :WaitForChild("modules")
+    :WaitForChild("GameHandler_cl")
+    :WaitForChild("VoteSkip_cl")
+    :WaitForChild("Network")
+    :WaitForChild("VotedYes")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -65,6 +71,8 @@ local function collectModels(modelName)
 		print("🛑 Stopped during", modelName, "collection.")
 	else
 		print("✅ Done collecting all", modelName)
+		task.wait(0.1)
+		votedYesEvent:FireServer()
 	end
 end
 
