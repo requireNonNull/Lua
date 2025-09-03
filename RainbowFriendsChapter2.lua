@@ -8,7 +8,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 local teleportPosition = Vector3.new(53, 138, -8)
-local lookyTeleportPosition = Vector3.new(1260, -171, 526)
+local endTeleportPosition = Vector3.new(1260, -171, 526)
 local stopLoop = false
 
 -- 🛑 Stop if space is pressed
@@ -143,11 +143,14 @@ task.spawn(function()
 		else
 			collectModels(phase.name)
 		end
+
+		task.wait(0.1)
+		votedYesEvent:FireServer()
 	end
 
 	if not stopLoop then
 		print("🎉 ✅ All collection phases completed. Teleporting to Looky position.")
-		humanoidRootPart.CFrame = CFrame.new(lookyTeleportPosition)
+		humanoidRootPart.CFrame = CFrame.new(endTeleportPosition)
 	else
 		print("🛑 Script stopped before completion.")
 	end
