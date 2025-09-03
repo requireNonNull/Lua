@@ -7,6 +7,13 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
+local requiredModelCount = {
+	LightBulb = 25,
+	GasCanister = 15,
+	CakeMix = 9,
+	Looky = 10,
+}
+
 local teleportPosition = Vector3.new(53, 138, -8)
 local endTeleportPosition = Vector3.new(1260, -171, 526)
 local stopLoop = false
@@ -39,6 +46,8 @@ local function collectModels(modelName)
 
 	while not stopLoop and anyModelsExist(workspace, modelName) do
 		local collectedThisTrip = 0
+
+		print("✅ Required", modelName, "count reached. Beginning collection.")
 
 		for _, obj in ipairs(workspace:GetChildren()) do
 			if stopLoop or collectedThisTrip >= perTripLimit then break end
@@ -79,6 +88,8 @@ local function collectLookysFromIgnore()
 	while not stopLoop and anyModelsExist(ignore, "Looky") do
 		local lookyModels = {}
 
+		print("✅ Required", modelName, "count reached. Beginning collection.")
+
 		local function gatherLookys(container)
 			for _, obj in ipairs(container:GetChildren()) do
 				if obj:IsA("Model") and obj.Name == "Looky" then
@@ -112,12 +123,27 @@ local function collectLookysFromIgnore()
 	end
 end
 
+local function countModels(container, modelName)
+	local count = 0
+	for _, obj in ipairs(container:GetChildren()) do
+		if obj:IsA("Model") and obj.Name == modelName then
+			count += 1
+		elseif obj:IsA("Folder") or obj:IsA("Model") then
+			count += countModels(obj, modelName)
+		end
+	end
+	return count
+end
+
 -- ⏳ Wait for a model to appear before starting its phase
 local function waitForModelToAppear(container, modelName)
-	print("⏳ Waiting for model:", modelName)
-	while not stopLoop and not anyModelsExist(container, modelName) do
+	local requiredCount = requiredModelCount[modelName] or 1
+	print("⏳ Waiting for", requiredCount, modelName .. "(s) to appear...")
+
+	while not stopLoop and countModels(container, modelName) < requiredCount do
 		task.wait(0.5)
 	end
+
 	return not stopLoop
 end
 
