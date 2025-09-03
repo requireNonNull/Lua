@@ -17,15 +17,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
 	end
 end)
 
--- 🚪 Toggle noclip
-local function setNoclip(enabled)
-	for _, part in ipairs(character:GetDescendants()) do
-		if part:IsA("BasePart") then
-			part.CanCollide = not enabled
-		end
-	end
-end
-
 -- 🔍 Check if any models named modelName exist inside container (recursive)
 local function anyModelsExist(container, modelName)
 	for _, obj in ipairs(container:GetChildren()) do
@@ -53,15 +44,12 @@ local function collectModels(modelName)
 			if obj:IsA("Model") and obj.Name == modelName then
 				local part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
 				if part then
-					setNoclip(true)
 					humanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 3, 0)
 					collectedThisTrip += 1
 					task.wait(0.1)
 				end
 			end
 		end
-
-		setNoclip(false)
 
 		if collectedThisTrip == 0 then
 			print("⚠️ No more", modelName, "found this batch.")
@@ -103,22 +91,14 @@ local function collectLookysFromIgnore()
 
 			local part = looky.PrimaryPart or looky:FindFirstChildWhichIsA("BasePart")
 			if part then
-				setNoclip(true)
 				humanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 3, 0)
 				task.wait(0.1)
-				setNoclip(false)
 
 				-- Teleport back to collection point after each Looky
 				humanoidRootPart.CFrame = CFrame.new(teleportPosition)
 				task.wait(1)
 			end
 		end
-	end
-
-	-- After Looky done, teleport in loop to given pos until stopped
-	while not stopLoop do
-		humanoidRootPart.CFrame = CFrame.new(lookyTeleportPosition)
-		task.wait(0.1)
 	end
 
 	if stopLoop then
@@ -128,62 +108,41 @@ local function collectLookysFromIgnore()
 	end
 end
 
--- 🧠 Detect current active phase
-local function detectCurrentPhase()
-	if anyModelsExist(workspace, "LightBulb") then
-		return "LightBulb"
-	elseif anyModelsExist(workspace, "GasCanister") then
-		return "GasCanister"
-	elseif anyModelsExist(workspace:WaitForChild("ignore"), "Looky") then
-		return "Looky"
-	elseif anyModelsExist(workspace, "CakeMix") then
-		return "CakeMix"
+-- ⏳ Wait for a model to appear before starting its phase
+local function waitForModelToAppear(container, modelName)
+	print("⏳ Waiting for model:", modelName)
+	while not stopLoop and not anyModelsExist(container, modelName) do
+		task.wait(0.5)
 	end
-	return nil
+	return not stopLoop
 end
 
 -- 🧩 Main logic
 task.spawn(function()
-	setNoclip(true)
+	local phaseOrder = {
+		{ name = "LightBulb", container = workspace },
+		{ name = "GasCanister", container = workspace },
+		{ name = "Looky", container = workspace:WaitForChild("ignore") },
+		{ name = "CakeMix", container = workspace },
+	}
 
-	local phase = detectCurrentPhase()
-	if not phase then
-		print("❌ No phase detected.")
-		return
+	for _, phase in ipairs(phaseOrder) do
+		if stopLoop then break end
+
+		local success = waitForModelToAppear(phase.container, phase.name)
+		if not success then break end
+
+		if phase.name == "Looky" then
+			collectLookysFromIgnore()
+		else
+			collectModels(phase.name)
+		end
 	end
 
-	print("📌 Detected phase:", phase)
-
-	if phase == "LightBulb" then
-		collectModels("LightBulb")
-		if stopLoop then return end
-
-		collectModels("GasCanister")
-		if stopLoop then return end
-
-		collectLookysFromIgnore()
-		if stopLoop then return end
-
-		collectModels("CakeMix")
-
-	elseif phase == "GasCanister" then
-		collectModels("GasCanister")
-		if stopLoop then return end
-
-		collectLookysFromIgnore()
-		if stopLoop then return end
-
-		collectModels("CakeMix")
-
-	elseif phase == "Looky" then
-		collectLookysFromIgnore()
-		if stopLoop then return end
-
-		collectModels("CakeMix")
-
-	elseif phase == "CakeMix" then
-		collectModels("CakeMix")
+	if not stopLoop then
+		print("🎉 ✅ All collection phases completed. Teleporting to Looky position.")
+		humanoidRootPart.CFrame = CFrame.new(lookyTeleportPosition)
+	else
+		print("🛑 Script stopped before completion.")
 	end
-
-	print("🎉 ✅ All collection phases completed.")
 end)
