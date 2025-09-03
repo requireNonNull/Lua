@@ -1,11 +1,7 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local votedYesEvent = ReplicatedStorage
-    :WaitForChild("modules")
-    :WaitForChild("GameHandler_cl")
-    :WaitForChild("VoteSkip_cl")
-    :WaitForChild("Network")
-    :WaitForChild("VotedYes")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local votedYesEvent = ReplicatedStorage:WaitForChild("modules"):WaitForChild("GameHandler_cl"):WaitForChild("VoteSkip_cl"):WaitForChild("Network"):WaitForChild("VotedYes")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
