@@ -6,58 +6,94 @@ local TweenService = game:GetService("TweenService")
 -- Player references
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Game objects
+local itemsFolder = workspace:WaitForChild("Items")
+local items = itemsFolder:GetChildren()
+local rebirthEvent = ReplicatedStorage:WaitForChild("ResetFolder"):WaitForChild("RebirthEvent")
 
 -- Variables
 local teleportCount = 0
 local startTime = tick()
 local loopRunning = false
-
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-local itemsFolder = workspace:WaitForChild("Items")
-local items = itemsFolder:GetChildren()
-local rebirthEvent = ReplicatedStorage:WaitForChild("ResetFolder"):WaitForChild("RebirthEvent")
-
 local currentIndex = 1
 
--- Helper function: Add UICorner to a UI element with radius
-local function addUICorner(instance, radius)
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius or 8)
-	corner.Parent = instance
+-- Helper function to create rounded corners on UI objects
+local function addUICorner(parent, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or 10)
+    corner.Parent = parent
+    return corner
 end
 
--- Helper function: Create a hover effect for buttons (color change on hover)
+-- Helper function to create hover effect on buttons
 local function createHoverEffect(button)
-	button.MouseEnter:Connect(function()
-		button.BackgroundColor3 = button.BackgroundColor3:lerp(Color3.new(0.8, 0.8, 0.8), 0.1)
-	end)
-	button.MouseLeave:Connect(function()
-		button.BackgroundColor3 = button.BackgroundColor3:lerp(Color3.new(0.3, 0.3, 0.3), 0) -- reset to original
-	end)
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.25), {BackgroundTransparency = 0.2}):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.25), {BackgroundTransparency = 0}):Play()
+    end)
 end
 
--- === UI SETUP ===
-
--- Main ScreenGui
+-- Create ScreenGui container
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "TeleportControlGui"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
--- Main Frame (container)
+-- ===== SPLASH SCREEN =====
+
+local splashFrame = Instance.new("Frame")
+splashFrame.Size = UDim2.new(0, 300, 0, 150)
+splashFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+splashFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+splashFrame.BackgroundTransparency = 1 -- start invisible
+splashFrame.Parent = screenGui
+addUICorner(splashFrame, 15)
+
+local splashText = Instance.new("TextLabel")
+splashText.Size = UDim2.new(1, 0, 1, 0)
+splashText.BackgroundTransparency = 1
+splashText.Text = "Breezingfreeze"
+splashText.Font = Enum.Font.GothamBold
+splashText.TextSize = 36
+splashText.TextColor3 = Color3.fromRGB(0, 170, 255)
+splashText.TextStrokeTransparency = 0
+splashText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+splashText.Parent = splashFrame
+
+-- Fade in splash
+local fadeInTween = TweenService:Create(splashFrame, TweenInfo.new(1), {BackgroundTransparency = 0})
+fadeInTween:Play()
+fadeInTween.Completed:Wait()
+
+-- Wait visible for 2 seconds
+task.wait(2)
+
+-- Fade out splash
+local fadeOutTween = TweenService:Create(splashFrame, TweenInfo.new(1), {BackgroundTransparency = 1})
+fadeOutTween:Play()
+fadeOutTween.Completed:Wait()
+
+-- Remove splash
+splashFrame:Destroy()
+
+-- ===== MAIN UI =====
+
+-- Main Frame container
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 320, 0, 220)
 mainFrame.Position = UDim2.new(0, 20, 0, 20)
-mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-mainFrame.BackgroundTransparency = 0.1
-mainFrame.Active = true
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundTransparency = 0
 mainFrame.Parent = screenGui
-addUICorner(mainFrame, 10)
+addUICorner(mainFrame, 12)
 
--- Start/Stop Toggle Button
+-- Toggle Button (Start/Stop loop)
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 280, 0, 40)
 toggleButton.Position = UDim2.new(0, 20, 0, 20)
@@ -70,24 +106,24 @@ toggleButton.AutoButtonColor = false
 toggleButton.Parent = mainFrame
 addUICorner(toggleButton, 12)
 
--- Gradient for toggle button
+-- Gradient for toggle button (OLD style)
 local toggleGradient = Instance.new("UIGradient", toggleButton)
 toggleGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 90, 170))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 90, 170))
 }
 toggleGradient.Rotation = 45
 
--- TextStroke for toggle button (using properties)
+-- Text Stroke for better text visibility (using properties)
 toggleButton.TextStrokeTransparency = 0
 toggleButton.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
--- Outline stroke for toggle button
+-- Toggle Button Stroke (Outline)
 local toggleStroke = Instance.new("UIStroke", toggleButton)
 toggleStroke.Thickness = 2
 toggleStroke.Color = Color3.fromRGB(255, 255, 255)
 
--- Terminate Button
+-- Terminate Button (Stop & Remove UI)
 local terminateButton = Instance.new("TextButton")
 terminateButton.Size = UDim2.new(0, 280, 0, 40)
 terminateButton.Position = UDim2.new(0, 20, 0, 70)
@@ -100,144 +136,132 @@ terminateButton.AutoButtonColor = false
 terminateButton.Parent = mainFrame
 addUICorner(terminateButton, 12)
 
--- Gradient for terminate button
+-- Gradient for terminate button (OLD style)
 local terminateGradient = Instance.new("UIGradient", terminateButton)
 terminateGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 70, 70)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 0, 0))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 70, 70)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 0, 0))
 }
 terminateGradient.Rotation = 45
 
--- TextStroke for terminate button
+-- Text Stroke for terminate button (using properties)
 terminateButton.TextStrokeTransparency = 0
 terminateButton.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
--- Outline stroke for terminate button
+-- Terminate Button Stroke (Outline)
 local terminateStroke = Instance.new("UIStroke", terminateButton)
 terminateStroke.Thickness = 2
 terminateStroke.Color = Color3.fromRGB(255, 255, 255)
 
--- Info Label (shows status and stats)
+-- Info Label for status updates
 local infoLabel = Instance.new("TextLabel")
 infoLabel.Size = UDim2.new(0, 280, 0, 80)
 infoLabel.Position = UDim2.new(0, 20, 0, 130)
-infoLabel.Text = ""
+infoLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+infoLabel.BackgroundTransparency = 0.3
+infoLabel.TextColor3 = Color3.fromRGB(240, 240, 240) -- LIGHTER text color for better visibility
 infoLabel.TextWrapped = true
 infoLabel.Font = Enum.Font.GothamSemibold
 infoLabel.TextSize = 16
-infoLabel.TextColor3 = Color3.fromRGB(230, 230, 230) -- light text for visibility
-infoLabel.BackgroundTransparency = 0.3
-infoLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+infoLabel.Text = ""
 infoLabel.Parent = mainFrame
-addUICorner(infoLabel, 8)
+addUICorner(infoLabel, 10)
 
--- === BUTTON FUNCTIONS ===
-
-toggleButton.MouseButton1Click:Connect(function()
-	loopRunning = not loopRunning
-	toggleButton.Text = loopRunning and "Stop Loop" or "Start Loop"
-	print("[DEBUG] Toggle Button clicked. Loop running:", loopRunning)
-end)
-
-terminateButton.MouseButton1Click:Connect(function()
-	print("[DEBUG] Terminate Button clicked. Destroying UI and stopping loop.")
-	loopRunning = false
-	screenGui:Destroy()
-end)
-
--- Optional: add hover effect to buttons (simple brightness increase)
-createHoverEffect(toggleButton)
-createHoverEffect(terminateButton)
-
--- === REBIRTH NOTIFICATION FUNCTION ===
+-- Show a small notification for rebirth event
 local function showRebirthNotification()
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0, 200, 0, 40)
-	label.Position = UDim2.new(0.5, -100, 0, 10)
-	label.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-	label.BackgroundTransparency = 0.2
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.Font = Enum.Font.GothamSemibold
-	label.TextSize = 18
-	label.Text = "🎉 Rebirth Triggered!"
-	label.ZIndex = 5
-	label.Parent = screenGui
-	addUICorner(label, 10)
+    local notifLabel = Instance.new("TextLabel")
+    notifLabel.Size = UDim2.new(0, 220, 0, 40)
+    notifLabel.Position = UDim2.new(0.5, -110, 0, 10)
+    notifLabel.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    notifLabel.BackgroundTransparency = 0.15
+    notifLabel.TextColor3 = Color3.new(1, 1, 1)
+    notifLabel.Font = Enum.Font.GothamSemibold
+    notifLabel.TextSize = 18
+    notifLabel.Text = "🎉 Rebirth Triggered!"
+    notifLabel.ZIndex = 10
+    notifLabel.Parent = screenGui
+    addUICorner(notifLabel, 10)
 
-	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 2
-	stroke.Color = Color3.fromRGB(255, 255, 255)
-	stroke.Parent = label
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 2
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Parent = notifLabel
 
-	task.delay(1.5, function()
-		local tween = TweenService:Create(label, TweenInfo.new(0.5), {
-			TextTransparency = 1,
-			BackgroundTransparency = 1
-		})
-		tween:Play()
-		tween.Completed:Wait()
-		label:Destroy()
-	end)
+    -- Tween fade out after 1.5 seconds
+    task.delay(1.5, function()
+        local tween = TweenService:Create(notifLabel, TweenInfo.new(0.5), {
+            TextTransparency = 1,
+            BackgroundTransparency = 1
+        })
+        tween:Play()
+        tween.Completed:Wait()
+        notifLabel:Destroy()
+    end)
 end
 
--- === INFO LABEL UPDATE LOOP ===
+-- Update Info Label continuously with loop status and stats
 task.spawn(function()
-	while screenGui.Parent do
-		local timePlayed = math.floor(tick() - startTime)
-		local minutes = math.floor(timePlayed / 60)
-		local seconds = timePlayed % 60
+    while screenGui.Parent do
+        local elapsed = math.floor(tick() - startTime)
+        local minutes = math.floor(elapsed / 60)
+        local seconds = elapsed % 60
 
-		local serverId = game.JobId ~= "" and game.JobId or "Local Server"
-		local status = loopRunning and "🟢 RUNNING" or "🔴 STOPPED"
+        local serverId = game.JobId ~= "" and game.JobId or "Local Server"
+        local status = loopRunning and "🟢 RUNNING" or "🔴 STOPPED"
 
-		infoLabel.Text = string.format(
-			"Loop Status: %s\nTeleports Done: %d\nTime Played: %02d:%02d\nServer ID:\n%s",
-			status,
-			teleportCount,
-			minutes,
-			seconds,
-			serverId
-		)
-
-		task.wait(1)
-	end
+        infoLabel.Text = string.format(
+            "Loop: %s\nTeleports: %d\nTime Played: %02d:%02d\nServer ID:\n%s",
+            status,
+            teleportCount,
+            minutes,
+            seconds,
+            serverId
+        )
+        task.wait(1)
+    end
 end)
 
--- === TELEPORT LOOP ===
+-- Main teleport loop (runs only when loopRunning is true)
 task.spawn(function()
-	while screenGui.Parent do
-		if loopRunning then
-			if currentIndex > #items then
-				currentIndex = 1
-			end
+    while screenGui.Parent do
+        if loopRunning then
+            if currentIndex > #items then
+                currentIndex = 1
+            end
 
-			local model = items[currentIndex]
-			if model:IsA("Model") then
-				local targetPart = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
-				if targetPart then
-					-- Teleport player
-					humanoidRootPart.CFrame = targetPart.CFrame
+            local model = items[currentIndex]
+            if model:IsA("Model") then
+                local targetPart = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+                if targetPart then
+                    humanoidRootPart.CFrame = targetPart.CFrame
+                    teleportCount += 1
 
-					teleportCount += 1
+                    -- Trigger rebirth every 120 teleports
+                    if teleportCount % 120 == 0 then
+                        rebirthEvent:FireServer()
+                        showRebirthNotification()
+                    end
+                end
+            end
 
-					-- Debug info
-					print(string.format("[DEBUG] Teleported to item #%d: %s (Teleport count: %d)", currentIndex, model.Name, teleportCount))
-
-					-- Trigger rebirth every 120 teleports
-					if teleportCount % 120 == 0 then
-						rebirthEvent:FireServer()
-						showRebirthNotification()
-						print("[DEBUG] Rebirth event fired.")
-					end
-				else
-					print("[WARN] Item #" .. currentIndex .. " has no PrimaryPart or BasePart.")
-				end
-			else
-				print("[WARN] Item #" .. currentIndex .. " is not a Model.")
-			end
-
-			currentIndex += 1
-		end
-		task.wait(0.10) -- small delay between teleports
-	end
+            currentIndex += 1
+        end
+        task.wait(0.1)
+    end
 end)
+
+-- Toggle button click handler (start/stop loop)
+toggleButton.MouseButton1Click:Connect(function()
+    loopRunning = not loopRunning
+    toggleButton.Text = loopRunning and "Stop Loop" or "Start Loop"
+end)
+
+-- Terminate button click handler (destroy UI and stop loop)
+terminateButton.MouseButton1Click:Connect(function()
+    loopRunning = false
+    screenGui:Destroy()
+end)
+
+-- Apply hover effects to buttons
+createHoverEffect(toggleButton)
+createHoverEffect(terminateButton)
