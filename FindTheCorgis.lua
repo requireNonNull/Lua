@@ -103,21 +103,20 @@ infoLabel.Parent = mainFrame
 
 Instance.new("UICorner", infoLabel).CornerRadius = UDim.new(0, 8)
 
--- 🟢 Hover Animation Function
-local function createHoverEffect(button)
-	local tweenIn = TweenService:Create(button, TweenInfo.new(0.15), {BackgroundTransparency = 0.05})
-	local tweenOut = TweenService:Create(button, TweenInfo.new(0.15), {BackgroundTransparency = 0.2})
-
-	button.MouseEnter:Connect(function()
-		tweenIn:Play()
-	end)
-	button.MouseLeave:Connect(function()
-		tweenOut:Play()
-	end)
-end
-
 createHoverEffect(toggleButton)
 createHoverEffect(terminateButton)
+
+-- 🟢 Start/Stop Toggle Function
+toggleButton.MouseButton1Click:Connect(function()
+	loopRunning = not loopRunning
+	toggleButton.Text = loopRunning and "Stop Loop" or "Start Loop"
+end)
+
+-- ❌ Terminate Button Function
+terminateButton.MouseButton1Click:Connect(function()
+	screenGui:Destroy()
+	loopRunning = false
+end)
 
 -- ✨ Rebirth Notification Function
 local function showRebirthNotification()
