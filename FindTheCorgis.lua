@@ -50,6 +50,10 @@ toggleButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255) -- Changed for bette
 toggleButton.AutoButtonColor = false
 toggleButton.Parent = mainFrame
 
+local textToggleStroke = Instance.new("TextStrokeTransparency")
+toggleButton.TextStrokeTransparency = 0 -- 0 is fully visible
+toggleButton.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
+
 Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
 
 local toggleGradient = Instance.new("UIGradient", toggleButton)
@@ -74,6 +78,10 @@ terminateButton.TextColor3 = Color3.new(1, 1, 1)
 terminateButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0) -- Darker red for better contrast
 terminateButton.AutoButtonColor = false
 terminateButton.Parent = mainFrame
+
+local textTerminateStroke = Instance.new("TextStrokeTransparency")
+terminateButton.TextStrokeTransparency = 0 -- 0 is fully visible
+terminateButton.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
 
 Instance.new("UICorner", terminateButton).CornerRadius = UDim.new(0, 12)
 
@@ -103,9 +111,6 @@ infoLabel.Parent = mainFrame
 
 Instance.new("UICorner", infoLabel).CornerRadius = UDim.new(0, 8)
 
-createHoverEffect(toggleButton)
-createHoverEffect(terminateButton)
-
 -- 🟢 Start/Stop Toggle Function
 toggleButton.MouseButton1Click:Connect(function()
 	loopRunning = not loopRunning
@@ -117,6 +122,9 @@ terminateButton.MouseButton1Click:Connect(function()
 	screenGui:Destroy()
 	loopRunning = false
 end)
+
+createHoverEffect(toggleButton)
+createHoverEffect(terminateButton)
 
 -- ✨ Rebirth Notification Function
 local function showRebirthNotification()
