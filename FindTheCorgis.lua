@@ -267,8 +267,7 @@ task.spawn(function()
 
         local uptimeStr = string.format("%02d:%02d:%02d", hours, minutes, seconds)
         local statusText = loopRunning and "🟢 RUNNING" or "🔴 STOPPED"
-        local serverId = game.JobId ~= "" and game.JobId or
-                    local serverId = (game.JobId ~= "" and game.JobId) or "N/A"
+        local serverId = (game.JobId ~= "" and game.JobId) or "N/A"
 
         -- Update labels
         uptimeLabel.Text = "Uptime: " .. uptimeStr
