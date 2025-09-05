@@ -192,7 +192,7 @@ task.spawn(function()
 					humanoidRootPart.CFrame = targetPart.CFrame 
 
 					teleportCount += 1
-					if teleportCount % 100 == 0 then
+					if teleportCount % 120 == 0 then
 						rebirthEvent:FireServer()
 						showRebirthNotification()
 					end
@@ -201,34 +201,42 @@ task.spawn(function()
 
 			currentIndex += 1
 		end
-		task.wait(0.05) 
+		task.wait(0.10) 
 	end
 end)
 
--- 🔁 Start/Stop Toggle Logic
-toggleButton.MouseButton1Click:Connect(function()
-	loopRunning = not loopRunning
+-- 🕹️ Start/Stop Toggle Button
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 280, 0, 40)
+toggleButton.Position = UDim2.new(0, 20, 0, 20)
+toggleButton.Text = "Start Loop"
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 18
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255) -- solid color
+toggleButton.AutoButtonColor = false
+toggleButton.Parent = mainFrame
 
-	if loopRunning then
-		toggleButton.Text = "Stop Loop"
-		toggleStroke.Color = Color3.fromRGB(255, 80, 80)
-		toggleGradient.Color = ColorSequence.new{
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 0, 0))
-		}
-	else
-		toggleButton.Text = "Start Loop"
-		toggleStroke.Color = Color3.fromRGB(0, 255, 0)
-		toggleGradient.Color = ColorSequence.new{
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 90, 170))
-		}
-	end
-end)
+Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
 
--- ⛔ Terminate Button Logic
-terminateButton.MouseButton1Click:Connect(function()
-	loopRunning = false
-	screenGui:Destroy()
-	print("✅ Teleport script terminated and UI cleaned.")
-end)
+local toggleStroke = Instance.new("UIStroke", toggleButton)
+toggleStroke.Thickness = 2
+toggleStroke.Color = Color3.fromRGB(255, 255, 255)
+
+-- ⛔ Terminate Button
+local terminateButton = Instance.new("TextButton")
+terminateButton.Size = UDim2.new(0, 280, 0, 40)
+terminateButton.Position = UDim2.new(0, 20, 0, 70)
+terminateButton.Text = "Terminate Script"
+terminateButton.Font = Enum.Font.GothamBold
+terminateButton.TextSize = 18
+terminateButton.TextColor3 = Color3.new(1, 1, 1)
+terminateButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0) -- solid red
+terminateButton.AutoButtonColor = false
+terminateButton.Parent = mainFrame
+
+Instance.new("UICorner", terminateButton).CornerRadius = UDim.new(0, 12)
+
+local terminateStroke = Instance.new("UIStroke", terminateButton)
+terminateStroke.Thickness = 2
+terminateStroke.Color = Color3.fromRGB(255, 255, 255)
