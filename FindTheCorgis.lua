@@ -25,14 +25,14 @@ screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
--- 💠 Main Frame (Draggable Container)
+-- 💠 Main Frame (Container without Draggable)
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 320, 0, 220)
 mainFrame.Position = UDim2.new(0, 20, 0, 20)
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BackgroundTransparency = 0.1
 mainFrame.Active = true
-mainFrame.Draggable = true
+-- Removed Draggable property for mobile compatibility
 mainFrame.Parent = screenGui
 
 local frameCorner = Instance.new("UICorner", mainFrame)
@@ -46,7 +46,7 @@ toggleButton.Text = "Start Loop"
 toggleButton.Font = Enum.Font.GothamBold
 toggleButton.TextSize = 18
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255) -- Changed for better contrast
 toggleButton.AutoButtonColor = false
 toggleButton.Parent = mainFrame
 
@@ -54,8 +54,8 @@ Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 12)
 
 local toggleGradient = Instance.new("UIGradient", toggleButton)
 toggleGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 200, 255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 255))
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 90, 170))
 }
 toggleGradient.Rotation = 45
 
@@ -71,7 +71,7 @@ terminateButton.Text = "Terminate Script"
 terminateButton.Font = Enum.Font.GothamBold
 terminateButton.TextSize = 18
 terminateButton.TextColor3 = Color3.new(1, 1, 1)
-terminateButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+terminateButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0) -- Darker red for better contrast
 terminateButton.AutoButtonColor = false
 terminateButton.Parent = mainFrame
 
@@ -79,8 +79,8 @@ Instance.new("UICorner", terminateButton).CornerRadius = UDim.new(0, 12)
 
 local terminateGradient = Instance.new("UIGradient", terminateButton)
 terminateGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 0, 0))
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 70, 70)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 0, 0))
 }
 terminateGradient.Rotation = 45
 
@@ -119,6 +119,41 @@ end
 createHoverEffect(toggleButton)
 createHoverEffect(terminateButton)
 
+-- ✨ Rebirth Notification Function
+local function showRebirthNotification()
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0, 200, 0, 40)
+	label.Position = UDim2.new(0.5, -100, 0, 10)
+	label.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+	label.BackgroundTransparency = 0.2
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 18
+	label.Text = "🎉 Rebirth Triggered!"
+	label.ZIndex = 5
+	label.Parent = screenGui
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = label
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 2
+	stroke.Color = Color3.fromRGB(255, 255, 255)
+	stroke.Parent = label
+
+	-- Tween fade out after delay
+	task.delay(1.5, function()
+		local tween = TweenService:Create(label, TweenInfo.new(0.5), {
+			TextTransparency = 1,
+			BackgroundTransparency = 1
+		})
+		tween:Play()
+		tween.Completed:Wait()
+		label:Destroy()
+	end)
+end
+
 -- 📊 Info Update Loop
 task.spawn(function()
 	while screenGui.Parent do
@@ -154,15 +189,19 @@ task.spawn(function()
 			if model:IsA("Model") then
 				local targetPart = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
 				if targetPart then
-					humanoidRootPart.CFrame = targetPart.CFrame
-					rebirthEvent:FireServer()
+					humanoidRootPart.CFrame = targetPart.CFrame 
+
 					teleportCount += 1
+					if teleportCount % 100 == 0 then
+						rebirthEvent:FireServer()
+						showRebirthNotification()
+					end
 				end
 			end
 
 			currentIndex += 1
 		end
-		task.wait(0.01)
+		task.wait(0.05) 
 	end
 end)
 
@@ -181,8 +220,8 @@ toggleButton.MouseButton1Click:Connect(function()
 		toggleButton.Text = "Start Loop"
 		toggleStroke.Color = Color3.fromRGB(0, 255, 0)
 		toggleGradient.Color = ColorSequence.new{
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 200, 255)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 255))
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 90, 170))
 		}
 	end
 end)
