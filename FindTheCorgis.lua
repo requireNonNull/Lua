@@ -50,7 +50,6 @@ toggleButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255) -- Changed for bette
 toggleButton.AutoButtonColor = false
 toggleButton.Parent = mainFrame
 
-local textToggleStroke = Instance.new("TextStrokeTransparency")
 toggleButton.TextStrokeTransparency = 0 -- 0 is fully visible
 toggleButton.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
 
@@ -79,7 +78,6 @@ terminateButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0) -- Darker red for b
 terminateButton.AutoButtonColor = false
 terminateButton.Parent = mainFrame
 
-local textTerminateStroke = Instance.new("TextStrokeTransparency")
 terminateButton.TextStrokeTransparency = 0 -- 0 is fully visible
 terminateButton.TextStrokeColor3 = Color3.new(0, 0, 0) -- Black outline
 
@@ -122,9 +120,6 @@ terminateButton.MouseButton1Click:Connect(function()
 	screenGui:Destroy()
 	loopRunning = false
 end)
-
-createHoverEffect(toggleButton)
-createHoverEffect(terminateButton)
 
 -- ✨ Rebirth Notification Function
 local function showRebirthNotification()
