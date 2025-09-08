@@ -32,8 +32,10 @@ local function tpTo(character, targetPos)
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if not hrp or not humanoid then return end
 
+	local yPos = targetPos.Y
+	yPos += 10
 	-- Insta-TP
-	hrp.CFrame = CFrame.new(Vector3.new(targetPos.X, yPos + 20, targetPos.Z))
+	hrp.CFrame = CFrame.new(Vector3.new(targetPos.X, yPos, targetPos.Z))
 end
 
 function CoinFarmer.Start(statusLabel)
