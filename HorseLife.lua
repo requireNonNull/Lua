@@ -42,7 +42,7 @@ local function tpTo(character, targetPos)
 	if result then
 		yPos = result.Position.Y + 3
 	else
-		yPos = yPos + 3 -- Always add +3 to prevent falling through horse
+		yPos = yPos + 10 -- Always add +3 to prevent falling through horse
 	end
 
 	-- Insta-TP
