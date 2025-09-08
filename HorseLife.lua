@@ -1,8 +1,7 @@
--- HorseLife CoinFarm (All-in-One)
+-- HorseLife CoinFarm (All-in-One, Instant TP)
 -- Drop into StarterPlayerScripts or loadstring() it.
 
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
@@ -10,7 +9,6 @@ local player = Players.LocalPlayer
 local CoinFarmer = {}
 CoinFarmer.Running = false
 CoinFarmer.CoinsFarmed = 0
-CoinFarmer.CurrentTween = nil
 
 local function getAllCoins()
     local coins = {}
@@ -28,7 +26,7 @@ local function getAllCoins()
     return coins
 end
 
-local function pivotTo(character, targetPos)
+local function tpTo(character, targetPos)
 	local hrp = character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if not hrp or not humanoid then return end
@@ -44,16 +42,8 @@ local function pivotTo(character, targetPos)
 		yPos = result.Position.Y + 3
 	end
 
-	local targetCF = CFrame.new(Vector3.new(targetPos.X, yPos, targetPos.Z))
-
-	-- Tween
-	if CoinFarmer.CurrentTween then
-		CoinFarmer.CurrentTween:Cancel()
-	end
-	local tweenInfo = TweenInfo.new(1.5, Enum.EasingStyle.Linear)
-	CoinFarmer.CurrentTween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCF})
-	CoinFarmer.CurrentTween:Play()
-	CoinFarmer.CurrentTween.Completed:Wait()
+	-- Insta-TP instead of tween
+	hrp.CFrame = CFrame.new(Vector3.new(targetPos.X, yPos, targetPos.Z))
 end
 
 function CoinFarmer.Start(statusLabel)
@@ -67,9 +57,9 @@ function CoinFarmer.Start(statusLabel)
 			for _, coin in ipairs(coins) do
 				if not CoinFarmer.Running then break end
 				if coin and coin.Parent then
-					statusLabel.Text = "Status: Moving to coin..."
-					pivotTo(character, coin.Position)
-					task.wait(0.3)
+					statusLabel.Text = "Status: Teleporting to coin..."
+					tpTo(character, coin.Position)
+					task.wait(0.15) -- small delay to avoid breaking physics
 					CoinFarmer.CoinsFarmed += 1
 				end
 			end
@@ -82,9 +72,6 @@ end
 
 function CoinFarmer.Stop()
 	CoinFarmer.Running = false
-	if CoinFarmer.CurrentTween then
-		CoinFarmer.CurrentTween:Cancel()
-	end
 end
 
 -- UI ------------------------
@@ -112,7 +99,7 @@ local terminateBtn = Instance.new("TextButton")
 terminateBtn.Size = UDim2.new(0, 160, 0, 65)
 terminateBtn.Position = UDim2.new(0, 10, 1, -140)
 terminateBtn.BackgroundTransparency = 0.3
-terminateBtn.BackgroundColor3 = Color3.fromRGB(255, 80, 80) -- bright red
+terminateBtn.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 terminateBtn.Text = "Terminate Farm"
 terminateBtn.TextScaled = true
 terminateBtn.TextColor3 = Color3.new(1,1,1)
@@ -120,11 +107,10 @@ terminateBtn.Font = Enum.Font.GothamBold
 terminateBtn.BorderSizePixel = 0
 terminateBtn.Parent = screenGui
 
--- Style terminate button separately (lighter stroke)
+-- Terminate style
 local corner2 = Instance.new("UICorner")
 corner2.CornerRadius = UDim.new(0, 12)
 corner2.Parent = terminateBtn
-
 local stroke2 = Instance.new("UIStroke")
 stroke2.Color = Color3.fromRGB(255, 150, 150)
 stroke2.Thickness = 3
@@ -132,20 +118,17 @@ stroke2.Transparency = 0.15
 stroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 stroke2.Parent = terminateBtn
 
-
--- Style
+-- Style function
 local function styleButton(btn)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 12)
 	corner.Parent = btn
-
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = Color3.fromRGB(120, 180, 255)
 	stroke.Thickness = 3
 	stroke.Transparency = 0.15
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	stroke.Parent = btn
-
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new {
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 100, 200)),
@@ -156,7 +139,7 @@ local function styleButton(btn)
 end
 styleButton(farmButton)
 
--- Overlay Window
+-- Overlay
 local overlay = Instance.new("Frame")
 overlay.Size = UDim2.new(0.4,0,0.25,0)
 overlay.AnchorPoint = Vector2.new(0.5,0.5)
@@ -165,11 +148,9 @@ overlay.BackgroundColor3 = Color3.fromRGB(30,30,40)
 overlay.BackgroundTransparency = 0.1
 overlay.BorderSizePixel = 0
 overlay.Parent = screenGui
-
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0,16)
 corner.Parent = overlay
-
 local stroke = Instance.new("UIStroke")
 stroke.Color = Color3.fromRGB(120,180,255)
 stroke.Thickness = 3
@@ -224,7 +205,7 @@ farmButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Terminate script completely
+-- Terminate completely
 terminateBtn.MouseButton1Click:Connect(function()
 	CoinFarmer.Stop()
 	if screenGui then
