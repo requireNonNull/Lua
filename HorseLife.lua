@@ -13,19 +13,19 @@ CoinFarmer.CoinsFarmed = 0
 CoinFarmer.CurrentTween = nil
 
 local function getAllCoins()
-	local coins = {}
-	local root = workspace:WaitForChild("Interactions"):WaitForChild("CurrencyNodes")
-	
-	for _, folder in ipairs(root:GetChildren()) do
-		if folder:IsA("Folder") then
-			for _, coin in ipairs(folder:GetChildren()) do
-				if coin:IsA("BasePart") or coin:IsA("MeshPart") then
-					table.insert(coins, coin)
-				end
-			end
-		end
-	end
-	return coins
+    local coins = {}
+    local root = workspace:WaitForChild("Interactions"):WaitForChild("CurrencyNodes")
+
+    for _, folder in ipairs(root:GetChildren()) do
+        if folder:IsA("Folder") then
+            for _, coin in ipairs(folder:GetChildren()) do
+                if (coin:IsA("BasePart") or coin:IsA("MeshPart")) and coin.Name == "Coins" then
+                    table.insert(coins, coin)
+                end
+            end
+        end
+    end
+    return coins
 end
 
 local function pivotTo(character, targetPos)
