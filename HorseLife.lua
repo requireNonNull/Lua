@@ -107,6 +107,32 @@ farmButton.Font = Enum.Font.GothamBold
 farmButton.BorderSizePixel = 0
 farmButton.Parent = screenGui
 
+-- Terminate Button
+local terminateBtn = Instance.new("TextButton")
+terminateBtn.Size = UDim2.new(0, 160, 0, 65)
+terminateBtn.Position = UDim2.new(0, 10, 1, -140)
+terminateBtn.BackgroundTransparency = 0.3
+terminateBtn.BackgroundColor3 = Color3.fromRGB(255, 80, 80) -- bright red
+terminateBtn.Text = "Terminate Farm"
+terminateBtn.TextScaled = true
+terminateBtn.TextColor3 = Color3.new(1,1,1)
+terminateBtn.Font = Enum.Font.GothamBold
+terminateBtn.BorderSizePixel = 0
+terminateBtn.Parent = screenGui
+
+-- Style terminate button separately (lighter stroke)
+local corner2 = Instance.new("UICorner")
+corner2.CornerRadius = UDim.new(0, 12)
+corner2.Parent = terminateBtn
+
+local stroke2 = Instance.new("UIStroke")
+stroke2.Color = Color3.fromRGB(255, 150, 150)
+stroke2.Thickness = 3
+stroke2.Transparency = 0.15
+stroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke2.Parent = terminateBtn
+
+
 -- Style
 local function styleButton(btn)
 	local corner = Instance.new("UICorner")
@@ -196,6 +222,15 @@ farmButton.MouseButton1Click:Connect(function()
 		statusLabel.Text = "Status: Idle"
 		CoinFarmer.Stop()
 	end
+end)
+
+-- Terminate script completely
+terminateBtn.MouseButton1Click:Connect(function()
+	CoinFarmer.Stop()
+	if screenGui then
+		screenGui:Destroy()
+	end
+	warn("🐎 HorseLife CoinFarm terminated. You can reloadstring a new version now.")
 end)
 
 -- Live stats update
