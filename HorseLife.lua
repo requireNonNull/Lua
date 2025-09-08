@@ -1,4 +1,5 @@
 -- HorseLife CoinFarm (All-in-One, Instant TP)
+-- v0.0.2
 -- Drop into StarterPlayerScripts or loadstring() it.
 
 local Players = game:GetService("Players")
@@ -107,16 +108,25 @@ terminateBtn.Font = Enum.Font.GothamBold
 terminateBtn.BorderSizePixel = 0
 terminateBtn.Parent = screenGui
 
--- Terminate style
+-- Terminate style (gradient + stroke)
 local corner2 = Instance.new("UICorner")
 corner2.CornerRadius = UDim.new(0, 12)
 corner2.Parent = terminateBtn
+
 local stroke2 = Instance.new("UIStroke")
-stroke2.Color = Color3.fromRGB(255, 150, 150)
+stroke2.Color = Color3.fromRGB(255, 200, 200)
 stroke2.Thickness = 3
 stroke2.Transparency = 0.15
 stroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 stroke2.Parent = terminateBtn
+
+local gradient2 = Instance.new("UIGradient")
+gradient2.Color = ColorSequence.new {
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 120, 120)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 40, 40))
+}
+gradient2.Rotation = 45
+gradient2.Parent = terminateBtn
 
 -- Style function
 local function styleButton(btn)
@@ -141,7 +151,7 @@ styleButton(farmButton)
 
 -- Overlay
 local overlay = Instance.new("Frame")
-overlay.Size = UDim2.new(0.4,0,0.25,0)
+overlay.Size = UDim2.new(0.4,0,0.28,0)
 overlay.AnchorPoint = Vector2.new(0.5,0.5)
 overlay.Position = UDim2.new(0.5,0,0.15,0)
 overlay.BackgroundColor3 = Color3.fromRGB(30,30,40)
@@ -167,10 +177,21 @@ title.TextColor3 = Color3.fromRGB(200,230,255)
 title.Font = Enum.Font.GothamBold
 title.Parent = overlay
 
+-- Version label
+local versionLabel = Instance.new("TextLabel")
+versionLabel.Size = UDim2.new(1,0,0,25)
+versionLabel.Position = UDim2.new(0,0,0,35)
+versionLabel.BackgroundTransparency = 1
+versionLabel.Text = "Version: v0.0.2"
+versionLabel.TextScaled = true
+versionLabel.TextColor3 = Color3.fromRGB(180,180,200)
+versionLabel.Font = Enum.Font.Gotham
+versionLabel.Parent = overlay
+
 -- Info Labels
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1,0,0,30)
-statusLabel.Position = UDim2.new(0,0,0,40)
+statusLabel.Position = UDim2.new(0,0,0,65)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Text = "Status: Idle"
 statusLabel.TextScaled = true
@@ -180,7 +201,7 @@ statusLabel.Parent = overlay
 
 local coinsLabel = Instance.new("TextLabel")
 coinsLabel.Size = UDim2.new(1,0,0,30)
-coinsLabel.Position = UDim2.new(0,0,0,75)
+coinsLabel.Position = UDim2.new(0,0,0,100)
 coinsLabel.BackgroundTransparency = 1
 coinsLabel.Text = "Coins Farmed: 0"
 coinsLabel.TextScaled = true
