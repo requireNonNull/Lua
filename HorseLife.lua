@@ -1,6 +1,6 @@
 -- HorseLife CoinFarm (All-in-One, Instant TP)
-local VERSION = "v0.0.3"
-local CHANGELOG = "<+> 1 sec delay each tp <+>"
+local VERSION = "v0.0.4"
+local CHANGELOG = "<+> Wait for any RemoteEvent before moving <+>"
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -59,32 +59,27 @@ function CoinFarmer.Start(statusLabel)
 				if coin and coin.Parent then
 					statusLabel.Text = "Status: Teleporting to coin..."
 
-					-- Listen for this coin collection
-					local collected = false
+					-- Setup a flag to detect any RemoteEvent fire
+					local eventFired = false
 					local conn
-					conn = remote.OnClientEvent:Connect(function(firedCoin)
-						if firedCoin == coin then
-							collected = true
-							conn:Disconnect()
-						end
+					conn = remote.OnClientEvent:Connect(function()
+						eventFired = true
+						conn:Disconnect()
 					end)
 
 					-- Teleport to coin
 					tpTo(character, coin.Position)
 
-					-- Wait until collected or timeout
+					-- Wait for event or timeout
 					local timeout = 5
 					local start = tick()
-					while not collected and tick() - start < timeout do
+					while not eventFired and tick() - start < timeout do
 						task.wait()
 					end
 
-					if collected then
-						CoinFarmer.CoinsFarmed += 1
-					end
-
-					-- small delay to prevent physics issues
-					task.wait(0.2)
+					-- Increment coins farmed
+					CoinFarmer.CoinsFarmed += 1
+					task.wait(0.2) -- small delay to avoid physics issues
 				end
 			end
 		else
@@ -105,39 +100,23 @@ screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Toggle Button
-local farmButton = Instance.new("TextButton")
-farmButton.Size = UDim2.new(0, 160, 0, 65)
-farmButton.Position = UDim2.new(0, 10, 1, -215)
-farmButton.BackgroundTransparency = 0.3
-farmButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-farmButton.Text = "Start Farming"
-farmButton.TextScaled = true
-farmButton.TextColor3 = Color3.new(1,1,1)
-farmButton.Font = Enum.Font.GothamBold
-farmButton.BorderSizePixel = 0
-farmButton.Parent = screenGui
-
--- Terminate Button
-local terminateBtn = Instance.new("TextButton")
-terminateBtn.Size = UDim2.new(0, 160, 0, 65)
-terminateBtn.Position = UDim2.new(0, 10, 1, -140)
-terminateBtn.BackgroundTransparency = 0.3
-terminateBtn.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-terminateBtn.Text = "Terminate Farm"
-terminateBtn.TextScaled = true
-terminateBtn.TextColor3 = Color3.new(1,1,1)
-terminateBtn.Font = Enum.Font.GothamBold
-terminateBtn.BorderSizePixel = 0
-terminateBtn.Parent = screenGui
-
--- Styles ------------------------
-local function styleButton(btn, color1, color2, strokeColor)
+local function createButton(name, text, pos, color1, color2)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0,160,0,65)
+	btn.Position = pos
+	btn.BackgroundTransparency = 0.3
+	btn.BackgroundColor3 = Color3.fromRGB(40,40,60)
+	btn.Text = text
+	btn.TextScaled = true
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.GothamBold
+	btn.BorderSizePixel = 0
+	btn.Parent = screenGui
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 12)
+	corner.CornerRadius = UDim.new(0,12)
 	corner.Parent = btn
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = strokeColor or Color3.fromRGB(120, 180, 255)
+	stroke.Color = Color3.fromRGB(120,180,255)
 	stroke.Thickness = 3
 	stroke.Transparency = 0.15
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -149,10 +128,11 @@ local function styleButton(btn, color1, color2, strokeColor)
 	}
 	gradient.Rotation = 45
 	gradient.Parent = btn
+	return btn
 end
 
-styleButton(farmButton, Color3.fromRGB(60,100,200), Color3.fromRGB(20,40,120))
-styleButton(terminateBtn, Color3.fromRGB(255,120,120), Color3.fromRGB(200,40,40), Color3.fromRGB(255,200,200))
+local farmButton = createButton("FarmBtn","Start Farming",UDim2.new(0,10,1,-215),Color3.fromRGB(60,100,200),Color3.fromRGB(20,40,120))
+local terminateBtn = createButton("TerminateBtn","Terminate Farm",UDim2.new(0,10,1,-140),Color3.fromRGB(255,120,120),Color3.fromRGB(200,40,40))
 
 -- Overlay
 local overlay = Instance.new("Frame")
@@ -172,7 +152,7 @@ overlayStroke.Thickness = 3
 overlayStroke.Transparency = 0.3
 overlayStroke.Parent = overlay
 
--- Title & Info Labels
+-- Labels
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,35)
 title.BackgroundTransparency = 1
@@ -186,7 +166,7 @@ local versionLabel = Instance.new("TextLabel")
 versionLabel.Size = UDim2.new(1,0,0,25)
 versionLabel.Position = UDim2.new(0,0,0,35)
 versionLabel.BackgroundTransparency = 1
-versionLabel.Text = "Version: " .. VERSION
+versionLabel.Text = "Version: "..VERSION
 versionLabel.TextScaled = true
 versionLabel.TextColor3 = Color3.fromRGB(180,180,200)
 versionLabel.Font = Enum.Font.Gotham
@@ -196,7 +176,7 @@ local changelogLabel = Instance.new("TextLabel")
 changelogLabel.Size = UDim2.new(1,0,0,25)
 changelogLabel.Position = UDim2.new(0,0,0,60)
 changelogLabel.BackgroundTransparency = 1
-changelogLabel.Text = "Update: " .. CHANGELOG
+changelogLabel.Text = "Update: "..CHANGELOG
 changelogLabel.TextScaled = true
 changelogLabel.TextColor3 = Color3.fromRGB(160,200,160)
 changelogLabel.Font = Enum.Font.Gotham
@@ -222,7 +202,7 @@ coinsLabel.TextColor3 = Color3.new(1,1,1)
 coinsLabel.Font = Enum.Font.Gotham
 coinsLabel.Parent = overlay
 
--- Button connections
+-- Button logic
 local running = false
 farmButton.MouseButton1Click:Connect(function()
 	running = not running
@@ -247,7 +227,7 @@ terminateBtn.MouseButton1Click:Connect(function()
 	warn("🐎 HorseLife CoinFarm terminated. You can reloadstring a new version now.")
 end)
 
--- Live stats
+-- Update live stats
 RunService.RenderStepped:Connect(function()
-	coinsLabel.Text = "Coins Farmed: " .. CoinFarmer.CoinsFarmed
+	coinsLabel.Text = "Coins Farmed: "..CoinFarmer.CoinsFarmed
 end)
