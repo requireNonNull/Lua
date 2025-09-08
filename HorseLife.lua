@@ -1,6 +1,6 @@
 -- HorseLife CoinFarm (All-in-One, Instant TP)
--- v0.0.2
--- Drop into StarterPlayerScripts or loadstring() it.
+local VERSION = "v0.0.3"
+local CHANGELOG = "<+> 1 sec delay each tp <+>"
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -60,7 +60,7 @@ function CoinFarmer.Start(statusLabel)
 				if coin and coin.Parent then
 					statusLabel.Text = "Status: Teleporting to coin..."
 					tpTo(character, coin.Position)
-					task.wait(0.15) -- small delay to avoid breaking physics
+					task.wait(1) -- small delay to avoid breaking physics
 					CoinFarmer.CoinsFarmed += 1
 				end
 			end
@@ -182,11 +182,22 @@ local versionLabel = Instance.new("TextLabel")
 versionLabel.Size = UDim2.new(1,0,0,25)
 versionLabel.Position = UDim2.new(0,0,0,35)
 versionLabel.BackgroundTransparency = 1
-versionLabel.Text = "Version: v0.0.2"
+versionLabel.Text = "Version: " .. VERSION
 versionLabel.TextScaled = true
 versionLabel.TextColor3 = Color3.fromRGB(180,180,200)
 versionLabel.Font = Enum.Font.Gotham
 versionLabel.Parent = overlay
+
+-- Changelog label
+local changelogLabel = Instance.new("TextLabel")
+changelogLabel.Size = UDim2.new(1,0,0,25)
+changelogLabel.Position = UDim2.new(0,0,0,60)
+changelogLabel.BackgroundTransparency = 1
+changelogLabel.Text = "Update: " .. CHANGELOG
+changelogLabel.TextScaled = true
+changelogLabel.TextColor3 = Color3.fromRGB(160,200,160)
+changelogLabel.Font = Enum.Font.Gotham
+changelogLabel.Parent = overlay
 
 -- Info Labels
 local statusLabel = Instance.new("TextLabel")
