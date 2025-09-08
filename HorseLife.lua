@@ -81,10 +81,12 @@ function CoinFarmer.Start(statusLabel)
 				if not CoinFarmer.Running then break end
 				if coin and coin.Parent then
 					statusLabel.Text = "Status: Teleporting to coin..."
-					tpTo(character, coin.Position)
 
 					-- wait for server confirmation or timeout
 					local confirmed = waitForConfirm(3) -- 3 sec timeout
+					
+					tpTo(character, coin.Position)
+					
 					if confirmed then
 						CoinFarmer.CoinsFarmed += 1
 						statusLabel.Text = "Status: Coin collected!"
