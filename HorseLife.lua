@@ -1,6 +1,6 @@
 -- HorseLife CoinFarm (All-in-One, Instant TP)
-local VERSION = "v0.0.5 fix 002"
-local CHANGELOG = "<+> Added +10 Y offset for horse sitting <+>"
+local VERSION = "v0.0.6"
+local CHANGELOG = "added xp farm when no coins"
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
