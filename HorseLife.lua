@@ -11,12 +11,12 @@ local CoinFarmer = {}
 CoinFarmer.Running = false
 CoinFarmer.CoinsFarmed = 0
 
-local function getAllCoins()
+local function getCoins()
     local coins = {}
     local root = workspace:WaitForChild("Interactions"):WaitForChild("CurrencyNodes")
 
     for _, folder in ipairs(root:GetChildren()) do
-        if folder:IsA("Folder") then
+        if folder:IsA("Folder") and folder.Name ~= "Spawned" then
             for _, coin in ipairs(folder:GetChildren()) do
                 if (coin:IsA("BasePart") or coin:IsA("MeshPart")) and coin.Name == "Coins" then
                     table.insert(coins, coin)
@@ -24,8 +24,22 @@ local function getAllCoins()
             end
         end
     end
+
     return coins
 end
+
+local function getXPParts()
+    local xpParts = {}
+    local spawned = workspace:WaitForChild("Interactions"):WaitForChild("CurrencyNodes"):WaitForChild("Spawned")
+    for _, name in ipairs({"XPAgility", "XPJump"}) do
+        local part = spawned:FindFirstChild(name)
+        if part then
+            table.insert(xpParts, part)
+        end
+    end
+    return xpParts
+end
+
 
 local function tpTo(character, targetPos)
 	local hrp = character:FindFirstChild("HumanoidRootPart")
@@ -39,27 +53,42 @@ local function tpTo(character, targetPos)
 end
 
 function CoinFarmer.Start(statusLabel)
-	if CoinFarmer.Running then return end
-	CoinFarmer.Running = true
-	local character = player.Character or player.CharacterAdded:Wait()
+    if CoinFarmer.Running then return end
+    CoinFarmer.Running = true
+    local character = player.Character or player.CharacterAdded:Wait()
 
-	while CoinFarmer.Running do
-		local coins = getAllCoins()
-		if #coins > 0 then
-			for _, coin in ipairs(coins) do
-				if not CoinFarmer.Running then break end
-				if coin and coin.Parent then
-					statusLabel.Text = "Status: Teleporting to coin..."
-					tpTo(character, coin.Position)
-					task.wait(1) -- small delay to avoid breaking physics
-					CoinFarmer.CoinsFarmed += 1
-				end
-			end
-		else
-			statusLabel.Text = "Status: Waiting for coins..."
-			task.wait(2)
-		end
-	end
+    while CoinFarmer.Running do
+        -- Phase 1: Coins
+        local coins = getCoins()
+        if #coins > 0 then
+            for _, coin in ipairs(coins) do
+                if not CoinFarmer.Running then break end
+                if coin and coin.Parent then
+                    statusLabel.Text = "Farming Coins..."
+                    tpTo(character, coin.Position)
+                    task.wait(1)
+                    CoinFarmer.CoinsFarmed += 1
+                end
+            end
+        else
+            -- Phase 2: XP Parts
+            local xpParts = getXPParts()
+            if #xpParts > 0 then
+                for _, xp in ipairs(xpParts) do
+                    if not CoinFarmer.Running then break end
+                    if xp and xp.Parent then
+                        statusLabel.Text = "Farming " .. xp.Name .. "..."
+                        tpTo(character, xp.Position)
+                        task.wait(1)
+                    end
+                end
+            else
+                -- Nothing to farm
+                statusLabel.Text = "Waiting for Coins / XP..."
+                task.wait(2)
+            end
+        end
+    end
 end
 
 function CoinFarmer.Stop()
