@@ -1,6 +1,6 @@
 -- HorseLife CoinFarm (All-in-One, Instant TP)
-local VERSION = "v0.0.4"
-local CHANGELOG = "<+> Added +3 Y offset for horse sitting <+>"
+local VERSION = "v0.0.5"
+local CHANGELOG = "<+> Added +20 Y offset for horse sitting <+>"
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -32,18 +32,8 @@ local function tpTo(character, targetPos)
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if not hrp or not humanoid then return end
 
-	-- Ground adjust
-	local rayParams = RaycastParams.new()
-	rayParams.FilterDescendantsInstances = {character}
-	rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-	local result = workspace:Raycast(targetPos + Vector3.new(0,5,0), Vector3.new(0,-20,0), rayParams)
-
 	local yPos = targetPos.Y
-	if result then
-		yPos = result.Position.Y + 3
-	else
-		yPos = yPos + 10 -- Always add +3 to prevent falling through horse
-	end
+		yPos = result.Position.Y + 20
 
 	-- Insta-TP
 	hrp.CFrame = CFrame.new(Vector3.new(targetPos.X, yPos, targetPos.Z))
