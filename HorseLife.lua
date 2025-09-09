@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Manual Resources)
 -- Single-select UI checkboxes with scrollable UI and debug mode
 
-local VERSION = "v2.4"
+local VERSION = "v2.5"
 local DEBUG_MODE = true -- Output debug info
 
 local Players = game:GetService("Players")
@@ -96,7 +96,7 @@ local function createCheckbox(text, order, callback)
 	button.Size = UDim2.new(1,-10,0,30)
 	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
 	button.TextColor3 = Color3.fromRGB(200,200,200)
-	button.Text = "[ ] "..text
+	button.Text = "[◻] "..text
 	button.Font = Enum.Font.SourceSans
 	button.TextSize = 16
 	button.LayoutOrder = order
@@ -105,7 +105,7 @@ local function createCheckbox(text, order, callback)
 	local state = false
 	local function setState(val)
 		state = val
-		button.Text = (state and "[X] " or "[ ] ") .. text
+		button.Text = (state and "[☑] " or "[◻] ") .. text
 		if state then
 			for _, other in pairs(checkboxes) do
 				if other ~= setState then
@@ -223,118 +223,178 @@ local function getResourceTargets(name)
 	return targets
 end
 
--- Farming Loop (with debug + dynamic rescan + anti-freeze)
-task.spawn(function()
-	while true do
-		if Farmer.Running and Farmer.Mode then
-			local char = player.Character or player.CharacterAdded:Wait()
-
-			-- =========================
-			-- COINS
-			-- =========================
-			if Farmer.Mode == "Coins" then
-				if DEBUG_MODE then print("[DEBUG][Loop] Farming Coins...") end
-
-				for _, coin in ipairs(getCoinParts()) do
-					if not Farmer.Running or Farmer.Mode ~= "Coins" then break end
-					if coin and coin.Parent then
-						statusLabel.Text = "Collecting Coins..."
-						if DEBUG_MODE then print("[DEBUG][Coin] Teleporting to coin:", coin:GetFullName()) end
-
-						tpTo(char, coin.Position)
-						local start = tick()
-						repeat task.wait(0.3) until not coin.Parent or tick() - start > 6
-
-						if DEBUG_MODE then print("[DEBUG][Coin] Coin collected or timeout") end
-					end
-				end
-
-			-- =========================
-			-- XP (Agility / Jump)
-			-- =========================
-			elseif Farmer.Mode == "XPAgility" or Farmer.Mode == "XPJump" then
-				statusLabel.Text = "Training " .. Farmer.Mode .. "..."
-				if DEBUG_MODE then print("[DEBUG][Loop] Training XP:", Farmer.Mode) end
-				doXP(Farmer.Mode)
-
-			-- =========================
-			-- MANUAL RESOURCES
-			-- =========================
-			else
-				local current = Farmer.Mode
-				if DEBUG_MODE then print("[DEBUG][Loop] Farming resource:", current) end
-
-				while Farmer.Running and Farmer.Mode == current do
-					local targets = getResourceTargets(current)
-
-					if #targets == 0 then
-						statusLabel.Text = "Waiting for " .. current .. "..."
-						if DEBUG_MODE then print("[DEBUG][Resource] No live targets for", current) end
-						task.wait(1)
-					else
-						for idx, res in ipairs(targets) do
-							if not Farmer.Running or Farmer.Mode ~= current then break end
-
-							local model = res.Model
-							if not model or not model.Parent then
-								if DEBUG_MODE then print("[DEBUG][Resource] Target #" .. idx .. " already gone") end
-								continue
-							end
-
-							local fullName = pcall(function() return model:GetFullName() end) and model:GetFullName() or tostring(model)
-							statusLabel.Text = "Farming " .. current .. "..."
-							if DEBUG_MODE then print("[DEBUG][Resource] Processing target #" .. idx, fullName) end
-
-							-- Teleport to resource
-							local pos
-							local ok, pivot = pcall(function() return model:GetPivot().Position end)
-							if ok then pos = pivot
-							elseif model.PrimaryPart then pos = model.PrimaryPart.Position
-							else
-								for _, d in ipairs(model:GetDescendants()) do
-									if d:IsA("BasePart") then pos = d.Position break end
-								end
-							end
-							if pos then tpTo(char, pos) end
-
-							-- First click
-							pcall(function() fireclickdetector(res.Click) end)
-							task.wait(0.3)
-
-							-- Spam remote until despawn OR timeout
-							local spamStart = tick()
-							while model and model.Parent and Farmer.Running and Farmer.Mode == current do
-								if res.Remote then
-									if res.Remote.ClassName == "RemoteEvent" then
-										pcall(function() res.Remote:FireServer(unpack(resourceArgs)) end)
-									elseif res.Remote.ClassName == "RemoteFunction" then
-										pcall(function() res.Remote:InvokeServer(unpack(resourceArgs)) end)
-									end
-								end
-
-								task.wait(math.random(4,10)/10)
-								if tick() - spamStart > 8 then
-									if DEBUG_MODE then print("[DEBUG][Resource] Timeout, forcing next target") end
-									break
-								end
-							end
-
-							if DEBUG_MODE then print("[DEBUG][Resource] Finished target:", fullName) end
-							-- force rescan after each
-							break
-						end
-					end
-					task.wait(0.5) -- small pause before rescanning
-				end
-			end
-		else
-			statusLabel.Text = "Status: Idle"
+-- =======================================
+-- FARMING LOOP
+-- =======================================
+local function startFarming()
+	while Farmer.Running do
+		local char = player.Character
+		if not char then
+			if DEBUG_MODE then print("[DEBUG] No character, waiting...") end
 			task.wait(1)
+			continue
 		end
 
-		RunService.RenderStepped:Wait()
+		-- =========================
+		-- COINS
+		-- =========================
+		if Farmer.Mode == "Coins" then
+			if DEBUG_MODE then print("[DEBUG][Loop] Farming Coins...") end
+
+			local coinsFolder = workspace:FindFirstChild("Interactions")
+				and workspace.Interactions:FindFirstChild("CurrencyNodes")
+				and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
+
+			if coinsFolder then
+				local coins = coinsFolder:GetChildren()
+				if #coins == 0 then
+					statusLabel.Text = "Waiting for Coins..."
+					task.wait(1)
+				else
+					for _, coin in ipairs(coins) do
+						if not Farmer.Running or Farmer.Mode ~= "Coins" then break end
+						if not coin:IsA("Model") or not coin:FindFirstChild("CoinPart") then continue end
+
+						local part = coin.CoinPart
+						statusLabel.Text = "Collecting Coins..."
+						if DEBUG_MODE then print("[DEBUG][Coins] Collecting:", coin:GetFullName()) end
+
+						tpTo(char, part.Position)
+
+						local start = tick()
+						while coin.Parent and Farmer.Running and Farmer.Mode == "Coins" do
+							task.wait(0.1)
+							if tick() - start > 6 then
+								if DEBUG_MODE then print("[DEBUG][Coins] Timeout on coin:", coin:GetFullName()) end
+								break
+							end
+						end
+
+						if DEBUG_MODE then print("[DEBUG][Coins] Collected:", coin:GetFullName()) end
+					end
+				end
+			else
+				statusLabel.Text = "Waiting for Coins..."
+				task.wait(1)
+			end
+
+		-- =========================
+		-- XP AGILITY
+		-- =========================
+		elseif Farmer.Mode == "XPAgility" then
+			if DEBUG_MODE then print("[DEBUG][Loop] Farming XPAgility...") end
+
+			local xpFolder = workspace:FindFirstChild("Interactions")
+				and workspace.Interactions:FindFirstChild("CurrencyNodes")
+				and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
+
+			if xpFolder then
+				local agility = xpFolder:FindFirstChild("XPAgility")
+				if agility and agility:IsA("Model") then
+					local part = agility:FindFirstChildWhichIsA("BasePart")
+					if part then
+						statusLabel.Text = "Collecting XP Agility..."
+						tpTo(char, part.Position)
+
+						local start = tick()
+						while agility.Parent and Farmer.Running and Farmer.Mode == "XPAgility" do
+							task.wait(0.1)
+							if tick() - start > 6 then break end
+						end
+					end
+				else
+					statusLabel.Text = "Waiting for XP Agility..."
+					task.wait(1)
+				end
+			end
+
+		-- =========================
+		-- XP JUMP
+		-- =========================
+		elseif Farmer.Mode == "XPJump" then
+			if DEBUG_MODE then print("[DEBUG][Loop] Farming XPJump...") end
+
+			local xpFolder = workspace:FindFirstChild("Interactions")
+				and workspace.Interactions:FindFirstChild("CurrencyNodes")
+				and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
+
+			if xpFolder then
+				local jump = xpFolder:FindFirstChild("XPJump")
+				if jump and jump:IsA("Model") then
+					local part = jump:FindFirstChildWhichIsA("BasePart")
+					if part then
+						statusLabel.Text = "Collecting XP Jump..."
+						tpTo(char, part.Position)
+
+						local start = tick()
+						while jump.Parent and Farmer.Running and Farmer.Mode == "XPJump" do
+							task.wait(0.1)
+							if tick() - start > 6 then break end
+						end
+					end
+				else
+					statusLabel.Text = "Waiting for XP Jump..."
+					task.wait(1)
+				end
+			end
+
+		-- =========================
+		-- MANUAL RESOURCES
+		-- =========================
+		else
+			local current = Farmer.Mode
+			if DEBUG_MODE then print("[DEBUG][Loop] Farming resource:", current) end
+
+			while Farmer.Running and Farmer.Mode == current do
+				local targets = getResourceTargets(current)
+
+				if #targets == 0 then
+					statusLabel.Text = "Waiting for " .. current .. "..."
+					if DEBUG_MODE then print("[DEBUG][Resource] No live targets for", current) end
+					task.wait(1)
+				else
+					for idx, res in ipairs(targets) do
+						if not Farmer.Running or Farmer.Mode ~= current then break end
+
+						local model = res.Model
+						if not model or not model.Parent then continue end
+
+						local pos
+						local ok, pivot = pcall(function() return model:GetPivot().Position end)
+						if ok then pos = pivot
+						elseif model.PrimaryPart then pos = model.PrimaryPart.Position
+						else
+							for _, d in ipairs(model:GetDescendants()) do
+								if d:IsA("BasePart") then pos = d.Position break end
+							end
+						end
+						if pos then tpTo(char, pos) end
+
+						-- First click
+						pcall(function() fireclickdetector(res.Click) end)
+						task.wait(0.3)
+
+						-- Spam remote until despawn OR timeout
+						local spamStart = tick()
+						while model and model.Parent and Farmer.Running and Farmer.Mode == current do
+							if res.Remote then
+								if res.Remote.ClassName == "RemoteEvent" then
+									pcall(function() res.Remote:FireServer(unpack(resourceArgs)) end)
+								elseif res.Remote.ClassName == "RemoteFunction" then
+									pcall(function() res.Remote:InvokeServer(unpack(resourceArgs)) end)
+								end
+							end
+							task.wait(math.random(4,10)/10)
+							if tick() - spamStart > 8 then break end
+						end
+					end
+				end
+				task.wait(0.5)
+			end
+		end
 	end
-end)
+end
+
 
 -- UI Setup ------------------------
 local order=0
