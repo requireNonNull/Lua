@@ -100,7 +100,7 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "CoinFarmUI"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
-screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.Parent = game:GetService("CoreGui") -- MINOR CHANGE; CHANGE BACK TO PLAYERGUI IF COREGUI ISNT SUPPORTED BY YOUR EXECUTOR
 
 -- Buttons
 local function createButton(text, pos, bgColor)
