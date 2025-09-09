@@ -1,16 +1,18 @@
--- HorseLife CoinFarm (All-in-One, Instant TP)
-local VERSION = "v0.0.6"
-local CHANGELOG = "added xp farm when no coins"
+-- HorseLife MultiFarm (All-in-One, Instant TP + Resources)
+local VERSION = "v0.1.0"
+local CHANGELOG = "added XP + Resource farm toggle system"
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
--- FARMER LOGIC ------------------------
+-- FARMER CORE ------------------------
 local CoinFarmer = {}
 CoinFarmer.Running = false
+CoinFarmer.Mode = nil -- "Coins", "XP", or resource name
 CoinFarmer.CoinsFarmed = 0
 
+-- ============ TARGET GETTERS ============
 local function getCoins()
     local coins = {}
     local root = workspace:WaitForChild("Interactions"):WaitForChild("CurrencyNodes")
@@ -40,7 +42,22 @@ local function getXPParts()
     return xpParts
 end
 
+local function getResources(name)
+    local resFolder = workspace:WaitForChild("Interactions"):WaitForChild("Resource")
+    local objects = {}
+    local model = resFolder:FindFirstChild(name)
+    if model then
+        for _, obj in ipairs(model:GetChildren()) do
+            local cd = obj:FindFirstChildOfClass("ClickDetector")
+            if cd then
+                table.insert(objects, cd)
+            end
+        end
+    end
+    return objects
+end
 
+-- ============ HELPERS ============
 local function tpTo(character, targetPos)
 	local hrp = character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
@@ -48,34 +65,46 @@ local function tpTo(character, targetPos)
 
 	local yPos = targetPos.Y
 	yPos += 10
-	-- Insta-TP
 	hrp.CFrame = CFrame.new(Vector3.new(targetPos.X, yPos, targetPos.Z))
 end
 
+-- ============ FARM LOGIC ============
 function CoinFarmer.Start(statusLabel)
     if CoinFarmer.Running then return end
     CoinFarmer.Running = true
     local character = player.Character or player.CharacterAdded:Wait()
 
     while CoinFarmer.Running do
-        -- Phase 1: Coins
-        local coins = getCoins()
-        if #coins > 0 then
-            for _, coin in ipairs(coins) do
-                if not CoinFarmer.Running then break end
-                if coin and coin.Parent then
-                    statusLabel.Text = "Farming Coins..."
-                    tpTo(character, coin.Position)
-                    task.wait(1)
-                    CoinFarmer.CoinsFarmed += 1
+        if not CoinFarmer.Mode then
+            statusLabel.Text = "Select a farming mode..."
+            task.wait(1)
+            continue
+        end
+
+        -- Coins
+        if CoinFarmer.Mode == "Coins" then
+            local coins = getCoins()
+            if #coins > 0 then
+                for _, coin in ipairs(coins) do
+                    if not CoinFarmer.Running or CoinFarmer.Mode ~= "Coins" then break end
+                    if coin and coin.Parent then
+                        statusLabel.Text = "Farming Coins..."
+                        tpTo(character, coin.Position)
+                        task.wait(1)
+                        CoinFarmer.CoinsFarmed += 1
+                    end
                 end
+            else
+                statusLabel.Text = "Waiting for Coins..."
+                task.wait(2)
             end
-        else
-            -- Phase 2: XP Parts
+
+        -- XP
+        elseif CoinFarmer.Mode == "XP" then
             local xpParts = getXPParts()
             if #xpParts > 0 then
                 for _, xp in ipairs(xpParts) do
-                    if not CoinFarmer.Running then break end
+                    if not CoinFarmer.Running or CoinFarmer.Mode ~= "XP" then break end
                     if xp and xp.Parent then
                         statusLabel.Text = "Farming " .. xp.Name .. "..."
                         tpTo(character, xp.Position)
@@ -83,8 +112,24 @@ function CoinFarmer.Start(statusLabel)
                     end
                 end
             else
-                -- Nothing to farm
-                statusLabel.Text = "Waiting for Coins / XP..."
+                statusLabel.Text = "Waiting for XP parts..."
+                task.wait(2)
+            end
+
+        -- RESOURCES
+        else
+            local targets = getResources(CoinFarmer.Mode)
+            if #targets > 0 then
+                for _, cd in ipairs(targets) do
+                    if not CoinFarmer.Running or CoinFarmer.Mode ~= CoinFarmer.Mode then break end
+                    if cd and cd.Parent then
+                        statusLabel.Text = "Farming " .. CoinFarmer.Mode .. "..."
+                        fireclickdetector(cd)
+                        task.wait(1)
+                    end
+                end
+            else
+                statusLabel.Text = "Waiting for " .. CoinFarmer.Mode .. "..."
                 task.wait(2)
             end
         end
@@ -93,6 +138,7 @@ end
 
 function CoinFarmer.Stop()
 	CoinFarmer.Running = false
+	CoinFarmer.Mode = nil
 end
 
 -- UI ------------------------
@@ -100,12 +146,12 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "CoinFarmUI"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
-screenGui.Parent = game:GetService("CoreGui") -- MINOR CHANGE; CHANGE BACK TO PLAYERGUI IF COREGUI ISNT SUPPORTED BY YOUR EXECUTOR
+screenGui.Parent = game:GetService("CoreGui")
 
--- Buttons
-local function createButton(text, pos, bgColor)
+-- Button creator
+local function createButton(text, pos, bgColor, onClick)
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0,160,0,65)
+	btn.Size = UDim2.new(0,160,0,45)
 	btn.Position = pos
 	btn.BackgroundTransparency = 0.3
 	btn.BackgroundColor3 = bgColor
@@ -119,93 +165,62 @@ local function createButton(text, pos, bgColor)
 	corner.CornerRadius = UDim.new(0,12)
 	corner.Parent = btn
 
-	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(120,180,255)
-	stroke.Thickness = 3
-	stroke.Transparency = 0.15
-	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Parent = btn
-
-	local gradient = Instance.new("UIGradient")
-	gradient.Color = ColorSequence.new {
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(60,100,200)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(20,40,120))
-	}
-	gradient.Rotation = 45
-	gradient.Parent = btn
-
 	btn.Parent = screenGui
+	btn.MouseButton1Click:Connect(onClick)
 	return btn
 end
 
-local farmButton = createButton("Start Farming", UDim2.new(0,10,1,-215), Color3.fromRGB(40,40,60))
-local terminateBtn = createButton("Terminate Farm", UDim2.new(0,10,1,-140), Color3.fromRGB(255,80,80))
-
--- Overlay
+-- Overlay + Labels
 local overlay = Instance.new("Frame")
-overlay.Size = UDim2.new(0.4,0,0.28,0)
+overlay.Size = UDim2.new(0.4,0,0.4,0)
 overlay.AnchorPoint = Vector2.new(0.5,0.5)
-overlay.Position = UDim2.new(0.5,0,0.15,0)
+overlay.Position = UDim2.new(0.5,0,0.2,0)
 overlay.BackgroundColor3 = Color3.fromRGB(30,30,40)
 overlay.BackgroundTransparency = 0.1
 overlay.BorderSizePixel = 0
 overlay.Parent = screenGui
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0,16)
-corner.Parent = overlay
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(120,180,255)
-stroke.Thickness = 3
-stroke.Transparency = 0.3
-stroke.Parent = overlay
 
--- Labels
-local function createLabel(text, pos, color, font, size)
-	local lbl = Instance.new("TextLabel")
-	lbl.Size = size
-	lbl.Position = pos
-	lbl.BackgroundTransparency = 1
-	lbl.Text = text
-	lbl.TextScaled = true
-	lbl.TextColor3 = color
-	lbl.Font = font
-	lbl.Parent = overlay
-	return lbl
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1,0,0,30)
+statusLabel.Position = UDim2.new(0,0,0,0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: Idle"
+statusLabel.TextColor3 = Color3.new(1,1,1)
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextScaled = true
+statusLabel.Parent = overlay
+
+-- Farming Buttons
+local y = 40
+local function addFarmButton(name, mode)
+	createButton(name, UDim2.new(0,10,0,y), Color3.fromRGB(60,60,100), function()
+		if CoinFarmer.Mode == mode then
+			CoinFarmer.Mode = nil
+			statusLabel.Text = "Stopped: " .. name
+		else
+			CoinFarmer.Mode = mode
+			if not CoinFarmer.Running then
+				task.spawn(function() CoinFarmer.Start(statusLabel) end)
+			end
+		end
+	end)
+	y += 50
 end
 
-createLabel("HorseLife CoinFarm", UDim2.new(0,0,0,0), Color3.fromRGB(200,230,255), Enum.Font.GothamBold, UDim2.new(1,0,0,35))
-createLabel("Version: " .. VERSION, UDim2.new(0,0,0,35), Color3.fromRGB(180,180,200), Enum.Font.Gotham, UDim2.new(1,0,0,25))
-createLabel("Update: " .. CHANGELOG, UDim2.new(0,0,0,60), Color3.fromRGB(160,200,160), Enum.Font.Gotham, UDim2.new(1,0,0,25))
+-- Add toggles
+addFarmButton("Farm Coins", "Coins")
+addFarmButton("Farm XP", "XP")
+for _, res in ipairs({"AppleBarrel","BerryBush","FallenTree","FoodPallet","LargeBerryBush","Stump","Treasure"}) do
+	addFarmButton("Farm " .. res, res)
+end
 
-local statusLabel = createLabel("Status: Idle", UDim2.new(0,0,0,90), Color3.new(1,1,1), Enum.Font.Gotham, UDim2.new(1,0,0,30))
-local coinsLabel = createLabel("Coins Farmed: 0", UDim2.new(0,0,0,125), Color3.new(1,1,1), Enum.Font.Gotham, UDim2.new(1,0,0,30))
-
--- Button logic
-local running = false
-farmButton.MouseButton1Click:Connect(function()
-	running = not running
-	if running then
-		farmButton.Text = "Stop Farming"
-		statusLabel.Text = "Status: Starting..."
-		task.spawn(function()
-			CoinFarmer.Start(statusLabel)
-		end)
-	else
-		farmButton.Text = "Start Farming"
-		statusLabel.Text = "Status: Idle"
-		CoinFarmer.Stop()
-	end
-end)
-
-terminateBtn.MouseButton1Click:Connect(function()
+-- Terminate Button
+createButton("Terminate", UDim2.new(0,10,0,y+20), Color3.fromRGB(200,50,50), function()
 	CoinFarmer.Stop()
-	if screenGui then
-		screenGui:Destroy()
-	end
-	warn("🐎 HorseLife CoinFarm terminated. You can reloadstring a new version now.")
+	screenGui:Destroy()
 end)
 
 -- Live stats
 RunService.RenderStepped:Connect(function()
-	coinsLabel.Text = "Coins Farmed: " .. CoinFarmer.CoinsFarmed
+	statusLabel.Text = "Mode: " .. (CoinFarmer.Mode or "None")
 end)
