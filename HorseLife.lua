@@ -1,7 +1,7 @@
--- // AutoFarm Script (Manual Resources)
+-- // AutoFarm Script (Manual Resources with HP)
 -- Single-select UI checkboxes with scrollable UI and debug mode
 
-local VERSION = "v2.7"
+local VERSION = "v2.8"
 local DEBUG_MODE = true -- Output debug info
 
 local Players = game:GetService("Players")
@@ -96,7 +96,7 @@ local function createCheckbox(text, order, callback)
 	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
 	button.TextColor3 = Color3.fromRGB(200,200,200)
 	button.Text = "[ ] "..text
-	button.Font = Enum.Font.SourceSans
+	button.Font = Enum.Font.SourceSansBold
 	button.TextSize = 16
 	button.LayoutOrder = order
 	button.Parent = scrollFrame
@@ -127,10 +127,9 @@ local function createCheckbox(text, order, callback)
 end
 
 -- Helpers
-local character = player.Character or player.CharacterAdded:Wait()
 local function tpTo(char,pos)
 	if char and char:FindFirstChild("HumanoidRootPart") then
-		char:PivotTo(CFrame.new(pos+Vector3.new(0,10,0)))
+		char:PivotTo(CFrame.new(pos + Vector3.new(0,10,0)))
 		if DEBUG_MODE then
 			print("[DEBUG] TPS to:", pos)
 		end
@@ -154,37 +153,35 @@ local manualResources = {
 	"Treasure",
 }
 
-local function getResourceTargets(name)
-	local resFolder = workspace:FindFirstChild("Interactions") 
+-- Get HP of a resource
+local function getResourceHP(resourceName)
+	local gui = workspace:FindFirstChild("Interactions")
 		and workspace.Interactions:FindFirstChild("Resource")
-	if not resFolder then return {} end
+		and workspace.Interactions.Resource:FindFirstChild(resourceName)
+		and workspace.Interactions.Resource[resourceName]:FindFirstChild("DefaultResourceNodeGui")
+	if not gui then return nil end
 
-	local targets = {}
-	for _, obj in ipairs(resFolder:GetChildren()) do
-		if obj and obj.Name == name then
-			table.insert(targets,obj)
-		end
-	end
-	return targets
+	local hpText = gui:FindFirstChild("Bar")
+		and gui.Bar:FindFirstChild("Background")
+		and gui.Bar.Background:FindFirstChild("HP")
+	if not hpText or not hpText:IsA("TextLabel") then return nil end
+
+	local hp = tonumber(hpText.Text)
+	return hp
 end
 
--- =======================================
--- FARMING LOOP (Name-only, continuous)
--- =======================================
 local function startFarming()
-	while Farmer.Running do
-		local char = player.Character
-		if not char then
-			task.wait(1)
-			continue
-		end
-
-		local current = Farmer.Mode
-		if not current then
+	while true do
+		if not Farmer.Running or not Farmer.Mode then
 			task.wait(0.5)
 			continue
 		end
 
+		local char = player.Character
+		if not char then task.wait(1) continue end
+		local current = Farmer.Mode
+
+		-- Determine folder
 		local scanFolder
 		if current == "Coins" or current == "XPAgility" or current == "XPJump" then
 			scanFolder = workspace:FindFirstChild("Interactions")
@@ -200,79 +197,86 @@ local function startFarming()
 			continue
 		end
 
-		local targets = {}
-		for _, obj in ipairs(scanFolder:GetChildren()) do
-			if obj.Name == current then
-				table.insert(targets, obj)
+		-- Infinite loop over current resource/collection
+		while Farmer.Running and Farmer.Mode == current do
+			-- Collect all matching objects
+			local targets = {}
+			for _, obj in ipairs(scanFolder:GetChildren()) do
+				if obj.Name == current then
+					table.insert(targets,obj)
+				end
 			end
-		end
 
-		if #targets == 0 then
-			statusLabel.Text = "Waiting for " .. current .. "..."
-			task.wait(1)
-			continue
-		end
-
-		for _, obj in ipairs(targets) do
-			if not Farmer.Running or Farmer.Mode ~= current then break end
-
-			local pos
-			local ok, pivot = pcall(function() return obj:GetPivot().Position end)
-			if ok then pos = pivot
-			elseif obj.PrimaryPart then pos = obj.PrimaryPart.Position
+			if #targets == 0 then
+				statusLabel.Text = "Waiting for " .. current .. "..."
+				task.wait(1)
 			else
-				local part = obj:FindFirstChildWhichIsA("BasePart")
-				if part then pos = part.Position end
-			end
+				for _, obj in ipairs(targets) do
+					if not Farmer.Running or Farmer.Mode ~= current then break end
 
-			if pos then
-				statusLabel.Text = "Collecting " .. current .. "..."
-				tpTo(char, pos + Vector3.new(0,10,0))
-				task.wait(0.3)
-			end
+					local pos
+					local ok, pivot = pcall(function() return obj:GetPivot().Position end)
+					if ok then pos = pivot
+					elseif obj.PrimaryPart then pos = obj.PrimaryPart.Position
+					else
+						local part = obj:FindFirstChildWhichIsA("BasePart")
+						if part then pos = part.Position end
+					end
 
-			pcall(function() fireclickdetector(obj:FindFirstChildWhichIsA("ClickDetector")) end)
+					if pos then
+						statusLabel.Text = "Collecting " .. current .. "..."
+						tpTo(char, pos)
+						task.wait(0.3)
+					end
 
-			local remote = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
-			local spamStart = tick()
-			while obj.Parent and Farmer.Running and Farmer.Mode == current do
-				if remote then
-					if remote.ClassName == "RemoteEvent" then
-						pcall(function() remote:FireServer(unpack(resourceArgs)) end)
-					elseif remote.ClassName == "RemoteFunction" then
-						pcall(function() remote:InvokeServer(unpack(resourceArgs)) end)
+					pcall(function() fireclickdetector(obj:FindFirstChildOfClass("ClickDetector")) end)
+
+					local remote = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
+					while obj.Parent and Farmer.Running and Farmer.Mode == current do
+						if remote then
+							if remote.ClassName == "RemoteEvent" then
+								pcall(function() remote:FireServer(unpack(resourceArgs)) end)
+							elseif remote.ClassName == "RemoteFunction" then
+								pcall(function() remote:InvokeServer(unpack(resourceArgs)) end)
+							end
+						end
+						task.wait(math.random(4,10)/10)
 					end
 				end
-				task.wait(math.random(4,10)/10)
-				if tick() - spamStart > 8 then break end
 			end
-		end
 
-		task.wait(0.5)
+			task.wait(0.1) -- small delay before re-scanning
+		end
 	end
 end
 
+
 -- UI Setup ------------------------
 local order=0
-local function setupCheckbox(name)
-	createCheckbox(name, order, function(state)
-		Farmer.Running = state
-		Farmer.Mode = state and name or nil
-		if state then
-			-- Start farming in separate thread
-			spawn(startFarming)
-		end
+createCheckbox("Coins",order,function(state)
+	Farmer.Running=state
+	Farmer.Mode=state and "Coins" or nil
+end) order=order+1
+
+createCheckbox("XP Agility",order,function(state)
+	Farmer.Running=state
+	Farmer.Mode=state and "XPAgility" or nil
+end) order=order+1
+
+createCheckbox("XP Jump",order,function(state)
+	Farmer.Running=state
+	Farmer.Mode=state and "XPJump" or nil
+end) order=order+1
+
+for _,resName in ipairs(manualResources) do
+	createCheckbox(resName,order,function(state)
+		Farmer.Running=state
+		Farmer.Mode=state and resName or nil
 	end)
-	order = order + 1
+	order=order+1
 end
 
--- Coins & XP
-setupCheckbox("Coins")
-setupCheckbox("XPAgility")
-setupCheckbox("XPJump")
+if DEBUG_MODE then print("[DEBUG] AutoFarm loaded with",order,"checkboxes") end
 
--- Manual resources
-for _, resName in ipairs(manualResources) do
-	setupCheckbox(resName) end
-
-if DEBUG_MODE then print("[DEBUG] AutoFarm loaded with", order, "checkboxes") end
+-- Start farming in background
+task.spawn(startFarming)
