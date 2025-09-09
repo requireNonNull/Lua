@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v4.1"
+local VERSION = "v4.2"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -179,8 +179,8 @@ local resourcePaths = {
 	Stump = workspace.Interactions.Resource,
 	CactusFruit = workspace.Interactions.Resource,
 	Treasure = workspace.Interactions.Resource,
-	DailyChest = workspace.LocalResources:FindFirstChild("DailyChest"),
-	DiggingNodes = workspace.LocalResources:FindFirstChild("DiggingNodes")
+	DailyChest = workspace.LocalResources,
+	DiggingNodes = workspace.LocalResources
 }
 
 local manualResources = {
