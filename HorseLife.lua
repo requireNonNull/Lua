@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Manual Resources)
 -- Single-select UI checkboxes with scrollable UI and debug mode
 
-local VERSION = "v2.6"
+local VERSION = "v2.7"
 local DEBUG_MODE = true -- Output debug info
 
 local Players = game:GetService("Players")
@@ -65,7 +65,6 @@ title.Parent = frame
 -- Status
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1,-10,0,20)
---statusLabel.AnchorPoint = Vector2.new(0,1)
 statusLabel.Position = UDim2.new(0,5,1,-25)
 statusLabel.BackgroundTransparency = 1
 statusLabel.TextColor3 = Color3.fromRGB(200,200,200)
@@ -77,7 +76,7 @@ statusLabel.Parent = frame
 
 -- Scroll Frame
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,-10,1,-60) -- leaves space for labels
+scrollFrame.Size = UDim2.new(1,-10,1,-60)
 scrollFrame.Position = UDim2.new(0,5,0,30)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 8
@@ -142,45 +141,7 @@ end
 local Farmer = {Running=false, Mode=nil}
 local resourceArgs = {5,true}
 
--- Coins
-local function getCoinParts()
-	local spawned = workspace:FindFirstChild("Interactions") 
-		and workspace.Interactions:FindFirstChild("CurrencyNodes") 
-		and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
-	if not spawned then return {} end
-	local coins = {}
-	for _, obj in ipairs(spawned:GetChildren()) do
-		if (obj:IsA("BasePart") or obj:IsA("MeshPart")) and obj.Name == "Coins" then
-			table.insert(coins,obj)
-		end
-	end
-	return coins
-end
-
--- XP
-local function getXPParts()
-	local spawned = workspace:FindFirstChild("Interactions") 
-		and workspace.Interactions:FindFirstChild("CurrencyNodes") 
-		and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
-	if not spawned then return {} end
-	local xpParts = {}
-	for _, name in ipairs({"XPAgility","XPJump"}) do
-		local part = spawned:FindFirstChild(name)
-		if part then table.insert(xpParts,part) end
-	end
-	return xpParts
-end
-
-local function doXP(xpName)
-	for _, part in ipairs(getXPParts()) do
-		if part.Name==xpName and part.Parent then
-			tpTo(player.Character, part.Position)
-			repeat task.wait(0.3) until not part.Parent
-		end
-	end
-end
-
--- Resources (manual list)
+-- Manual resources
 local manualResources = {
 	"AppleBarrel",
 	"BerryBush",
@@ -196,30 +157,14 @@ local manualResources = {
 local function getResourceTargets(name)
 	local resFolder = workspace:FindFirstChild("Interactions") 
 		and workspace.Interactions:FindFirstChild("Resource")
-	if not resFolder then
-		if DEBUG_MODE then print("[DEBUG][getResourceTargets] Resource folder missing") end
-		return {}
-	end
+	if not resFolder then return {} end
 
 	local targets = {}
-	for i, obj in ipairs(resFolder:GetChildren()) do
-		if obj and obj:IsA("Model") and obj.Name == name then
-			local cd = obj:FindFirstChildOfClass("ClickDetector")
-			local re = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
-			table.insert(targets, { Model = obj, Click = cd, Remote = re })
-
-			if DEBUG_MODE then
-				local fullname = pcall(function() return obj:GetFullName() end) and obj:GetFullName() or tostring(obj)
-				print("[DEBUG][getResourceTargets] #" .. i .. " ->", fullname,
-					" parent=" .. tostring(obj.Parent and obj.Parent.Name or "nil"),
-					" Click=" .. tostring((cd and "yes") or "no"),
-					" RemoteClass=" .. tostring(re and re.ClassName or "nil"),
-					" RemoteName=" .. tostring(re and re.Name or "nil"))
-			end
+	for _, obj in ipairs(resFolder:GetChildren()) do
+		if obj and obj.Name == name then
+			table.insert(targets,obj)
 		end
 	end
-
-	if DEBUG_MODE then print("[DEBUG][getResourceTargets] total targets for", name, "=", #targets) end
 	return targets
 end
 
@@ -230,7 +175,6 @@ local function startFarming()
 	while Farmer.Running do
 		local char = player.Character
 		if not char then
-			if DEBUG_MODE then print("[DEBUG] No character, waiting...") end
 			task.wait(1)
 			continue
 		end
@@ -241,28 +185,21 @@ local function startFarming()
 			continue
 		end
 
-		-- Determine folder to scan
 		local scanFolder
 		if current == "Coins" or current == "XPAgility" or current == "XPJump" then
 			scanFolder = workspace:FindFirstChild("Interactions")
 				and workspace.Interactions:FindFirstChild("CurrencyNodes")
 				and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
-			if not scanFolder then
-				statusLabel.Text = "Waiting for " .. current .. "..."
-				task.wait(1)
-				continue
-			end
 		else
 			scanFolder = workspace:FindFirstChild("Interactions")
 				and workspace.Interactions:FindFirstChild("Resource")
-			if not scanFolder then
-				if DEBUG_MODE then print("[DEBUG] Resource folder missing") end
-				task.wait(1)
-				continue
-			end
+		end
+		if not scanFolder then
+			statusLabel.Text = "Waiting for " .. current .. "..."
+			task.wait(1)
+			continue
 		end
 
-		-- Endless loop over all objects matching the name
 		local targets = {}
 		for _, obj in ipairs(scanFolder:GetChildren()) do
 			if obj.Name == current then
@@ -279,7 +216,6 @@ local function startFarming()
 		for _, obj in ipairs(targets) do
 			if not Farmer.Running or Farmer.Mode ~= current then break end
 
-			-- Get position safely
 			local pos
 			local ok, pivot = pcall(function() return obj:GetPivot().Position end)
 			if ok then pos = pivot
@@ -295,10 +231,8 @@ local function startFarming()
 				task.wait(0.3)
 			end
 
-			-- Fire ClickDetector if exists
-			pcall(function() fireclickdetector(obj:FindFirstChildOfClass("ClickDetector")) end)
+			pcall(function() fireclickdetector(obj:FindFirstChildWhichIsA("ClickDetector")) end)
 
-			-- Fire remote repeatedly until despawn or timeout
 			local remote = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
 			local spamStart = tick()
 			while obj.Parent and Farmer.Running and Farmer.Mode == current do
@@ -314,35 +248,31 @@ local function startFarming()
 			end
 		end
 
-		-- Small delay before re-scanning
 		task.wait(0.5)
 	end
 end
 
 -- UI Setup ------------------------
 local order=0
-createCheckbox("Coins",order,function(state)
-	Farmer.Running=state
-	Farmer.Mode=state and "Coins" or nil
-end) order=order+1
-
-createCheckbox("XP Agility",order,function(state)
-	Farmer.Running=state
-	Farmer.Mode=state and "XPAgility" or nil
-end) order=order+1
-
-createCheckbox("XP Jump",order,function(state)
-	Farmer.Running=state
-	Farmer.Mode=state and "XPJump" or nil
-end) order=order+1
-
--- Add manual resources
-for _,resName in ipairs(manualResources) do
-	createCheckbox(resName,order,function(state)
-		Farmer.Running=state
-		Farmer.Mode=state and resName or nil
+local function setupCheckbox(name)
+	createCheckbox(name, order, function(state)
+		Farmer.Running = state
+		Farmer.Mode = state and name or nil
+		if state then
+			-- Start farming in separate thread
+			spawn(startFarming)
+		end
 	end)
-	order=order+1
+	order = order + 1
 end
 
-if DEBUG_MODE then print("[DEBUG] AutoFarm loaded with",order,"checkboxes") end
+-- Coins & XP
+setupCheckbox("Coins")
+setupCheckbox("XPAgility")
+setupCheckbox("XPJump")
+
+-- Manual resources
+for _, resName in ipairs(manualResources) do
+	setupCheckbox(resName) end
+
+if DEBUG_MODE then print("[DEBUG] AutoFarm loaded with", order, "checkboxes") end
