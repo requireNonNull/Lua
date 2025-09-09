@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v4.2"
+local VERSION = "v4.3"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -130,6 +130,30 @@ local function createCheckbox(text, order, callback)
 	scrollFrame.CanvasSize = UDim2.new(0,0,0,uiLayout.AbsoluteContentSize.Y + 10)
 end
 
+-- Random teleport positions
+local teleportSpots = {
+    Vector3.new(5, 13, 17),
+    Vector3.new(-421, 36, -902),
+    Vector3.new(1209, 41, -30),
+    Vector3.new(2067, 19, -367),
+    Vector3.new(2128, 71, -1241),
+    Vector3.new(1097, 107, -2018),
+    Vector3.new(421, 73, -2572),
+    Vector3.new(-118, 19, -1675),
+    Vector3.new(-1078, 138, -1772),
+    Vector3.new(-1774, 112, -1120),
+    Vector3.new(-1815, 42, -277),
+    Vector3.new(-1063, 21, -114),
+    Vector3.new(-661, 56, 375)
+}
+
+-- helper: random teleport
+local function randomTeleport(char)
+    local spot = teleportSpots[math.random(1, #teleportSpots)]
+    print("[DEBUG] Random teleporting to:", spot)
+    tpTo(char, spot)
+end
+
 -- ==========================
 -- Helper functions
 -- ==========================
@@ -220,7 +244,9 @@ local function startFarming()
 		if #targets == 0 then
 			statusLabel.Text = "Waiting for " .. current .. "..."
 			if DEBUG_MODE then print("[DEBUG] No targets found for", current) end
-			task.wait(1)
+			-- nothing found → random teleport + wait
+	        randomTeleport(char)
+	        task.wait(3) -- small pause so map loads & resources can spawn
 			continue
 		end
 
