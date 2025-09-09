@@ -32,7 +32,7 @@ versionLabel.Size = UDim2.new(1, -10, 0, 20)
 versionLabel.Position = UDim2.new(0, 5, 1, -55)
 versionLabel.BackgroundTransparency = 1
 versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-versionLabel.Text = "v1.4"
+versionLabel.Text = "v1.5"
 versionLabel.Font = Enum.Font.SourceSansItalic
 versionLabel.TextSize = 14
 versionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -234,17 +234,15 @@ createCheckbox("Coins", 0, function(state)
     Farmer.Mode = state and "Coins" or nil
 end)
 
-if xpFolder then
-    createCheckbox("XP Agility", 1, function(state)
-        Farmer.Running = state
-        Farmer.Mode = state and "XPAgility" or nil
-    end)
+createCheckbox("XP Agility", 1, function(state)
+    Farmer.Running = state
+    Farmer.Mode = state and "XPAgility" or nil
+end)
 
-    createCheckbox("XP Jump", 2, function(state)
-        Farmer.Running = state
-        Farmer.Mode = state and "XPJump" or nil
-    end)
-end
+createCheckbox("XP Jump", 2, function(state)
+    Farmer.Running = state
+    Farmer.Mode = state and "XPJump" or nil
+end)
 
 -- Auto-add all resources dynamically
 local resFolder = workspace:WaitForChild("Interactions"):WaitForChild("Resource")
