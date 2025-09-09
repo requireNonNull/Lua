@@ -1,7 +1,7 @@
--- // AutoFarm Script (Manual Resources with HP) v3.0
+-- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v3.2"
+local VERSION = "v4.0"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -19,7 +19,7 @@ screenGui.IgnoreGuiInset = true
 screenGui.Parent = game:GetService("CoreGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 240, 0, 300)
+frame.Size = UDim2.new(0, 240, 0, 350)
 frame.Position = UDim2.new(0, 50, 0, 150)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
@@ -142,31 +142,53 @@ local function tpTo(char,pos)
 	end
 end
 
-local resourceArgs = {5,true}
+-- ==========================
+-- Farming settings
+-- ==========================
+-- Each resource has a timeout (seconds) for how long we try to farm it
+local resourceTimeouts = {
+	Coins = 10,
+	XPAgility = 10,
+	XPJump = 10,
+	AppleBarrel = 15,
+	BerryBush = 15,
+	FallenTree = 20,
+	FoodPallet = 15,
+	LargeBerryBush = 20,
+	SilkBush = 15,
+	StoneDeposit = 25,
+	Stump = 15,
+	CactusFruit = 15,
+	Treasure = 20,
+	DailyChest = 12,
+	DiggingNodes = 15
+}
+
+-- Each resource's path
+local resourcePaths = {
+	Coins = workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned"),
+	XPAgility = workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned"),
+	XPJump = workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned"),
+	AppleBarrel = workspace.Interactions.Resource,
+	BerryBush = workspace.Interactions.Resource,
+	FallenTree = workspace.Interactions.Resource,
+	FoodPallet = workspace.Interactions.Resource,
+	LargeBerryBush = workspace.Interactions.Resource,
+	SilkBush = workspace.Interactions.Resource,
+	StoneDeposit = workspace.Interactions.Resource,
+	Stump = workspace.Interactions.Resource,
+	CactusFruit = workspace.Interactions.Resource,
+	Treasure = workspace.Interactions.Resource,
+	DailyChest = workspace.LocalResources:FindFirstChild("DailyChest"),
+	DiggingNodes = workspace.LocalResources:FindFirstChild("DiggingNodes")
+}
+
 local manualResources = {
 	"AppleBarrel","BerryBush","FallenTree","FoodPallet","LargeBerryBush",
-	"SilkBush","StoneDeposit","Stump","CactusFruit","Treasure"
+	"SilkBush","StoneDeposit","Stump","CactusFruit","Treasure","DailyChest","DiggingNodes"
 }
 
 local Farmer = {Running=false, Mode=nil}
-
--- Per-object HP reading
-local function getObjectHP(obj)
-	local success, hp = pcall(function()
-		if not obj or not obj.Parent then return nil end
-		local gui = obj:FindFirstChild("DefaultResourceNodeGui")
-		if not gui then return nil end
-		local bar = gui:FindFirstChild("Bar")
-		if not bar or not bar:FindFirstChild("Background") then return nil end
-		local hpText = bar.Background:FindFirstChild("HP")
-		if not hpText or not hpText:IsA("TextLabel") then return nil end
-		return tonumber(hpText.Text)
-	end)
-	if not success then
-		if DEBUG_MODE then print("[DEBUG] getObjectHP error for",obj.Name) end
-	end
-	return hp
-end
 
 -- ==========================
 -- Farming loop
@@ -178,26 +200,21 @@ local function startFarming()
 
 		local char = player.Character or player.CharacterAdded:Wait()
 		local current = Farmer.Mode
+		local timeout = resourceTimeouts[current] or 10
+		local folder = resourcePaths[current]
 
-		local scanFolder
-		if current == "Coins" or current == "XPAgility" or current == "XPJump" then
-			scanFolder = workspace:FindFirstChild("Interactions")
-				and workspace.Interactions:FindFirstChild("CurrencyNodes")
-				and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
-		else
-			scanFolder = workspace:FindFirstChild("Interactions")
-				and workspace.Interactions:FindFirstChild("Resource")
-		end
-		if not scanFolder then
+		if not folder then
 			statusLabel.Text = "Waiting for " .. current .. "..."
-			if DEBUG_MODE then print("[DEBUG] Scan folder missing for", current) end
+			if DEBUG_MODE then print("[DEBUG] Resource folder missing for", current) end
 			task.wait(1)
 			continue
 		end
 
 		local targets = {}
-		for _, obj in ipairs(scanFolder:GetChildren()) do
-			if obj.Name == current then table.insert(targets,obj) end
+		for _, obj in ipairs(folder:GetChildren()) do
+			if obj.Name == current or obj.Parent.Name == current then
+				table.insert(targets,obj)
+			end
 		end
 
 		if #targets == 0 then
@@ -229,35 +246,19 @@ local function startFarming()
 				task.wait(0.3)
 			end
 
-			-- Fire ClickDetector
+			-- Fire ClickDetector if exists
 			pcall(function() fireclickdetector(obj:FindFirstChildOfClass("ClickDetector")) end)
 
-			--local remote = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
-
-			-- Infinite spam until HP gone or object disappears
-			local spamStart = tick()
+			local startTime = tick()
 			while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
-				local hp = getObjectHP(obj)
-				if hp == 0 or not hp then
-					if DEBUG_MODE then print("[DEBUG] Object", obj.Name, "finished or missing HP") end
-					break
-				end
-
-				--if remote then
-					--pcall(function()
-						--if remote.ClassName == "RemoteEvent" then remote:FireServer(unpack(resourceArgs))
-						--elseif remote.ClassName == "RemoteFunction" then remote:InvokeServer(unpack(resourceArgs)) end
-						--if DEBUG_MODE then print("[DEBUG] Fired remote for", obj.Name) end
-					--end)
-				--end
-
-				task.wait(0.4)
-				if tick()-spamStart > 40 then -- safety timeout for high HP
+				if tick() - startTime > timeout then
 					if DEBUG_MODE then print("[DEBUG] Timeout reached for", obj.Name) end
 					break
 				end
+				task.wait(0.5)
 			end
 		end
+
 		task.wait(0.2) -- small delay before re-scan
 	end
 end
