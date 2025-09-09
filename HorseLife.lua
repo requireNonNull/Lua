@@ -32,7 +32,7 @@ versionLabel.Size = UDim2.new(1, -10, 0, 20)
 versionLabel.Position = UDim2.new(0, 5, 1, -55)
 versionLabel.BackgroundTransparency = 1
 versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-versionLabel.Text = "v1.3"
+versionLabel.Text = "v1.4"
 versionLabel.Font = Enum.Font.SourceSansItalic
 versionLabel.TextSize = 14
 versionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -140,9 +140,9 @@ local function getXPParts()
 end
 
 local function doXP(xpName)
-    if xpFolder then
-        local part = xpFolder:FindFirstChild(xpName)
-        if part then
+    local parts = getXPParts()
+    for _, part in ipairs(parts) do
+        if part.Name == xpName and part.Parent then
             tpTo(player.Character, part.Position)
             -- wait until XP part disappears
             repeat task.wait(0.3) until not part.Parent
