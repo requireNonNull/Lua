@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Manual Resources with HP)
 -- Single-select UI checkboxes with scrollable UI and debug mode
 
-local VERSION = "v2.8"
+local VERSION = "v2.9"
 local DEBUG_MODE = true -- Output debug info
 
 local Players = game:GetService("Players")
@@ -172,16 +172,12 @@ end
 
 local function startFarming()
 	while true do
-		if not Farmer.Running or not Farmer.Mode then
-			task.wait(0.5)
-			continue
-		end
+		task.wait(0.1)
+		if not Farmer.Running or not Farmer.Mode then continue end
 
-		local char = player.Character
-		if not char then task.wait(1) continue end
+		local char = player.Character or player.CharacterAdded:Wait()
 		local current = Farmer.Mode
 
-		-- Determine folder
 		local scanFolder
 		if current == "Coins" or current == "XPAgility" or current == "XPJump" then
 			scanFolder = workspace:FindFirstChild("Interactions")
@@ -197,56 +193,64 @@ local function startFarming()
 			continue
 		end
 
-		-- Infinite loop over current resource/collection
-		while Farmer.Running and Farmer.Mode == current do
-			-- Collect all matching objects
-			local targets = {}
-			for _, obj in ipairs(scanFolder:GetChildren()) do
-				if obj.Name == current then
-					table.insert(targets,obj)
-				end
+		-- Endless farming loop for current mode
+		local targets = {}
+		for _, obj in ipairs(scanFolder:GetChildren()) do
+			if obj.Name == current then
+				table.insert(targets,obj)
 			end
-
-			if #targets == 0 then
-				statusLabel.Text = "Waiting for " .. current .. "..."
-				task.wait(1)
-			else
-				for _, obj in ipairs(targets) do
-					if not Farmer.Running or Farmer.Mode ~= current then break end
-
-					local pos
-					local ok, pivot = pcall(function() return obj:GetPivot().Position end)
-					if ok then pos = pivot
-					elseif obj.PrimaryPart then pos = obj.PrimaryPart.Position
-					else
-						local part = obj:FindFirstChildWhichIsA("BasePart")
-						if part then pos = part.Position end
-					end
-
-					if pos then
-						statusLabel.Text = "Collecting " .. current .. "..."
-						tpTo(char, pos)
-						task.wait(0.3)
-					end
-
-					pcall(function() fireclickdetector(obj:FindFirstChildOfClass("ClickDetector")) end)
-
-					local remote = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
-					while obj.Parent and Farmer.Running and Farmer.Mode == current do
-						if remote then
-							if remote.ClassName == "RemoteEvent" then
-								pcall(function() remote:FireServer(unpack(resourceArgs)) end)
-							elseif remote.ClassName == "RemoteFunction" then
-								pcall(function() remote:InvokeServer(unpack(resourceArgs)) end)
-							end
-						end
-						task.wait(math.random(4,10)/10)
-					end
-				end
-			end
-
-			task.wait(0.1) -- small delay before re-scanning
 		end
+
+		if #targets == 0 then
+			statusLabel.Text = "Waiting for " .. current .. "..."
+			task.wait(1)
+			continue
+		end
+
+		for _, obj in ipairs(targets) do
+			if not Farmer.Running or Farmer.Mode ~= current then break end
+			if not obj.Parent then continue end
+
+			local pos
+			local ok, pivot = pcall(function() return obj:GetPivot().Position end)
+			if ok then pos = pivot
+			elseif obj.PrimaryPart then pos = obj.PrimaryPart.Position
+			else
+				local part = obj:FindFirstChildWhichIsA("BasePart")
+				if part then pos = part.Position end
+			end
+
+			if pos then
+				statusLabel.Text = "Collecting " .. current .. "..."
+				tpTo(char, pos + Vector3.new(0,10,0))
+				task.wait(0.3)
+			end
+
+			-- ClickDetector fire
+			pcall(function() fireclickdetector(obj:FindFirstChildOfClass("ClickDetector")) end)
+
+			local remote = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
+
+			-- Infinite spam until HP gone or object disappears
+			local spamStart = tick()
+			while obj.Parent and Farmer.Running and Farmer.Mode == current do
+				local hp = getResourceHP(current)
+				if hp == 0 then break end
+
+				if remote then
+					if remote.ClassName == "RemoteEvent" then
+						pcall(function() remote:FireServer(unpack(resourceArgs)) end)
+					elseif remote.ClassName == "RemoteFunction" then
+						pcall(function() remote:InvokeServer(unpack(resourceArgs)) end)
+					end
+				end
+				task.wait(0.4) -- adjust speed if needed
+				-- Safety timeout
+				if tick() - spamStart > 20 then break end
+			end
+		end
+
+		task.wait(0.2) -- small delay before re-scanning
 	end
 end
 
