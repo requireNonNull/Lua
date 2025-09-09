@@ -61,22 +61,9 @@ title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
 title.Parent = frame
 
--- Version
-local versionLabel = Instance.new("TextLabel")
-versionLabel.Size = UDim2.new(1,-10,0,20)
-versionLabel.AnchorPoint = Vector2.new(0,1)
-versionLabel.Position = UDim2.new(0,5,1,-5) -- 5 pixels above bottom
-versionLabel.BackgroundTransparency = 1
-versionLabel.TextColor3 = Color3.fromRGB(150,150,150)
-versionLabel.Text = "v1.8"
-versionLabel.Font = Enum.Font.SourceSansItalic
-versionLabel.TextSize = 14
-versionLabel.TextXAlignment = Enum.TextXAlignment.Left
-versionLabel.Parent = frame
-
 -- Status
 local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1,-10,0,25)
+statusLabel.Size = UDim2.new(1,-10,0,20)
 statusLabel.AnchorPoint = Vector2.new(0,1)
 statusLabel.Position = UDim2.new(0,5,1,-25)
 statusLabel.BackgroundTransparency = 1
@@ -87,9 +74,22 @@ statusLabel.TextSize = 16
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.Parent = frame
 
+-- Version
+local versionLabel = Instance.new("TextLabel")
+versionLabel.Size = UDim2.new(1,-10,0,20)
+versionLabel.AnchorPoint = Vector2.new(0,1)
+versionLabel.Position = UDim2.new(0,5,1,-5)
+versionLabel.BackgroundTransparency = 1
+versionLabel.TextColor3 = Color3.fromRGB(150,150,150)
+versionLabel.Text = "v1.8"
+versionLabel.Font = Enum.Font.SourceSansItalic
+versionLabel.TextSize = 14
+versionLabel.TextXAlignment = Enum.TextXAlignment.Left
+versionLabel.Parent = frame
+
 -- Scroll Frame
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,-10,1,-60)
+scrollFrame.Size = UDim2.new(1,-10,1,-60) -- leaves space for labels
 scrollFrame.Position = UDim2.new(0,5,0,30)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 8
@@ -255,15 +255,17 @@ task.spawn(function()
 							if DEBUG_MODE then print("[DEBUG] Clicking",res.Model.Name) end
 							fireclickdetector(res.Click)
 							task.wait(0.3)
-							-- reliable RemoteEvent firing
+							-- reliable RemoteEvent firing wrapped in pcall
 							repeat
 								if res.Model.Parent then
 									if DEBUG_MODE then print("[DEBUG] Firing RemoteEvent for",res.Model.Name) end
-									if res.Remote.ClassName == "RemoteEvent" then
-									    res.Remote:FireServer(unpack(resourceArgs))
-									elseif res.Remote.ClassName == "RemoteFunction" then
-									    res.Remote:InvokeServer(unpack(resourceArgs))
-									end
+									pcall(function()
+										if res.Remote.ClassName == "RemoteEvent" then
+										    res.Remote:FireServer(unpack(resourceArgs))
+										elseif res.Remote.ClassName == "RemoteFunction" then
+										    res.Remote:InvokeServer(unpack(resourceArgs))
+										end
+									end)
 									task.wait(math.random(0.4,1))
 								end
 							until not res.Model.Parent or Farmer.Mode~=current
