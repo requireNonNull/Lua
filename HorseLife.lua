@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Manual Resources)
 -- Single-select UI checkboxes with scrollable UI and debug mode
 
-local VERSION = "v2.2"
+local VERSION = "v2.3"
 local DEBUG_MODE = true -- Output debug info
 
 local Players = game:GetService("Players")
@@ -196,84 +196,161 @@ local manualResources = {
 local function getResourceTargets(name)
 	local resFolder = workspace:FindFirstChild("Interactions") 
 		and workspace.Interactions:FindFirstChild("Resource")
-	if not resFolder then return {} end
+	if not resFolder then
+		if DEBUG_MODE then print("[DEBUG][getResourceTargets] Resource folder missing") end
+		return {}
+	end
 
 	local targets = {}
-	for _, obj in ipairs(resFolder:GetChildren()) do
-		if obj.Name == name and obj:IsA("Model") then
+	for i, obj in ipairs(resFolder:GetChildren()) do
+		if obj and obj:IsA("Model") and obj.Name == name then
 			local cd = obj:FindFirstChildOfClass("ClickDetector")
-			local re = obj:FindFirstChild("RemoteEvent")
-			if cd and re then
-				table.insert(targets,{Model=obj,Click=cd,Remote=re})
+			local re = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
+			table.insert(targets, { Model = obj, Click = cd, Remote = re })
+
+			if DEBUG_MODE then
+				local fullname = pcall(function() return obj:GetFullName() end) and obj:GetFullName() or tostring(obj)
+				print("[DEBUG][getResourceTargets] #" .. i .. " ->", fullname,
+					" parent=" .. tostring(obj.Parent and obj.Parent.Name or "nil"),
+					" Click=" .. tostring((cd and "yes") or "no"),
+					" RemoteClass=" .. tostring(re and re.ClassName or "nil"),
+					" RemoteName=" .. tostring(re and re.Name or "nil"))
 			end
 		end
 	end
 
-	if DEBUG_MODE then
-		print("[DEBUG] Found", #targets, "targets for", name)
-	end
+	if DEBUG_MODE then print("[DEBUG][getResourceTargets] total targets for", name, "=", #targets) end
 	return targets
 end
 
--- Farming Loop (WITH dynamic re-scan before each TP)
+
+-- Farming Loop (full debug)
 task.spawn(function()
 	while true do
 		if Farmer.Running and Farmer.Mode then
 			local char = player.Character or player.CharacterAdded:Wait()
 
+			-- Coins farming
 			if Farmer.Mode == "Coins" then
+				if DEBUG_MODE then print("[DEBUG][Loop] Farming Coins") end
 				for _, coin in ipairs(getCoinParts()) do
 					if not Farmer.Running or Farmer.Mode ~= "Coins" then break end
 					if coin and coin.Parent then
 						statusLabel.Text = "Collecting Coins..."
+						if DEBUG_MODE then print("[DEBUG][Coins] TP to coin at", tostring(coin.Position)) end
 						tpTo(char, coin.Position)
-						repeat task.wait(0.3) until not coin.Parent
+						repeat 
+							task.wait(0.3) 
+						until not coin.Parent or not Farmer.Running or Farmer.Mode ~= "Coins"
+						if DEBUG_MODE then print("[DEBUG][Coins] Collected one coin") end
 					end
 				end
 
+			-- XP training
 			elseif Farmer.Mode == "XPAgility" or Farmer.Mode == "XPJump" then
+				if DEBUG_MODE then print("[DEBUG][Loop] Training", Farmer.Mode) end
 				statusLabel.Text = "Training " .. Farmer.Mode .. "..."
 				doXP(Farmer.Mode)
 
+			-- Manual resources
 			else
-				-- new logic: repeatedly find a single live resource model, process it, then re-scan
 				local current = Farmer.Mode
+				if DEBUG_MODE then print("[DEBUG][Loop] Farming resource:", current) end
+
 				while Farmer.Running and Farmer.Mode == current do
 					local targets = getResourceTargets(current)
+
 					if #targets == 0 then
 						statusLabel.Text = "Waiting for " .. current .. "..."
+						if DEBUG_MODE then print("[DEBUG][Resource] No live targets for", current) end
 						task.wait(1)
 					else
-						for _, res in ipairs(targets) do
+						for idx, res in ipairs(targets) do
 							if not Farmer.Running or Farmer.Mode ~= current then break end
-							if res.Model and res.Model.Parent then
+
+							local model = res.Model
+							if not model or not model.Parent then
+								if DEBUG_MODE then print("[DEBUG][Resource] Target #" .. idx .. " is gone before farming") end
+							else
+								local fullName = pcall(function() return model:GetFullName() end) and model:GetFullName() or tostring(model)
 								statusLabel.Text = "Farming " .. current .. "..."
-								tpTo(char, res.Model:GetPivot().Position)
+								if DEBUG_MODE then print("[DEBUG][Resource] Processing target #" .. idx, fullName) end
+
+								-- Get position safely
+								local pos
+								local ok, pivot = pcall(function() return model:GetPivot().Position end)
+								if ok then
+									pos = pivot
+								elseif model.PrimaryPart then
+									pos = model.PrimaryPart.Position
+								else
+									for _, d in ipairs(model:GetDescendants()) do
+										if d:IsA("BasePart") then
+											pos = d.Position
+											break
+										end
+									end
+								end
+								if pos then
+									tpTo(char, pos)
+								else
+									if DEBUG_MODE then print("[DEBUG][Resource] No valid position found for", fullName) end
+								end
 
 								-- First click
-								fireclickdetector(res.Click)
-								task.wait(0.6)
+								local okClick, clickErr = pcall(function() fireclickdetector(res.Click) end)
+								if DEBUG_MODE then 
+									print("[DEBUG][Resource] fireclickdetector ok=", tostring(okClick), "err=", tostring(clickErr)) 
+								end
+								task.wait(0.3)
 
-								-- Keep interacting until gone
-								while res.Model and res.Model.Parent and Farmer.Mode == current and Farmer.Running do
-									pcall(function()
-										if res.Remote.ClassName == "RemoteEvent" then
-											res.Remote:FireServer(unpack(resourceArgs))
-										elseif res.Remote.ClassName == "RemoteFunction" then
-											res.Remote:InvokeServer(unpack(resourceArgs))
-										end
-									end)
-									task.wait(math.random(0.9,2))
+								-- Keep interacting until destroyed or timeout
+								local spamStart = tick()
+								local timeout = 8
+								local cycles = 0
+								while model and model.Parent and Farmer.Running and Farmer.Mode == current do
+									if not res.Remote then
+										if DEBUG_MODE then print("[DEBUG][Resource] No remote found for", fullName) end
+										break
+									end
+
+									if res.Remote.ClassName == "RemoteEvent" then
+										local okRemote, err = pcall(function() res.Remote:FireServer(unpack(resourceArgs)) end)
+										if DEBUG_MODE then print("[DEBUG][Resource] FireServer ok=", tostring(okRemote), "err=", tostring(err)) end
+									elseif res.Remote.ClassName == "RemoteFunction" then
+										local okRemote, retOrErr = pcall(function() return res.Remote:InvokeServer(unpack(resourceArgs)) end)
+										if DEBUG_MODE then print("[DEBUG][Resource] InvokeServer ok=", tostring(okRemote), "ret=", tostring(retOrErr)) end
+									else
+										if DEBUG_MODE then print("[DEBUG][Resource] Unknown remote type:", res.Remote.ClassName) end
+									end
+
+									cycles += 1
+									task.wait(math.random(4,10)/10)
+
+									if tick() - spamStart > timeout then
+										if DEBUG_MODE then print("[DEBUG][Resource] Timeout farming", fullName, "after", cycles, "cycles") end
+										break
+									end
+								end
+
+								if DEBUG_MODE then
+									print(string.format("[DEBUG][Resource] Done %s | alive=%s | cycles=%d", 
+										fullName, tostring(model and model.Parent ~= nil), cycles))
 								end
 							end
 						end
 					end
+					task.wait(0.2) -- pause before re-scan
 				end
 			end
 		else
-			statusLabel.Text = "Status: Idle"
+			if statusLabel.Text ~= "Status: Idle" then
+				statusLabel.Text = "Status: Idle"
+				if DEBUG_MODE then print("[DEBUG][Loop] Idle") end
+			end
 			task.wait(1)
 		end
+
 		RunService.RenderStepped:Wait()
 	end
 end)
