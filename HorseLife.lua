@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Manual Resources with HP) v3.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v3.1"
+local VERSION = "v3.2"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -145,7 +145,7 @@ end
 local resourceArgs = {5,true}
 local manualResources = {
 	"AppleBarrel","BerryBush","FallenTree","FoodPallet","LargeBerryBush",
-	"SilkBush","StoneDeposit","Stump","Treasure"
+	"SilkBush","StoneDeposit","Stump","CactusFruit","Treasure"
 }
 
 local Farmer = {Running=false, Mode=nil}
