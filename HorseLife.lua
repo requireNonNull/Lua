@@ -4,12 +4,13 @@
 -- CONFIG ------------------------
 local DEBUG_MODE = true -- set to true to output debug info to console
 
--- UI ------------------------
+-- SERVICES ------------------------
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
+-- UI ------------------------
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FarmUI"
 screenGui.ResetOnSpawn = false
@@ -26,8 +27,7 @@ frame.Active = true
 frame.Parent = screenGui
 
 -- Draggable logic
-local dragging, dragInput, dragStart, startPos
-
+local dragging, dragStart, startPos
 local function update(input)
 	if dragging and input then
 		local delta = input.Position - dragStart
@@ -51,11 +51,9 @@ end)
 
 frame.InputChanged:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseMovement then
-		dragInput = input
+		UserInputService.InputChanged:Connect(update)
 	end
 end)
-
-UserInputService.InputChanged:Connect(update)
 
 -- Title
 local title = Instance.new("TextLabel")
@@ -73,7 +71,7 @@ versionLabel.Size = UDim2.new(1, -10, 0, 20)
 versionLabel.Position = UDim2.new(0, 5, 1, -55)
 versionLabel.BackgroundTransparency = 1
 versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-versionLabel.Text = "v1.6"
+versionLabel.Text = "v1.7"
 versionLabel.Font = Enum.Font.SourceSansItalic
 versionLabel.TextSize = 14
 versionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -123,7 +121,6 @@ local function createCheckbox(text, order, callback)
 		state = val
 		button.Text = (state and "[X] " or "[ ] ") .. text
 		if state then
-			-- uncheck all others
 			for _, other in pairs(checkboxes) do
 				if other ~= setState then
 					other(false)
@@ -143,13 +140,11 @@ local function createCheckbox(text, order, callback)
 	end)
 
 	checkboxes[text] = setState
-	-- update canvas
 	scrollFrame.CanvasSize = UDim2.new(0,0,0,uiLayout.AbsoluteContentSize.Y + 10)
 end
 
 -- Helpers
 local character = player.Character or player.CharacterAdded:Wait()
-
 local function tpTo(char, pos)
 	if char and char:FindFirstChild("HumanoidRootPart") then
 		char:PivotTo(CFrame.new(pos + Vector3.new(0,10,0)))
@@ -203,23 +198,24 @@ end
 
 -- Resources
 local resourceArgs = {5,true}
-local function getResourceModels(name)
-	local resFolder = workspace:WaitForChild("Interactions"):WaitForChild("Resource")
+local function getResourceTargets(resName)
+	local resFolder = workspace:FindFirstChild("Interactions") 
+		and workspace.Interactions:FindFirstChild("Resource")
+	if not resFolder then return {} end
+
 	local targets = {}
-	local model = resFolder:FindFirstChild(name)
-	if model then
-		for _, obj in ipairs(model:GetChildren()) do
-			if obj:IsA("Model") then
-				local cd = obj:FindFirstChildOfClass("ClickDetector")
-				local re = obj:FindFirstChild("RemoteEvent")
-				if cd and re then
-					table.insert(targets,{Model=obj,Click=cd,Remote=re})
-				end
+	for _, obj in ipairs(resFolder:GetChildren()) do
+		if obj:IsA("Model") and obj.Name == resName then
+			local cd = obj:FindFirstChildOfClass("ClickDetector")
+			local re = obj:FindFirstChild("RemoteEvent")
+			if cd and re then
+				table.insert(targets, {Model=obj, Click=cd, Remote=re})
 			end
 		end
 	end
+
 	if DEBUG_MODE then
-		print("[DEBUG] Found", #targets, "targets for resource", name)
+		print("[DEBUG] Found", #targets, "targets for resource", resName)
 	end
 	return targets
 end
@@ -244,7 +240,7 @@ task.spawn(function()
 				doXP(Farmer.Mode)
 			else
 				local currentMode = Farmer.Mode
-				local targets = getResourceModels(Farmer.Mode)
+				local targets = getResourceTargets(Farmer.Mode)
 				if #targets > 0 then
 					for _, res in ipairs(targets) do
 						if not Farmer.Running or Farmer.Mode ~= currentMode then break end
@@ -254,7 +250,9 @@ task.spawn(function()
 							fireclickdetector(res.Click)
 							task.wait(0.3)
 							repeat
-								if DEBUG_MODE then print("[DEBUG] Firing RemoteEvent for", res.Model.Name) end
+								if DEBUG_MODE then
+									print("[DEBUG] Firing RemoteEvent for", res.Model.Name)
+								end
 								res.Remote:FireServer(unpack(resourceArgs))
 								task.wait(math.random(4,10)/10)
 							until not res.Model.Parent or Farmer.Mode ~= currentMode
@@ -294,16 +292,19 @@ createCheckbox("XP Jump", order, function(state)
 end)
 order = order + 1
 
--- Add all resources dynamically
-local resFolder = workspace:WaitForChild("Interactions"):WaitForChild("Resource")
-for _, resource in ipairs(resFolder:GetChildren()) do
-	if resource:IsA("Folder") or resource:IsA("Model") then
-		local resName = resource.Name
-		createCheckbox(resName, order, function(state)
-			Farmer.Running = state
-			Farmer.Mode = state and resName or nil
-		end)
-		order = order + 1
+-- Add all resources dynamically (direct children of Resource folder)
+local resFolder = workspace:FindFirstChild("Interactions") 
+	and workspace.Interactions:FindFirstChild("Resource")
+if resFolder then
+	for _, resource in ipairs(resFolder:GetChildren()) do
+		if resource:IsA("Model") then
+			local resName = resource.Name
+			createCheckbox(resName, order, function(state)
+				Farmer.Running = state
+				Farmer.Mode = state and resName or nil
+			end)
+			order = order + 1
+		end
 	end
 end
 
