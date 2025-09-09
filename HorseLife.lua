@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Manual Resources with HP) v3.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v3.0"
+local VERSION = "v3.1"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -232,7 +232,7 @@ local function startFarming()
 			-- Fire ClickDetector
 			pcall(function() fireclickdetector(obj:FindFirstChildOfClass("ClickDetector")) end)
 
-			local remote = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
+			--local remote = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
 
 			-- Infinite spam until HP gone or object disappears
 			local spamStart = tick()
@@ -243,13 +243,13 @@ local function startFarming()
 					break
 				end
 
-				if remote then
-					pcall(function()
-						if remote.ClassName == "RemoteEvent" then remote:FireServer(unpack(resourceArgs))
-						elseif remote.ClassName == "RemoteFunction" then remote:InvokeServer(unpack(resourceArgs)) end
-						if DEBUG_MODE then print("[DEBUG] Fired remote for", obj.Name) end
-					end)
-				end
+				--if remote then
+					--pcall(function()
+						--if remote.ClassName == "RemoteEvent" then remote:FireServer(unpack(resourceArgs))
+						--elseif remote.ClassName == "RemoteFunction" then remote:InvokeServer(unpack(resourceArgs)) end
+						--if DEBUG_MODE then print("[DEBUG] Fired remote for", obj.Name) end
+					--end)
+				--end
 
 				task.wait(0.4)
 				if tick()-spamStart > 40 then -- safety timeout for high HP
