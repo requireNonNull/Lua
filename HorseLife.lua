@@ -32,7 +32,7 @@ versionLabel.Size = UDim2.new(1, -10, 0, 20)
 versionLabel.Position = UDim2.new(0, 5, 1, -55)
 versionLabel.BackgroundTransparency = 1
 versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-versionLabel.Text = "v1.2"
+versionLabel.Text = "v1.3"
 versionLabel.Font = Enum.Font.SourceSansItalic
 versionLabel.TextSize = 14
 versionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -104,17 +104,40 @@ local Farmer = {
     Mode = nil,
 }
 
--- Coin spots
+-- Coins (only collect "Coins" parts)
 local function getCoinParts()
-    local coinsFolder = workspace:FindFirstChild("Coins")
-    if not coinsFolder then return {} end
-    return coinsFolder:GetChildren()
+    local spawned = workspace:FindFirstChild("Interactions")
+        and workspace.Interactions:FindFirstChild("CurrencyNodes")
+        and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
+    if not spawned then return {} end
+
+    local coins = {}
+    for _, obj in ipairs(spawned:GetChildren()) do
+        if (obj:IsA("BasePart") or obj:IsA("MeshPart")) and obj.Name == "Coins" then
+            table.insert(coins, obj)
+        end
+    end
+    return coins
 end
 
--- XP (safe lookup)
-local xpFolder = workspace:FindFirstChild("Interactions") 
-    and workspace.Interactions:FindFirstChild("CurrencyNodes")
-    and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
+
+
+-- XP parts (filter specific XP names)
+local function getXPParts()
+    local spawned = workspace:FindFirstChild("Interactions")
+        and workspace.Interactions:FindFirstChild("CurrencyNodes")
+        and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
+    if not spawned then return {} end
+
+    local xpParts = {}
+    for _, name in ipairs({"XPAgility", "XPJump"}) do
+        local part = spawned:FindFirstChild(name)
+        if part then
+            table.insert(xpParts, part)
+        end
+    end
+    return xpParts
+end
 
 local function doXP(xpName)
     if xpFolder then
