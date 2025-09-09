@@ -160,10 +160,11 @@ task.spawn(function()
 
             -- Resources
             else
+                local currentMode = Farmer.Mode
                 local targets = getResourceModels(Farmer.Mode)
                 if #targets > 0 then
                     for _, res in ipairs(targets) do
-                        if not Farmer.Running or Farmer.Mode ~= Farmer.Mode then break end
+                        if not Farmer.Running or Farmer.Mode ~= currentMode then break end
                         if res.Model and res.Model.Parent then
                             statusLabel.Text = "Farming " .. Farmer.Mode .. "..."
                             tpTo(char, res.Model:GetPivot().Position)
@@ -176,7 +177,7 @@ task.spawn(function()
                             repeat
                                 res.Remote:FireServer(unpack(resourceArgs))
                                 task.wait(math.random(4, 10) / 10) -- 0.4 to 1s
-                            until not res.Model.Parent or Farmer.Mode ~= Farmer.Mode
+                            until not res.Model.Parent or Farmer.Mode ~= currentMode
                         end
                     end
                 else
@@ -209,14 +210,12 @@ if xpFolder then
     end)
 end
 
--- Auto-add all resources dynamically
-local resFolder = workspace:WaitForChild("Interactions"):WaitForChild("Resource")
-local order = 3
 for _, resource in ipairs(resFolder:GetChildren()) do
     if resource:IsA("Folder") or resource:IsA("Model") then
-        createCheckbox(resource.Name, order, function(state)
+        local resName = resource.Name
+        createCheckbox(resName, order, function(state)
             Farmer.Running = state
-            Farmer.Mode = state and resource.Name or nil
+            Farmer.Mode = state and resName or nil
         end)
         order = order + 1
     end
