@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v4.3"
+local VERSION = "v4.3 fix"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -147,12 +147,6 @@ local teleportSpots = {
     Vector3.new(-661, 56, 375)
 }
 
--- helper: random teleport
-local function randomTeleport(char)
-    local spot = teleportSpots[math.random(1, #teleportSpots)]
-    print("[DEBUG] Random teleporting to:", spot)
-    tpTo(char, spot)
-end
 
 -- ==========================
 -- Helper functions
@@ -164,6 +158,13 @@ local function tpTo(char,pos)
 			if DEBUG_MODE then print("[DEBUG] Teleported to", pos) end
 		end)
 	end
+end
+
+-- helper: random teleport
+local function randomTeleport(char)
+    local spot = teleportSpots[math.random(1, #teleportSpots)]
+    print("[DEBUG] Random teleporting to:", spot)
+    tpTo(char, spot)
 end
 
 -- ==========================
