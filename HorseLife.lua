@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Manual Resources)
 -- Single-select UI checkboxes with scrollable UI and debug mode
 
-local VERSION = "v2.1"
+local VERSION = "v2.2"
 local DEBUG_MODE = true -- Output debug info
 
 local Players = game:GetService("Players")
@@ -65,7 +65,7 @@ title.Parent = frame
 -- Status
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1,-10,0,20)
-statusLabel.AnchorPoint = Vector2.new(0,1)
+--statusLabel.AnchorPoint = Vector2.new(0,1)
 statusLabel.Position = UDim2.new(0,5,1,-25)
 statusLabel.BackgroundTransparency = 1
 statusLabel.TextColor3 = Color3.fromRGB(200,200,200)
@@ -223,7 +223,7 @@ task.spawn(function()
 
 			if Farmer.Mode == "Coins" then
 				for _, coin in ipairs(getCoinParts()) do
-					if not Farmer.Running or Farmer.Mode~="Coins" then break end
+					if not Farmer.Running or Farmer.Mode ~= "Coins" then break end
 					if coin and coin.Parent then
 						statusLabel.Text = "Collecting Coins..."
 						tpTo(char, coin.Position)
@@ -231,101 +231,52 @@ task.spawn(function()
 					end
 				end
 
-			elseif Farmer.Mode=="XPAgility" or Farmer.Mode=="XPJump" then
-				statusLabel.Text="Training "..Farmer.Mode.."..."
+			elseif Farmer.Mode == "XPAgility" or Farmer.Mode == "XPJump" then
+				statusLabel.Text = "Training " .. Farmer.Mode .. "..."
 				doXP(Farmer.Mode)
 
 			else
 				-- new logic: repeatedly find a single live resource model, process it, then re-scan
 				local current = Farmer.Mode
-				local resFolder = workspace:FindFirstChild("Interactions")
-					and workspace.Interactions:FindFirstChild("Resource")
+				while Farmer.Running and Farmer.Mode == current do
+					local targets = getResourceTargets(current)
+					if #targets == 0 then
+						statusLabel.Text = "Waiting for " .. current .. "..."
+						task.wait(1)
+					else
+						for _, res in ipairs(targets) do
+							if not Farmer.Running or Farmer.Mode ~= current then break end
+							if res.Model and res.Model.Parent then
+								statusLabel.Text = "Farming " .. current .. "..."
+								tpTo(char, res.Model:GetPivot().Position)
 
-				if not resFolder then
-					statusLabel.Text = "Waiting for Resource folder..."
-					task.wait(2)
-				else
-					-- loop: find one matching resource and process it; repeat until none left or mode changed
-					local foundAny = false
-					repeat
-						if not Farmer.Running or Farmer.Mode~=current then break end
+								-- First click
+								fireclickdetector(res.Click)
+								task.wait(0.6)
 
-						-- find a single live model of this resource type
-						local found = nil
-						for _, obj in ipairs(resFolder:GetChildren()) do
-							if not Farmer.Running or Farmer.Mode~=current then break end
-							if obj and obj:IsA("Model") and obj.Name == current and obj.Parent then
-								local cd = obj:FindFirstChildOfClass("ClickDetector")
-								local re = obj:FindFirstChild("RemoteEvent") or obj:FindFirstChild("RemoteFunction")
-								if cd and re then
-									found = { Model = obj, Click = cd, Remote = re }
-									break
+								-- Keep interacting until gone
+								while res.Model and res.Model.Parent and Farmer.Mode == current and Farmer.Running do
+									pcall(function()
+										if res.Remote.ClassName == "RemoteEvent" then
+											res.Remote:FireServer(unpack(resourceArgs))
+										elseif res.Remote.ClassName == "RemoteFunction" then
+											res.Remote:InvokeServer(unpack(resourceArgs))
+										end
+									end)
+									task.wait(math.random(0.9,2))
 								end
 							end
 						end
-
-						if not found then
-							-- nothing right now
-							if DEBUG_MODE then print("[DEBUG] No live resource found for", current) end
-							break
-						end
-
-						foundAny = true
-
-						-- double-check it's still parented before teleporting
-						if not (found.Model and found.Model.Parent) then
-							-- it vanished; continue to next iteration to find another
-							if DEBUG_MODE then print("[DEBUG] Found resource vanished before TP:", found.Model and found.Model.Name) end
-							task.wait(0.1)
-							continue
-						end
-
-						-- Process the found resource
-						statusLabel.Text = "Farming " .. current .. "..."
-						tpTo(char, found.Model:GetPivot().Position)
-
-						if DEBUG_MODE then print("[DEBUG] Clicking", found.Model.Name) end
-						pcall(function() fireclickdetector(found.Click) end)
-						task.wait(0.25)
-
-						-- Spam remote until model disappears (or mode changes)
-						local timeout = 8
-						local elapsed = 0
-						repeat
-							if not (found.Model and found.Model.Parent) then break end
-							if DEBUG_MODE then print("[DEBUG] Firing remote for", found.Model.Name, "(", (found.Remote and found.Remote.ClassName or "nil"), ")") end
-							pcall(function()
-								if found.Remote and found.Remote.ClassName == "RemoteEvent" then
-									found.Remote:FireServer(unpack(resourceArgs))
-								elseif found.Remote and found.Remote.ClassName == "RemoteFunction" then
-									found.Remote:InvokeServer(unpack(resourceArgs))
-								end
-							end)
-							local waitTime = math.random(4,10)/10 -- 0.4 - 1.0
-							task.wait(waitTime)
-							elapsed = elapsed + waitTime
-						until not (found.Model and found.Model.Parent) or Farmer.Mode~=current or elapsed >= timeout
-
-						-- small breathe before re-scan to avoid tight loop
-						task.wait(0.15)
-					until not Farmer.Running or Farmer.Mode~=current
-
-					-- if no resource was found at all, wait for them to spawn
-					if not foundAny then
-						statusLabel.Text = "Waiting for "..current.."..."
-						task.wait(1)
 					end
 				end
 			end
 		else
-			statusLabel.Text="Status: Idle"
+			statusLabel.Text = "Status: Idle"
 			task.wait(1)
 		end
-
 		RunService.RenderStepped:Wait()
 	end
 end)
-
 
 -- UI Setup ------------------------
 local order=0
