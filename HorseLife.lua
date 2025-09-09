@@ -37,6 +37,18 @@ statusLabel.TextSize = 16
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.Parent = frame
 
+-- Version label
+local versionLabel = Instance.new("TextLabel")
+versionLabel.Size = UDim2.new(1, -10, 0, 20)
+versionLabel.Position = UDim2.new(0, 5, 1, -50)
+versionLabel.BackgroundTransparency = 1
+versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+versionLabel.Text = "v1.0"
+versionLabel.Font = Enum.Font.SourceSansItalic
+versionLabel.TextSize = 14
+versionLabel.TextXAlignment = Enum.TextXAlignment.Left
+versionLabel.Parent = frame
+
 -- Helpers ------------------------
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
