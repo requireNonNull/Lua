@@ -9,7 +9,7 @@ screenGui.IgnoreGuiInset = true
 screenGui.Parent = game:GetService("CoreGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 220, 0, 260)
+frame.Size = UDim2.new(0, 220, 0, 280)
 frame.Position = UDim2.new(0, 50, 0, 150)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
@@ -26,6 +26,18 @@ title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
 title.Parent = frame
 
+-- Version label
+local versionLabel = Instance.new("TextLabel")
+versionLabel.Size = UDim2.new(1, -10, 0, 20)
+versionLabel.Position = UDim2.new(0, 5, 1, -55)
+versionLabel.BackgroundTransparency = 1
+versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+versionLabel.Text = "v1.2"
+versionLabel.Font = Enum.Font.SourceSansItalic
+versionLabel.TextSize = 14
+versionLabel.TextXAlignment = Enum.TextXAlignment.Left
+versionLabel.Parent = frame
+
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, -10, 0, 25)
 statusLabel.Position = UDim2.new(0, 5, 1, -30)
@@ -36,18 +48,6 @@ statusLabel.Font = Enum.Font.SourceSans
 statusLabel.TextSize = 16
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.Parent = frame
-
--- Version label
-local versionLabel = Instance.new("TextLabel")
-versionLabel.Size = UDim2.new(1, -10, 0, 20)
-versionLabel.Position = UDim2.new(0, 5, 1, -50)
-versionLabel.BackgroundTransparency = 1
-versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-versionLabel.Text = "v1.0"
-versionLabel.Font = Enum.Font.SourceSansItalic
-versionLabel.TextSize = 14
-versionLabel.TextXAlignment = Enum.TextXAlignment.Left
-versionLabel.Parent = frame
 
 -- Helpers ------------------------
 local Players = game:GetService("Players")
@@ -121,11 +121,11 @@ local function doXP(xpName)
         local part = xpFolder:FindFirstChild(xpName)
         if part then
             tpTo(player.Character, part.Position)
-            task.wait(math.random(4, 10) / 10)
+            -- wait until XP part disappears
+            repeat task.wait(0.3) until not part.Parent
         end
     end
 end
-
 
 -- Resources
 local resourceArgs = {5, true}
@@ -161,7 +161,8 @@ task.spawn(function()
                     if coin and coin:IsA("BasePart") and coin.Parent then
                         statusLabel.Text = "Collecting Coins..."
                         tpTo(char, coin.Position)
-                        task.wait(4)
+                        -- wait until coin disappears
+                        repeat task.wait(0.3) until not coin.Parent
                     end
                 end
 
@@ -185,10 +186,10 @@ task.spawn(function()
                             fireclickdetector(res.Click)
                             task.wait(0.3)
 
-                            -- Then spam RemoteEvent
+                            -- Then spam RemoteEvent until object disappears
                             repeat
                                 res.Remote:FireServer(unpack(resourceArgs))
-                                task.wait(math.random(4, 10) / 10) -- 0.4 to 1s
+                                task.wait(math.random(4, 10) / 10)
                             until not res.Model.Parent or Farmer.Mode ~= currentMode
                         end
                     end
@@ -222,6 +223,9 @@ if xpFolder then
     end)
 end
 
+-- Auto-add all resources dynamically
+local resFolder = workspace:WaitForChild("Interactions"):WaitForChild("Resource")
+local order = 3
 for _, resource in ipairs(resFolder:GetChildren()) do
     if resource:IsA("Folder") or resource:IsA("Model") then
         local resName = resource.Name
