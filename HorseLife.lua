@@ -99,8 +99,21 @@ local function getCoinParts()
     return coinsFolder:GetChildren()
 end
 
--- XP
-local xpRemote = workspace:WaitForChild("Interactions"):WaitForChild("XP"):WaitForChild("RemoteFunction")
+-- XP (safe lookup)
+local xpFolder = workspace:FindFirstChild("Interactions") 
+    and workspace.Interactions:FindFirstChild("CurrencyNodes")
+    and workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned")
+
+local function doXP(xpName)
+    if xpFolder then
+        local part = xpFolder:FindFirstChild(xpName)
+        if part then
+            tpTo(player.Character, part.Position)
+            task.wait(math.random(4, 10) / 10)
+        end
+    end
+end
+
 
 -- Resources
 local resourceArgs = {5, true}
@@ -142,10 +155,8 @@ task.spawn(function()
 
             -- XP
             elseif Farmer.Mode == "XPAgility" or Farmer.Mode == "XPJump" then
-                local xpType = Farmer.Mode == "XPAgility" and "Agility" or "Jump"
-                statusLabel.Text = "Training " .. xpType .. "..."
-                xpRemote:InvokeServer(xpType)
-                task.wait(math.random(4, 10) / 10) -- 0.4 to 1s
+                statusLabel.Text = "Training " .. Farmer.Mode .. "..."
+                doXP(Farmer.Mode)
 
             -- Resources
             else
@@ -186,15 +197,17 @@ createCheckbox("Coins", 0, function(state)
     Farmer.Mode = state and "Coins" or nil
 end)
 
-createCheckbox("XP Agility", 1, function(state)
-    Farmer.Running = state
-    Farmer.Mode = state and "XPAgility" or nil
-end)
+if xpFolder then
+    createCheckbox("XP Agility", 1, function(state)
+        Farmer.Running = state
+        Farmer.Mode = state and "XPAgility" or nil
+    end)
 
-createCheckbox("XP Jump", 2, function(state)
-    Farmer.Running = state
-    Farmer.Mode = state and "XPJump" or nil
-end)
+    createCheckbox("XP Jump", 2, function(state)
+        Farmer.Running = state
+        Farmer.Mode = state and "XPJump" or nil
+    end)
+end
 
 -- Auto-add all resources dynamically
 local resFolder = workspace:WaitForChild("Interactions"):WaitForChild("Resource")
