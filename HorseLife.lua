@@ -64,7 +64,8 @@ title.Parent = frame
 -- Version
 local versionLabel = Instance.new("TextLabel")
 versionLabel.Size = UDim2.new(1,-10,0,20)
-versionLabel.Position = UDim2.new(0,5,1,-55)
+versionLabel.AnchorPoint = Vector2.new(0,1)
+versionLabel.Position = UDim2.new(0,5,1,-5) -- 5 pixels above bottom
 versionLabel.BackgroundTransparency = 1
 versionLabel.TextColor3 = Color3.fromRGB(150,150,150)
 versionLabel.Text = "v1.8"
@@ -76,7 +77,8 @@ versionLabel.Parent = frame
 -- Status
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1,-10,0,25)
-statusLabel.Position = UDim2.new(0,5,1,-30)
+statusLabel.AnchorPoint = Vector2.new(0,1)
+statusLabel.Position = UDim2.new(0,5,1,-25)
 statusLabel.BackgroundTransparency = 1
 statusLabel.TextColor3 = Color3.fromRGB(200,200,200)
 statusLabel.Text = "Status: Idle"
