@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v4.0"
+local VERSION = "v4.1"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -147,21 +147,21 @@ end
 -- ==========================
 -- Each resource has a timeout (seconds) for how long we try to farm it
 local resourceTimeouts = {
-	Coins = 10,
-	XPAgility = 10,
-	XPJump = 10,
-	AppleBarrel = 15,
-	BerryBush = 15,
-	FallenTree = 20,
-	FoodPallet = 15,
-	LargeBerryBush = 20,
-	SilkBush = 15,
-	StoneDeposit = 25,
-	Stump = 15,
-	CactusFruit = 15,
-	Treasure = 20,
-	DailyChest = 12,
-	DiggingNodes = 15
+	Coins = 5,
+	XPAgility = 5,
+	XPJump = 5,
+	AppleBarrel = 5 / 2,
+	BerryBush = 20 / 2,
+	FallenTree = 25 / 2,
+	FoodPallet = 10 / 2,
+	LargeBerryBush = 72 / 2,
+	SilkBush = 200 / 2,
+	StoneDeposit = 50 / 2,
+	Stump = 35 / 2,
+	CactusFruit = 60 / 2,
+	Treasure = 50 / 2,
+	DailyChest = 200 / 2,
+	DiggingNodes = 20 / 2
 }
 
 -- Each resource's path
@@ -244,6 +244,13 @@ local function startFarming()
 				if DEBUG_MODE then print("[DEBUG] Moving to object at", pos) end
 				tpTo(char,pos)
 				task.wait(0.3)
+			end
+
+			local cd = obj:FindFirstChildOfClass("ClickDetector")
+			if cd then
+			    print("Found ClickDetector for:", obj.Name, "Parent:", cd.Parent:GetFullName())
+			else
+			    print("No ClickDetector found for", obj.Name)
 			end
 
 			-- Fire ClickDetector if exists
