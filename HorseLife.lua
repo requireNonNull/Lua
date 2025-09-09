@@ -81,7 +81,7 @@ versionLabel.AnchorPoint = Vector2.new(0,1)
 versionLabel.Position = UDim2.new(0,5,1,-5)
 versionLabel.BackgroundTransparency = 1
 versionLabel.TextColor3 = Color3.fromRGB(150,150,150)
-versionLabel.Text = "v1.9"
+versionLabel.Text = "v2.0"
 versionLabel.Font = Enum.Font.SourceSansItalic
 versionLabel.TextSize = 14
 versionLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -211,12 +211,13 @@ local function getResourceTargets(name)
 	if not resFolder then return {} end
 
 	local targets = {}
-	local obj = resFolder:FindFirstChild(name)
-	if obj and obj:IsA("Model") then
-		local cd = obj:FindFirstChildOfClass("ClickDetector")
-		local re = obj:FindFirstChild("RemoteEvent")
-		if cd and re then
-			table.insert(targets,{Model=obj,Click=cd,Remote=re})
+	for _, obj in ipairs(resFolder:GetChildren()) do
+		if obj.Name == name and obj:IsA("Model") then
+			local cd = obj:FindFirstChildOfClass("ClickDetector")
+			local re = obj:FindFirstChild("RemoteEvent")
+			if cd and re then
+				table.insert(targets,{Model=obj,Click=cd,Remote=re})
+			end
 		end
 	end
 
@@ -255,7 +256,6 @@ task.spawn(function()
 							if DEBUG_MODE then print("[DEBUG] Clicking",res.Model.Name) end
 							fireclickdetector(res.Click)
 							task.wait(0.3)
-							-- reliable RemoteEvent firing wrapped in pcall
 							repeat
 								if res.Model.Parent then
 									if DEBUG_MODE then print("[DEBUG] Firing RemoteEvent for",res.Model.Name) end
@@ -266,14 +266,13 @@ task.spawn(function()
 										    res.Remote:InvokeServer(unpack(resourceArgs))
 										end
 									end)
-									task.wait(math.random(0.4,1))
+									task.wait(math.random(0.8,2))
 								end
 							until not res.Model.Parent or Farmer.Mode~=current
 						end
 					end
 				else
 					statusLabel.Text="Waiting for "..Farmer.Mode.."..."
-					if DEBUG_MODE then print("[DEBUG] No targets for",Farmer.Mode) end
 					task.wait(2)
 				end
 			end
