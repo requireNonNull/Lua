@@ -44,7 +44,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 
 local function tpTo(char, pos)
     if char and char:FindFirstChild("HumanoidRootPart") then
-        char:PivotTo(CFrame.new(pos + Vector3.new(0, 3, 0)))
+        char:PivotTo(CFrame.new(pos + Vector3.new(0, 10, 0)))
     end
 end
 
@@ -149,7 +149,7 @@ task.spawn(function()
                     if coin and coin:IsA("BasePart") and coin.Parent then
                         statusLabel.Text = "Collecting Coins..."
                         tpTo(char, coin.Position)
-                        task.wait(0.3)
+                        task.wait(4)
                     end
                 end
 
