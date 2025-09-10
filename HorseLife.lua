@@ -1,14 +1,13 @@
--- // AutoFarm Script (Timeout-based) v4.0
--- Single-select UI checkboxes with scrollable UI and full debug
+-- // AutoFarm Script (Timeout-based) v5.0
+-- Complete version with Safe Mode and full UI
 
-local VERSION = "v4.7"
-local DEBUG_MODE = true -- Always debug every step
+local VERSION = "v5.1"
+local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 
 -- ==========================
 -- UI Setup
@@ -36,7 +35,6 @@ local function update(input)
 			startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 end
-
 frame.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = true
@@ -65,18 +63,7 @@ title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
 title.Parent = frame
 
--- Close Button (top right)
-local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0,30,1,0)
-closeButton.Position = UDim2.new(1,-30,0,0)
-closeButton.BackgroundColor3 = Color3.fromRGB(150,50,50)
-closeButton.TextColor3 = Color3.fromRGB(255,255,255)
-closeButton.Text = "❌"
-closeButton.Font = Enum.Font.SourceSansBold
-closeButton.TextSize = 18
-closeButton.Parent = title
-
--- Add this under UI Setup (after title)
+-- Settings Button (top left)
 local settingsButton = Instance.new("TextButton")
 settingsButton.Size = UDim2.new(0,30,1,0)
 settingsButton.Position = UDim2.new(0,0,0,0)
@@ -87,7 +74,18 @@ settingsButton.Font = Enum.Font.SourceSansBold
 settingsButton.TextSize = 18
 settingsButton.Parent = title
 
--- Settings Frame (hidden by default)
+-- Close/Delete Button (top right)
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0,30,1,0)
+closeButton.Position = UDim2.new(1,-30,0,0)
+closeButton.BackgroundColor3 = Color3.fromRGB(150,50,50)
+closeButton.TextColor3 = Color3.fromRGB(255,255,255)
+closeButton.Text = "❌"
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 18
+closeButton.Parent = title
+
+-- Settings Frame
 local settingsFrame = Instance.new("Frame")
 settingsFrame.Size = UDim2.new(1,-10,1,-60)
 settingsFrame.Position = UDim2.new(0,5,0,30)
@@ -95,48 +93,49 @@ settingsFrame.BackgroundTransparency = 1
 settingsFrame.Visible = false
 settingsFrame.Parent = frame
 
--- inside your UI creation code, in the Settings area
-local safeModeEnabled = false -- default OFF
-
+-- Safe Mode Button
+local safeModeEnabled = false
 local safeModeButton = Instance.new("TextButton")
 safeModeButton.Size = UDim2.new(1, -10, 0, 30)
-safeModeButton.Position = UDim2.new(0, 5, 0, 5) -- top of settings
-safeModeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-safeModeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+safeModeButton.Position = UDim2.new(0,5,0,5)
+safeModeButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+safeModeButton.TextColor3 = Color3.fromRGB(255,255,255)
 safeModeButton.Font = Enum.Font.SourceSansBold
 safeModeButton.TextSize = 18
 safeModeButton.Text = "Safe Mode: OFF"
 safeModeButton.Parent = settingsFrame
 
+safeModeButton.MouseButton1Click:Connect(function()
+	safeModeEnabled = not safeModeEnabled
+	if safeModeEnabled then
+		safeModeButton.Text = "Safe Mode: ON"
+		safeModeButton.BackgroundColor3 = Color3.fromRGB(30,150,30)
+	else
+		safeModeButton.Text = "Safe Mode: OFF"
+		safeModeButton.BackgroundColor3 = Color3.fromRGB(150,30,30)
+	end
+end)
+
+-- Teleport Speed Slider
 local settingsLabel = Instance.new("TextLabel")
 settingsLabel.Size = UDim2.new(1,0,0,30)
+settingsLabel.Position = UDim2.new(0,0,0,40)
 settingsLabel.BackgroundTransparency = 1
 settingsLabel.TextColor3 = Color3.fromRGB(255,255,255)
-settingsLabel.Text = "Teleport Speed"
+settingsLabel.Text = "Teleport Delay"
 settingsLabel.Font = Enum.Font.SourceSansBold
 settingsLabel.TextSize = 16
 settingsLabel.Parent = settingsFrame
 
--- Fake Slider
 local sliderBack = Instance.new("Frame")
 sliderBack.Size = UDim2.new(1,-20,0,10)
-sliderBack.Position = UDim2.new(0,10,0,40)
+sliderBack.Position = UDim2.new(0,10,0,70)
 sliderBack.BackgroundColor3 = Color3.fromRGB(100,100,100)
 sliderBack.BorderSizePixel = 0
 sliderBack.Parent = settingsFrame
 
-local sliderValueLabel = Instance.new("TextLabel")
-sliderValueLabel.Size = UDim2.new(1,0,0,20)
-sliderValueLabel.Position = UDim2.new(0,0,0,60)
-sliderValueLabel.BackgroundTransparency = 1
-sliderValueLabel.TextColor3 = Color3.fromRGB(200,200,200)
-sliderValueLabel.Text = "Delay: 0.3s"
-sliderValueLabel.Font = Enum.Font.SourceSans
-sliderValueLabel.TextSize = 16
-sliderValueLabel.Parent = settingsFrame
-
 local sliderFill = Instance.new("Frame")
-sliderFill.Size = UDim2.new(0.5,0,1,0) -- default 50%
+sliderFill.Size = UDim2.new(0.5,0,1,0)
 sliderFill.BackgroundColor3 = Color3.fromRGB(0,200,0)
 sliderFill.BorderSizePixel = 0
 sliderFill.Parent = sliderBack
@@ -147,6 +146,16 @@ sliderButton.Position = UDim2.new(0.5,-10,0,-5)
 sliderButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
 sliderButton.Text = ""
 sliderButton.Parent = sliderBack
+
+local sliderValueLabel = Instance.new("TextLabel")
+sliderValueLabel.Size = UDim2.new(1,0,0,20)
+sliderValueLabel.Position = UDim2.new(0,0,0,90)
+sliderValueLabel.BackgroundTransparency = 1
+sliderValueLabel.TextColor3 = Color3.fromRGB(200,200,200)
+sliderValueLabel.Text = "Delay: 0.3s"
+sliderValueLabel.Font = Enum.Font.SourceSans
+sliderValueLabel.TextSize = 16
+sliderValueLabel.Parent = settingsFrame
 
 -- Status
 local statusLabel = Instance.new("TextLabel")
@@ -175,46 +184,69 @@ uiLayout.Parent = scrollFrame
 uiLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 -- ==========================
--- Checkbox creation
+-- Helper Variables
 -- ==========================
+local Farmer = {Running=false, Mode=nil}
+local TeleportDelay = 0.3
+local draggingSlider = false
 local checkboxes = {}
-local function createCheckbox(text, order, callback)
-	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1,-10,0,30)
-	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
-	button.TextColor3 = Color3.fromRGB(200,200,200)
-	button.Text = "[ ] "..text
-	button.Font = Enum.Font.SourceSansBold
-	button.TextSize = 16
-	button.LayoutOrder = order
-	button.Parent = scrollFrame
 
-	local state = false
-	local function setState(val)
-		state = val
-		button.Text = (state and "[☑] " or "[ ] ") .. text
-		if state then
-			for _, other in pairs(checkboxes) do
-				if other ~= setState then
-					other(false)
-				end
-			end
-			callback(true)
-		else
-			callback(false)
-		end
-		if DEBUG_MODE then
-			print("[DEBUG] Checkbox", text, "set to", state)
-		end
+-- Slider drag logic
+sliderButton.MouseButton1Down:Connect(function() draggingSlider = true end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingSlider = false end
+end)
+RunService.RenderStepped:Connect(function()
+	if draggingSlider then
+		local mouseX = UserInputService:GetMouseLocation().X
+		local relative = math.clamp((mouseX - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X,0,1)
+		sliderButton.Position = UDim2.new(relative,-10,0,-5)
+		sliderFill.Size = UDim2.new(relative,0,1,0)
+		TeleportDelay = 0.1 + (1 - relative) * 0.9
+		sliderValueLabel.Text = string.format("Delay: %.1fs", TeleportDelay)
 	end
-	button.MouseButton1Click:Connect(function()
-		setState(not state)
-	end)
-	checkboxes[text] = setState
-	scrollFrame.CanvasSize = UDim2.new(0,0,0,uiLayout.AbsoluteContentSize.Y + 10)
+end)
+
+-- Toggle settings
+settingsButton.MouseButton1Click:Connect(function()
+	scrollFrame.Visible = not scrollFrame.Visible
+	settingsFrame.Visible = not settingsFrame.Visible
+end)
+
+-- ==========================
+-- Safe Wait Helper
+-- ==========================
+local function safeWait(base)
+	if safeModeEnabled then
+		task.wait(base + math.random() * 0.5)
+	else
+		task.wait(base)
+	end
 end
 
--- Random teleport positions
+local function randomizePos(pos)
+	if safeModeEnabled then
+		local offset = Vector3.new((math.random()-0.5)*2,0,(math.random()-0.5)*2)
+		return pos + offset
+	end
+	return pos
+end
+
+-- ==========================
+-- Teleport Function
+-- ==========================
+local function tpTo(char,pos)
+	if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
+	local hrp = char.HumanoidRootPart
+	pcall(function()
+		hrp.CFrame = CFrame.new(randomizePos(pos) + Vector3.new(0,10,0))
+	end)
+	if DEBUG_MODE then print("[DEBUG][TP] Teleported to", pos) end
+end
+
+-- ==========================
+-- Random Teleport
+-- ==========================
 local teleportSpots = {
     Vector3.new(5, 13, 17),
     Vector3.new(-421, 36, -902),
@@ -231,53 +263,47 @@ local teleportSpots = {
     Vector3.new(-661, 56, 375)
 }
 
-
--- ==========================
--- Helper functions
--- ==========================
-
-local function tpTo(char,pos)
-	if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
-	local hrp = char.HumanoidRootPart
-
-	if safeModeEnabled then
-		-- Safe mode: move smoothly with tween, stop ~5 studs before target
-		local targetPos = pos + Vector3.new(0, 3, 0) -- a bit above ground
-		local direction = (targetPos - hrp.Position).Unit
-		local stopPos = targetPos - direction * 5 -- stop 5 studs early
-
-		local dist = (stopPos - hrp.Position).Magnitude
-		local speed = 16 -- humanoid walk speed equivalent
-		local time = dist / speed
-
-		local tween = TweenService:Create(hrp, TweenInfo.new(time, Enum.EasingStyle.Linear), {
-			CFrame = CFrame.new(stopPos)
-		})
-		tween:Play()
-		tween.Completed:Wait()
-
-		if DEBUG_MODE then print("[DEBUG][SafeMode] Tweened to near", pos) end
-	else
-		-- Normal instant teleport
-		pcall(function()
-			hrp.CFrame = CFrame.new(pos + Vector3.new(0,10,0))
-			if DEBUG_MODE then print("[DEBUG][TP] Instant teleported to", pos) end
-		end)
-	end
-end
-
-
--- helper: random teleport
 local function randomTeleport(char)
-    local spot = teleportSpots[math.random(1, #teleportSpots)]
-    print("[DEBUG] Random teleporting to:", spot)
-    tpTo(char, spot)
+	local spot = teleportSpots[math.random(1,#teleportSpots)]
+	if DEBUG_MODE then print("[DEBUG][Random TP] ", spot) end
+	tpTo(char, spot)
 end
 
 -- ==========================
--- Farming settings
+-- Checkbox creation
 -- ==========================
--- Each resource has a timeout (seconds) for how long we try to farm it
+local function createCheckbox(text,order,callback)
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1,-10,0,30)
+	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	button.TextColor3 = Color3.fromRGB(200,200,200)
+	button.Text = "[ ] "..text
+	button.Font = Enum.Font.SourceSansBold
+	button.TextSize = 16
+	button.LayoutOrder = order
+	button.Parent = scrollFrame
+
+	local state = false
+	local function setState(val)
+		state = val
+		button.Text = (state and "[☑] " or "[ ] ") .. text
+		if state then
+			for _, other in pairs(checkboxes) do
+				if other ~= setState then other(false) end
+			end
+			callback(true)
+		else
+			callback(false)
+		end
+	end
+	button.MouseButton1Click:Connect(function() setState(not state) end)
+	checkboxes[text] = setState
+	scrollFrame.CanvasSize = UDim2.new(0,0,0,uiLayout.AbsoluteContentSize.Y + 10)
+end
+
+-- ==========================
+-- Farming Settings
+-- ==========================
 local resourceTimeouts = {
 	Coins = 5,
 	XPAgility = 5,
@@ -319,82 +345,21 @@ local manualResources = {
 	"AppleBarrel","BerryBush","FallenTree","FoodPallet","LargeBerryBush",
 	"SilkBush","StoneDeposit","Stump","CactusFruit","Treasure","DailyChest","DiggingNodes"
 }
-
-local Farmer = {Running=false, Mode=nil}
-
--- Global Teleport delay (used in farming loop)
-local TeleportDelay = 0.3
-
--- Slider drag
-local draggingSlider = false
-sliderButton.MouseButton1Down:Connect(function()
-	draggingSlider = true
-end)
-UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		draggingSlider = false
-	end
-end)
-
-RunService.RenderStepped:Connect(function()
-	if draggingSlider then
-		local mouseX = UserInputService:GetMouseLocation().X
-		local relative = math.clamp((mouseX - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X,0,1)
-		sliderButton.Position = UDim2.new(relative,-10,0,-5)
-		sliderFill.Size = UDim2.new(relative,0,1,0)
-
-		-- Scale delay between 0.1s (fastest) and 1.0s (slowest)
-		TeleportDelay = 0.1 + (1 - relative) * 0.9
-
-		sliderValueLabel.Text = string.format("Delay: %.1fs", TeleportDelay)
-
-		if DEBUG_MODE then print("[DEBUG] TeleportDelay set to",TeleportDelay) end
-	end
-end)
-
--- Toggle settings
-settingsButton.MouseButton1Click:Connect(function()
-	scrollFrame.Visible = not scrollFrame.Visible
-	settingsFrame.Visible = not settingsFrame.Visible
-end)
-
-safeModeButton.MouseButton1Click:Connect(function()
-    safeModeEnabled = not safeModeEnabled
-    if safeModeEnabled then
-        safeModeButton.Text = "Safe Mode: ON"
-        safeModeButton.BackgroundColor3 = Color3.fromRGB(30, 150, 30)
-    else
-        safeModeButton.Text = "Safe Mode: OFF"
-        safeModeButton.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
-    end
-end)
-
-closeButton.MouseButton1Click:Connect(function()
-    Farmer.Running = false
-    Farmer.Mode = nil
-    if DEBUG_MODE then print("[DEBUG] Closing UI and stopping all loops...") end
-    if screenGui then
-        screenGui:Destroy()
-    end
-end)
-
 -- ==========================
--- Farming loop
+-- Farming Loop
 -- ==========================
 local function startFarming()
 	while true do
-		task.wait(0.1)
+		safeWait(0.1)
 		if not Farmer.Running or not Farmer.Mode then continue end
-
 		local char = player.Character or player.CharacterAdded:Wait()
 		local current = Farmer.Mode
 		local timeout = resourceTimeouts[current] or 10
 		local folder = resourcePaths[current]
 
 		if not folder then
-			statusLabel.Text = "Waiting for " .. current .. "..."
-			if DEBUG_MODE then print("[DEBUG] Resource folder missing for", current) end
-			task.wait(1)
+			statusLabel.Text = "Waiting for "..current.."..."
+			safeWait(1)
 			continue
 		end
 
@@ -406,11 +371,9 @@ local function startFarming()
 		end
 
 		if #targets == 0 then
-			statusLabel.Text = "Waiting for " .. current .. "..."
-			if DEBUG_MODE then print("[DEBUG] No targets found for", current) end
-			-- nothing found → random teleport + wait
-	        randomTeleport(char)
-	        task.wait(3) -- small pause so map loads & resources can spawn
+			statusLabel.Text = "Waiting for "..current.."..."
+			randomTeleport(char)
+			safeWait(3)
 			continue
 		end
 
@@ -430,64 +393,61 @@ local function startFarming()
 			end)
 
 			if pos then
-				statusLabel.Text = "Collecting " .. current .. "..."
-				if DEBUG_MODE then print("[DEBUG] Moving to object at", pos) end
+				statusLabel.Text = "Collecting "..current.."..."
 				tpTo(char,pos)
-				task.wait(TeleportDelay)
+				safeWait(TeleportDelay)
 			end
 
-			local cd = obj:FindFirstChildOfClass("ClickDetector")
-			if cd then
-			    print("Found ClickDetector for:", obj.Name, "Parent:", cd.Parent:GetFullName())
-			else
-			    print("No ClickDetector found for", obj.Name)
-			end
-
-			-- Fire ClickDetector if exists
-			pcall(function() fireclickdetector(obj:FindFirstChildOfClass("ClickDetector")) end)
-
-			local startTime = tick()
-			while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
-				if tick() - startTime > timeout then
-					if DEBUG_MODE then print("[DEBUG] Timeout reached for", obj.Name) end
-					break
+			-- ClickDetector firing
+			pcall(function()
+				local cd = obj:FindFirstChildOfClass("ClickDetector")
+				if cd then
+					if safeModeEnabled then
+						task.wait(math.random()*0.3)
+					end
+					fireclickdetector(cd)
 				end
-				task.wait(TeleportDelay)
+			end)
+
+			-- Only wait for part removal if Safe Mode is enabled
+			if safeModeEnabled then
+				local startTime = tick()
+				while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
+					if tick() - startTime > timeout then break end
+					safeWait(TeleportDelay)
+				end
 			end
 		end
 	end
 end
 
 -- ==========================
--- UI Setup
+-- Setup Checkboxes
 -- ==========================
 local order = 0
-createCheckbox("Coins",order,function(state)
-	Farmer.Running=state
-	Farmer.Mode=state and "Coins" or nil
-end) order = order + 1
-
-createCheckbox("XP Agility",order,function(state)
-	Farmer.Running=state
-	Farmer.Mode=state and "XPAgility" or nil
-end) order = order + 1
-
-createCheckbox("XP Jump",order,function(state)
-	Farmer.Running=state
-	Farmer.Mode=state and "XPJump" or nil
-end) order = order + 1
-
-for _,resName in ipairs(manualResources) do
-	createCheckbox(resName,order,function(state)
-		Farmer.Running=state
-		Farmer.Mode=state and resName or nil
+createCheckbox("Coins",order,function(state) Farmer.Running=state Farmer.Mode=state and "Coins" or nil end) order=order+1
+createCheckbox("XP Agility",order,function(state) Farmer.Running=state Farmer.Mode=state and "XPAgility" or nil end) order=order+1
+createCheckbox("XP Jump",order,function(state) Farmer.Running=state Farmer.Mode=state and "XPJump" or nil end) order=order+1
+for _,res in ipairs(manualResources) do
+	createCheckbox(res, order, function(state)
+		Farmer.Running = state
+		Farmer.Mode = state and res or nil
 	end)
 	order = order + 1
 end
 
-if DEBUG_MODE then print("[DEBUG] AutoFarm loaded with",order,"checkboxes") end
+-- Close/Delete button functionality
+closeButton.MouseButton1Click:Connect(function()
+	Farmer.Running = false
+	Farmer.Mode = nil
+	if DEBUG_MODE then print("[DEBUG] Closing UI and stopping all loops...") end
+	if screenGui then
+		screenGui:Destroy()
+	end
+end)
 
--- ==========================
--- Start farming in background
--- ==========================
+-- Start farming loop in background
 task.spawn(startFarming)
+
+if DEBUG_MODE then print("[DEBUG] AutoFarm v"..VERSION.." fully loaded!") end
+
