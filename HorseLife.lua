@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v5.6"
+local VERSION = "v5.7"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -398,7 +398,6 @@ local function startFarming()
 			if pos then
 				statusLabel.Text = "▶️ Collecting "..current.."..."
 				tpTo(char,pos)
-				safeWait(TeleportDelay)
 			end
 
 			-- ClickDetector firing
