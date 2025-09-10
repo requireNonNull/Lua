@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.3"
+local VERSION = "v6.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -172,26 +172,33 @@ statusLabel.Parent = frame
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, -10, 1, -60)
 scrollFrame.Position = UDim2.new(0, 5, 0, 30)
-scrollFrame.BackgroundTransparency = 1
+scrollFrame.BackgroundTransparency = 1  -- keep transparent
 scrollFrame.ScrollBarThickness = 8
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollFrame.Parent = frame
-scrollFrame.ZIndex = 1 -- keep above gradient
 
--- Container inside scroll frame
-local container = Instance.new("Frame")
-container.Size = UDim2.new(1, 0, 0, 0) -- height will expand with UIListLayout
-container.BackgroundTransparency = 1
-container.Parent = scrollFrame
+-- ==============================
+-- Solid black background behind gradient
+-- ==============================
+local bgFrame = Instance.new("Frame")
+bgFrame.Size = UDim2.new(1,0,1,0)
+bgFrame.Position = UDim2.new(0,0,0,0)
+bgFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+bgFrame.BorderSizePixel = 0
+bgFrame.ZIndex = 0
+bgFrame.Parent = scrollFrame
 
--- Gradient background behind scroll content
+-- ==============================
+-- Gradient overlay
+-- ==============================
 local gradientFrame = Instance.new("Frame")
 gradientFrame.Size = UDim2.new(1,0,1,0)
 gradientFrame.Position = UDim2.new(0,0,0,0)
+gradientFrame.BackgroundTransparency = 0
 gradientFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 gradientFrame.BorderSizePixel = 0
-gradientFrame.ZIndex = 0  -- behind everything
-gradientFrame.Parent = scrollFrame  -- note: parent is scrollFrame, not container
+gradientFrame.ZIndex = 1
+gradientFrame.Parent = scrollFrame
 
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
@@ -200,6 +207,15 @@ gradient.Color = ColorSequence.new{
 }
 gradient.Rotation = 45
 gradient.Parent = gradientFrame
+
+-- ==============================
+-- Container for buttons
+-- ==============================
+local container = Instance.new("Frame")
+container.Size = UDim2.new(1, 0, 0, 0) -- height grows with UIListLayout
+container.BackgroundTransparency = 1
+container.ZIndex = 2
+container.Parent = scrollFrame
 
 -- UIListLayout for buttons
 local uiLayout = Instance.new("UIListLayout")
