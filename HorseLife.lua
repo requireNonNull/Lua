@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.2"
+local VERSION = "v6.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -170,35 +170,42 @@ statusLabel.Parent = frame
 
 -- Scroll Frame
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,-10,1,-60)
-scrollFrame.Position = UDim2.new(0,5,0,30)
+scrollFrame.Size = UDim2.new(1, -10, 1, -60)
+scrollFrame.Position = UDim2.new(0, 5, 0, 30)
 scrollFrame.BackgroundTransparency = 1
-scrollFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 scrollFrame.ScrollBarThickness = 8
-scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollFrame.Parent = frame
+scrollFrame.ZIndex = 1 -- keep above gradient
 
--- Gradient background behind scroll items
+-- Container inside scroll frame
+local container = Instance.new("Frame")
+container.Size = UDim2.new(1, 0, 0, 0) -- height will expand with UIListLayout
+container.BackgroundTransparency = 1
+container.Parent = scrollFrame
+
+-- Gradient background behind scroll content
 local gradientFrame = Instance.new("Frame")
 gradientFrame.Size = UDim2.new(1,0,1,0)
 gradientFrame.Position = UDim2.new(0,0,0,0)
 gradientFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 gradientFrame.BorderSizePixel = 0
-gradientFrame.ZIndex = 0 -- behind all checkboxes
-gradientFrame.Parent = scrollFrame
+gradientFrame.ZIndex = 0  -- behind everything
+gradientFrame.Parent = scrollFrame  -- note: parent is scrollFrame, not container
 
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)), -- top white
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))     -- bottom dark
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)), -- top
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))     -- bottom
 }
 gradient.Rotation = 45
 gradient.Parent = gradientFrame
 
+-- UIListLayout for buttons
 local uiLayout = Instance.new("UIListLayout")
 uiLayout.Padding = UDim.new(0,5)
-uiLayout.Parent = scrollFrame
 uiLayout.SortOrder = Enum.SortOrder.LayoutOrder
+uiLayout.Parent = container
 
 -- ==========================
 -- Helper Variables
@@ -287,19 +294,19 @@ local function randomTeleport(char)
 end
 
 -- ==========================
--- Checkbox creation
+-- Checkbox creation (updated)
 -- ==========================
-local function createCheckbox(text,order,callback)
+local function createCheckbox(text, order, callback)
 	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1,-10,0,30)
+	button.Size = UDim2.new(1, -10, 0, 30)
 	button.BackgroundColor3 = Color3.fromRGB(40,40,40)
 	button.TextColor3 = Color3.fromRGB(200,200,200)
 	button.Text = "[ ] "..text
 	button.Font = Enum.Font.SourceSansBold
 	button.TextSize = 16
 	button.LayoutOrder = order
-	button.ZIndex = 1
-	button.Parent = scrollFrame
+	button.ZIndex = 1 -- above gradient
+	button.Parent = container
 
 	local state = false
 	local function setState(val)
@@ -316,7 +323,9 @@ local function createCheckbox(text,order,callback)
 	end
 	button.MouseButton1Click:Connect(function() setState(not state) end)
 	checkboxes[text] = setState
-	scrollFrame.CanvasSize = UDim2.new(0,0,0,uiLayout.AbsoluteContentSize.Y + 10)
+
+	-- Update canvas size dynamically
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, uiLayout.AbsoluteContentSize.Y + 10)
 end
 
 -- ==========================
@@ -470,5 +479,5 @@ end)
 -- Start farming loop in background
 task.spawn(startFarming)
 
-if DEBUG_MODE then print("[DEBUG] AutoFarm v"..VERSION.." fully loaded!") end
+if DEBUG_MODE then print("[DEBUG] AutoFarm "..VERSION.." fully loaded!") end
 
