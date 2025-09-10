@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v5.2"
+local VERSION = "v5.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -78,7 +78,7 @@ closeButton.Size = UDim2.new(0,30,1,0)
 closeButton.Position = UDim2.new(1,-30,0,0)
 closeButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
 closeButton.TextColor3 = Color3.fromRGB(255,255,255)
-closeButton.Text = "⏻"
+closeButton.Text = "🛑"
 closeButton.Font = Enum.Font.SourceSansBold
 closeButton.TextSize = 18
 closeButton.Parent = title
@@ -92,11 +92,11 @@ settingsFrame.Visible = false
 settingsFrame.Parent = frame
 
 -- Safe Mode Button
-local safeModeEnabled = false
+local safeModeEnabled = true
 local safeModeButton = Instance.new("TextButton")
 safeModeButton.Size = UDim2.new(1, -10, 0, 30)
 safeModeButton.Position = UDim2.new(0,5,0,5)
-safeModeButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+safeModeButton.BackgroundColor3 = Color3.fromRGB(30,150,30)
 safeModeButton.TextColor3 = Color3.fromRGB(255,255,255)
 safeModeButton.Font = Enum.Font.SourceSansBold
 safeModeButton.TextSize = 18
@@ -134,7 +134,7 @@ sliderBack.Parent = settingsFrame
 
 local sliderFill = Instance.new("Frame")
 sliderFill.Size = UDim2.new(0.5,0,1,0)
-sliderFill.BackgroundColor3 = Color3.fromRGB(0,200,0)
+sliderFill.BackgroundColor3 = Color3.fromRGB(150,30,30)
 sliderFill.BorderSizePixel = 0
 sliderFill.Parent = sliderBack
 
