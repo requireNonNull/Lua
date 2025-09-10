@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v4.3 fix"
+local VERSION = "v4.4"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -63,6 +63,55 @@ title.Text = "🦄 Farmy - " .. VERSION
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
 title.Parent = frame
+
+-- Add this under UI Setup (after title)
+local settingsButton = Instance.new("TextButton")
+settingsButton.Size = UDim2.new(0,30,1,0)
+settingsButton.Position = UDim2.new(0,0,0,0)
+settingsButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
+settingsButton.TextColor3 = Color3.fromRGB(255,255,255)
+settingsButton.Text = "⚙️"
+settingsButton.Font = Enum.Font.SourceSansBold
+settingsButton.TextSize = 18
+settingsButton.Parent = title
+
+-- Settings Frame (hidden by default)
+local settingsFrame = Instance.new("Frame")
+settingsFrame.Size = UDim2.new(1,-10,1,-60)
+settingsFrame.Position = UDim2.new(0,5,0,30)
+settingsFrame.BackgroundTransparency = 1
+settingsFrame.Visible = false
+settingsFrame.Parent = frame
+
+local settingsLabel = Instance.new("TextLabel")
+settingsLabel.Size = UDim2.new(1,0,0,30)
+settingsLabel.BackgroundTransparency = 1
+settingsLabel.TextColor3 = Color3.fromRGB(255,255,255)
+settingsLabel.Text = "Teleport Speed"
+settingsLabel.Font = Enum.Font.SourceSansBold
+settingsLabel.TextSize = 16
+settingsLabel.Parent = settingsFrame
+
+-- Fake Slider
+local sliderBack = Instance.new("Frame")
+sliderBack.Size = UDim2.new(1,-20,0,10)
+sliderBack.Position = UDim2.new(0,10,0,40)
+sliderBack.BackgroundColor3 = Color3.fromRGB(100,100,100)
+sliderBack.BorderSizePixel = 0
+sliderBack.Parent = settingsFrame
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Size = UDim2.new(0.5,0,1,0) -- default 50%
+sliderFill.BackgroundColor3 = Color3.fromRGB(0,200,0)
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderBack
+
+local sliderButton = Instance.new("TextButton")
+sliderButton.Size = UDim2.new(0,20,0,20)
+sliderButton.Position = UDim2.new(0.5,-10,0,-5)
+sliderButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+sliderButton.Text = ""
+sliderButton.Parent = sliderBack
 
 -- Status
 local statusLabel = Instance.new("TextLabel")
@@ -215,6 +264,37 @@ local manualResources = {
 
 local Farmer = {Running=false, Mode=nil}
 
+-- Global Teleport delay (used in farming loop)
+local TeleportDelay = 0.3
+
+-- Slider drag
+local draggingSlider = false
+sliderButton.MouseButton1Down:Connect(function()
+	draggingSlider = true
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		draggingSlider = false
+	end
+end)
+RunService.RenderStepped:Connect(function()
+	if draggingSlider then
+		local mouseX = UserInputService:GetMouseLocation().X
+		local relative = math.clamp((mouseX - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X,0,1)
+		sliderButton.Position = UDim2.new(relative,-10,0,-5)
+		sliderFill.Size = UDim2.new(relative,0,1,0)
+		-- Scale delay between 0.1s and 1s
+		TeleportDelay = 0.1 + (1 - relative) * 0.9
+		if DEBUG_MODE then print("[DEBUG] TeleportDelay set to",TeleportDelay) end
+	end
+end)
+
+-- Toggle settings
+settingsButton.MouseButton1Click:Connect(function()
+	scrollFrame.Visible = not scrollFrame.Visible
+	settingsFrame.Visible = not settingsFrame.Visible
+end)
+
 -- ==========================
 -- Farming loop
 -- ==========================
@@ -270,7 +350,7 @@ local function startFarming()
 				statusLabel.Text = "Collecting " .. current .. "..."
 				if DEBUG_MODE then print("[DEBUG] Moving to object at", pos) end
 				tpTo(char,pos)
-				task.wait(0.3)
+				task.wait(TeleportDelay)
 			end
 
 			local cd = obj:FindFirstChildOfClass("ClickDetector")
