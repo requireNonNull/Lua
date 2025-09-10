@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v5.4"
+local VERSION = "v5.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -100,7 +100,7 @@ safeModeButton.BackgroundColor3 = Color3.fromRGB(30,150,30)
 safeModeButton.TextColor3 = Color3.fromRGB(255,255,255)
 safeModeButton.Font = Enum.Font.SourceSansBold
 safeModeButton.TextSize = 18
-safeModeButton.Text = "Safe Mode: OFF"
+safeModeButton.Text = "Safe Mode: ON"
 safeModeButton.Parent = settingsFrame
 
 safeModeButton.MouseButton1Click:Connect(function()
@@ -150,7 +150,7 @@ sliderValueLabel.Size = UDim2.new(1,0,0,20)
 sliderValueLabel.Position = UDim2.new(0,0,0,90)
 sliderValueLabel.BackgroundTransparency = 1
 sliderValueLabel.TextColor3 = Color3.fromRGB(200,200,200)
-sliderValueLabel.Text = "Delay: 0.3s"
+sliderValueLabel.Text = "Delay: 0.8s"
 sliderValueLabel.Font = Enum.Font.SourceSans
 sliderValueLabel.TextSize = 16
 sliderValueLabel.Parent = settingsFrame
@@ -186,7 +186,7 @@ uiLayout.SortOrder = Enum.SortOrder.LayoutOrder
 -- Helper Variables
 -- ==========================
 local Farmer = {Running=false, Mode=nil}
-local TeleportDelay = 0.3
+local TeleportDelay = 0.8
 local draggingSlider = false
 local checkboxes = {}
 
@@ -285,7 +285,7 @@ local function createCheckbox(text,order,callback)
 	local state = false
 	local function setState(val)
 		state = val
-		button.Text = (state and "[☑] " or "[ ] ") .. text
+		button.Text = (state and "[⬜] " or "[ ] ") .. text
 		if state then
 			for _, other in pairs(checkboxes) do
 				if other ~= setState then other(false) end
