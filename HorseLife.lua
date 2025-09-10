@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v5.5"
+local VERSION = "v5.6"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -65,7 +65,7 @@ title.Parent = frame
 local settingsButton = Instance.new("TextButton")
 settingsButton.Size = UDim2.new(0,30,1,0)
 settingsButton.Position = UDim2.new(0,0,0,0)
-settingsButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
+settingsButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
 settingsButton.TextColor3 = Color3.fromRGB(255,255,255)
 settingsButton.Text = "⚙️"
 settingsButton.Font = Enum.Font.SourceSansBold
@@ -76,9 +76,9 @@ settingsButton.Parent = title
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0,30,1,0)
 closeButton.Position = UDim2.new(1,-30,0,0)
-closeButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
+closeButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
 closeButton.TextColor3 = Color3.fromRGB(255,255,255)
-closeButton.Text = "🛑"
+closeButton.Text = "🔴"
 closeButton.Font = Enum.Font.SourceSansBold
 closeButton.TextSize = 18
 closeButton.Parent = title
