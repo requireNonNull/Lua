@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v5.7"
+local VERSION = "v5.8"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -307,10 +307,10 @@ local resourceTimeouts = {
 	Coins = 5,
 	XPAgility = 5,
 	XPJump = 5,
-	AppleBarrel = 5 / 2,
+	AppleBarrel = 10,
 	BerryBush = 20 / 2,
 	FallenTree = 25 / 2,
-	FoodPallet = 10 / 2,
+	FoodPallet = 10,
 	LargeBerryBush = 72 / 2,
 	SilkBush = 200 / 2,
 	StoneDeposit = 50 / 2,
