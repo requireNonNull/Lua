@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v5.3"
+local VERSION = "v5.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -161,7 +161,7 @@ statusLabel.Size = UDim2.new(1,-10,0,20)
 statusLabel.Position = UDim2.new(0,5,1,-25)
 statusLabel.BackgroundTransparency = 1
 statusLabel.TextColor3 = Color3.fromRGB(200,200,200)
-statusLabel.Text = "Status: Idle"
+statusLabel.Text = "⏸️ Idle"
 statusLabel.Font = Enum.Font.SourceSans
 statusLabel.TextSize = 16
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -172,6 +172,7 @@ local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1,-10,1,-60)
 scrollFrame.Position = UDim2.new(0,5,0,30)
 scrollFrame.BackgroundTransparency = 1
+scrollFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 scrollFrame.ScrollBarThickness = 8
 scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
 scrollFrame.Parent = frame
@@ -350,7 +351,7 @@ local function startFarming()
 	while true do
 		safeWait(0.1)
 		if not Farmer.Running or not Farmer.Mode then 
-		statusLabel.Text = "Status: Idle"  -- loop is idle
+		statusLabel.Text = "⏸️ Idle"  -- loop is idle
 		continue 
 		end
 		
@@ -360,7 +361,7 @@ local function startFarming()
 		local folder = resourcePaths[current]
 
 		if not folder then
-			statusLabel.Text = "Waiting for "..current.."..."
+			statusLabel.Text = "⏳ Waiting for "..current.."..."
 			safeWait(1)
 			continue
 		end
@@ -373,7 +374,7 @@ local function startFarming()
 		end
 
 		if #targets == 0 then
-			statusLabel.Text = "Waiting for "..current.."..."
+			statusLabel.Text = "⏳ Waiting for "..current.."..."
 			randomTeleport(char)
 			safeWait(3)
 			continue
@@ -395,7 +396,7 @@ local function startFarming()
 			end)
 
 			if pos then
-				statusLabel.Text = "Collecting "..current.."..."
+				statusLabel.Text = "▶️ Collecting "..current.."..."
 				tpTo(char,pos)
 				safeWait(TeleportDelay)
 			end
