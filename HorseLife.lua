@@ -1,7 +1,5 @@
--- // AutoFarm Script (Timeout-based) v5.0
--- Complete version with Safe Mode and full UI
-
-local VERSION = "v5.1"
+-- // 🦄 Farmy by Breezingfreeze
+local VERSION = "v5.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -78,9 +76,9 @@ settingsButton.Parent = title
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0,30,1,0)
 closeButton.Position = UDim2.new(1,-30,0,0)
-closeButton.BackgroundColor3 = Color3.fromRGB(150,50,50)
+closeButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
 closeButton.TextColor3 = Color3.fromRGB(255,255,255)
-closeButton.Text = "❌"
+closeButton.Text = "🗑️"
 closeButton.Font = Enum.Font.SourceSansBold
 closeButton.TextSize = 18
 closeButton.Parent = title
@@ -351,7 +349,11 @@ local manualResources = {
 local function startFarming()
 	while true do
 		safeWait(0.1)
-		if not Farmer.Running or not Farmer.Mode then continue end
+		if not Farmer.Running or not Farmer.Mode then 
+		statusLabel.Text = "Status: Idle"  -- loop is idle
+		continue 
+		end
+		
 		local char = player.Character or player.CharacterAdded:Wait()
 		local current = Farmer.Mode
 		local timeout = resourceTimeouts[current] or 10
