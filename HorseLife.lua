@@ -1,13 +1,14 @@
 -- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v4.5"
+local VERSION = "v4.6"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 -- ==========================
 -- UI Setup
@@ -82,6 +83,19 @@ settingsFrame.Position = UDim2.new(0,5,0,30)
 settingsFrame.BackgroundTransparency = 1
 settingsFrame.Visible = false
 settingsFrame.Parent = frame
+
+-- inside your UI creation code, in the Settings area
+local safeModeEnabled = false -- default OFF
+
+local safeModeButton = Instance.new("TextButton")
+safeModeButton.Size = UDim2.new(1, -10, 0, 30)
+safeModeButton.Position = UDim2.new(0, 5, 0, 5) -- top of settings
+safeModeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+safeModeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+safeModeButton.Font = Enum.Font.SourceSansBold
+safeModeButton.TextSize = 18
+safeModeButton.Text = "Safe Mode: OFF"
+safeModeButton.Parent = settingsFrame
 
 local settingsLabel = Instance.new("TextLabel")
 settingsLabel.Size = UDim2.new(1,0,0,30)
@@ -210,14 +224,37 @@ local teleportSpots = {
 -- ==========================
 -- Helper functions
 -- ==========================
+
 local function tpTo(char,pos)
-	if char and char:FindFirstChild("HumanoidRootPart") then
+	if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
+	local hrp = char.HumanoidRootPart
+
+	if safeModeEnabled then
+		-- Safe mode: move smoothly with tween, stop ~5 studs before target
+		local targetPos = pos + Vector3.new(0, 3, 0) -- a bit above ground
+		local direction = (targetPos - hrp.Position).Unit
+		local stopPos = targetPos - direction * 5 -- stop 5 studs early
+
+		local dist = (stopPos - hrp.Position).Magnitude
+		local speed = 16 -- humanoid walk speed equivalent
+		local time = dist / speed
+
+		local tween = TweenService:Create(hrp, TweenInfo.new(time, Enum.EasingStyle.Linear), {
+			CFrame = CFrame.new(stopPos)
+		})
+		tween:Play()
+		tween.Completed:Wait()
+
+		if DEBUG_MODE then print("[DEBUG][SafeMode] Tweened to near", pos) end
+	else
+		-- Normal instant teleport
 		pcall(function()
-			char:PivotTo(CFrame.new(pos + Vector3.new(0,10,0)))
-			if DEBUG_MODE then print("[DEBUG] Teleported to", pos) end
+			hrp.CFrame = CFrame.new(pos + Vector3.new(0,10,0))
+			if DEBUG_MODE then print("[DEBUG][TP] Instant teleported to", pos) end
 		end)
 	end
 end
+
 
 -- helper: random teleport
 local function randomTeleport(char)
@@ -308,6 +345,17 @@ end)
 settingsButton.MouseButton1Click:Connect(function()
 	scrollFrame.Visible = not scrollFrame.Visible
 	settingsFrame.Visible = not settingsFrame.Visible
+end)
+
+safeModeButton.MouseButton1Click:Connect(function()
+    safeModeEnabled = not safeModeEnabled
+    if safeModeEnabled then
+        safeModeButton.Text = "Safe Mode: ON"
+        safeModeButton.BackgroundColor3 = Color3.fromRGB(30, 150, 30)
+    else
+        safeModeButton.Text = "Safe Mode: OFF"
+        safeModeButton.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+    end
 end)
 
 -- ==========================
