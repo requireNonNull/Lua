@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v5.8"
+local VERSION = "v5.9"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -176,6 +176,23 @@ scrollFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 scrollFrame.ScrollBarThickness = 8
 scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
 scrollFrame.Parent = frame
+
+-- Gradient Background for Scroll Items
+local gradientFrame = Instance.new("Frame")
+gradientFrame.Size = UDim2.new(1,0,1,0)
+gradientFrame.Position = UDim2.new(0,0,0,0)
+gradientFrame.BackgroundColor3 = Color3.fromRGB(30,30,30) -- frame base color
+gradientFrame.BorderSizePixel = 0
+gradientFrame.ZIndex = 0
+gradientFrame.Parent = scrollFrame
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)), -- white top
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))      -- dark bottom
+}
+gradient.Rotation = 45
+gradient.Parent = gradientFrame
 
 local uiLayout = Instance.new("UIListLayout")
 uiLayout.Padding = UDim.new(0,5)
