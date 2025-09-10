@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v4.4"
+local VERSION = "v4.5"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -99,6 +99,16 @@ sliderBack.Position = UDim2.new(0,10,0,40)
 sliderBack.BackgroundColor3 = Color3.fromRGB(100,100,100)
 sliderBack.BorderSizePixel = 0
 sliderBack.Parent = settingsFrame
+
+local sliderValueLabel = Instance.new("TextLabel")
+sliderValueLabel.Size = UDim2.new(1,0,0,20)
+sliderValueLabel.Position = UDim2.new(0,0,0,60)
+sliderValueLabel.BackgroundTransparency = 1
+sliderValueLabel.TextColor3 = Color3.fromRGB(200,200,200)
+sliderValueLabel.Text = "Delay: 0.3s"
+sliderValueLabel.Font = Enum.Font.SourceSans
+sliderValueLabel.TextSize = 16
+sliderValueLabel.Parent = settingsFrame
 
 local sliderFill = Instance.new("Frame")
 sliderFill.Size = UDim2.new(0.5,0,1,0) -- default 50%
@@ -277,14 +287,19 @@ UserInputService.InputEnded:Connect(function(input)
 		draggingSlider = false
 	end
 end)
+
 RunService.RenderStepped:Connect(function()
 	if draggingSlider then
 		local mouseX = UserInputService:GetMouseLocation().X
 		local relative = math.clamp((mouseX - sliderBack.AbsolutePosition.X) / sliderBack.AbsoluteSize.X,0,1)
 		sliderButton.Position = UDim2.new(relative,-10,0,-5)
 		sliderFill.Size = UDim2.new(relative,0,1,0)
-		-- Scale delay between 0.1s and 1s
+
+		-- Scale delay between 0.1s (fastest) and 1.0s (slowest)
 		TeleportDelay = 0.1 + (1 - relative) * 0.9
+
+		sliderValueLabel.Text = string.format("Delay: %.1fs", TeleportDelay)
+
 		if DEBUG_MODE then print("[DEBUG] TeleportDelay set to",TeleportDelay) end
 	end
 end)
@@ -369,11 +384,9 @@ local function startFarming()
 					if DEBUG_MODE then print("[DEBUG] Timeout reached for", obj.Name) end
 					break
 				end
-				task.wait(0.5)
+				task.wait(TeleportDelay)
 			end
 		end
-
-		task.wait(0.2) -- small delay before re-scan
 	end
 end
 
