@@ -1,7 +1,7 @@
 -- // AutoFarm Script (Timeout-based) v4.0
 -- Single-select UI checkboxes with scrollable UI and full debug
 
-local VERSION = "v4.6"
+local VERSION = "v4.7"
 local DEBUG_MODE = true -- Always debug every step
 
 local Players = game:GetService("Players")
@@ -64,6 +64,17 @@ title.Text = "🦄 Farmy - " .. VERSION
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 18
 title.Parent = frame
+
+-- Close Button (top right)
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0,30,1,0)
+closeButton.Position = UDim2.new(1,-30,0,0)
+closeButton.BackgroundColor3 = Color3.fromRGB(150,50,50)
+closeButton.TextColor3 = Color3.fromRGB(255,255,255)
+closeButton.Text = "❌"
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 18
+closeButton.Parent = title
 
 -- Add this under UI Setup (after title)
 local settingsButton = Instance.new("TextButton")
@@ -355,6 +366,15 @@ safeModeButton.MouseButton1Click:Connect(function()
     else
         safeModeButton.Text = "Safe Mode: OFF"
         safeModeButton.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    Farmer.Running = false
+    Farmer.Mode = nil
+    if DEBUG_MODE then print("[DEBUG] Closing UI and stopping all loops...") end
+    if screenGui then
+        screenGui:Destroy()
     end
 end)
 
