@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.0"
+local VERSION = "v6.1"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -88,6 +88,7 @@ local settingsFrame = Instance.new("Frame")
 settingsFrame.Size = UDim2.new(1,-10,1,-60)
 settingsFrame.Position = UDim2.new(0,5,0,30)
 settingsFrame.BackgroundTransparency = 1
+settingsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 settingsFrame.Visible = false
 settingsFrame.Parent = frame
 
