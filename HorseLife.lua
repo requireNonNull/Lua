@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.1"
+local VERSION = "v6.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -178,10 +178,26 @@ scrollFrame.ScrollBarThickness = 8
 scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
 scrollFrame.Parent = frame
 
+-- Gradient background behind scroll items
+local gradientFrame = Instance.new("Frame")
+gradientFrame.Size = UDim2.new(1,0,1,0)
+gradientFrame.Position = UDim2.new(0,0,0,0)
+gradientFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+gradientFrame.BorderSizePixel = 0
+gradientFrame.ZIndex = 0 -- behind all checkboxes
+gradientFrame.Parent = scrollFrame
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)), -- top white
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))     -- bottom dark
+}
+gradient.Rotation = 45
+gradient.Parent = gradientFrame
+
 local uiLayout = Instance.new("UIListLayout")
 uiLayout.Padding = UDim.new(0,5)
 uiLayout.Parent = scrollFrame
-uiLayout.BackgroundColor3 = Color3.fromRGB(30,30,30) -- frame base color
 uiLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 -- ==========================
@@ -282,6 +298,7 @@ local function createCheckbox(text,order,callback)
 	button.Font = Enum.Font.SourceSansBold
 	button.TextSize = 16
 	button.LayoutOrder = order
+	button.ZIndex = 1
 	button.Parent = scrollFrame
 
 	local state = false
