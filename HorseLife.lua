@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 afk upd"
+local VERSION = "v6.6 upd: afk fix001"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -455,6 +455,7 @@ end
 closeButton.MouseButton1Click:Connect(function()
 	Farmer.Running = false
 	Farmer.Mode = nil
+	stopAFK()
 	if DEBUG_MODE then print("[DEBUG] Closing UI and stopping all loops...") end
 	if screenGui then
 		screenGui:Destroy()
@@ -464,40 +465,62 @@ end)
 -- Start farming loop in background
 task.spawn(startFarming)
 
--- ==========================
--- Anti-AFK / Simulated Movement
--- ==========================
+local stopAntiAFK = false  -- Control variable to stop the loop
+
+-- Anti-AFK loop
 task.spawn(function()
 	local VirtualUser = game:GetService("VirtualUser")
-	Players.LocalPlayer.Idled:Connect(function()
-		VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-		task.wait(1)
-		VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-	end)
+	local player = game.Players.LocalPlayer
+	local char = player.Character or player.CharacterAdded:Wait()
+	local humanoid = char:WaitForChild("Humanoid")
+	local hrp = char:WaitForChild("HumanoidRootPart")
+
+	-- Function to simulate walking
+	local function simulateWalk()
+		local randomDirection = Vector3.new(math.random(), 0, math.random()).unit
+		local targetPosition = hrp.Position + randomDirection * 2
+		humanoid:MoveTo(targetPosition)
+	end
+
+	-- Function to simulate jump
+	local function simulateJump()
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+	
+	-- Function to simulate mouse move
+	local function simulateMouseMovement()
+		local mouse = player:GetMouse()
+		local randomOffset = Vector2.new(math.random(-5, 5), math.random(-5, 5))
+		mouse.MoveEvent:Fire(randomOffset)
+	end
 
 	while true do
-		task.wait(300)  -- every 5 minutes (adjust as needed)
+		if stopAntiAFK then
+			if DEBUG_MODE then print("[DEBUG][Anti-AFK] Stopped due to manual stop request.") end
+			break  -- Exit the loop if stopAntiAFK is true
+		end
 
-		local char = player.Character
-		if char and char:FindFirstChildOfClass("Humanoid") and char:FindFirstChild("HumanoidRootPart") then
-			local humanoid = char:FindFirstChildOfClass("Humanoid")
+		-- Simulate some random AFK activity every 1 minute (or whatever interval you feel is safe)
+		task.wait(60)
 
-			-- Simulate jump
-			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		if humanoid and hrp then
+			-- Simulate activity: Move and Jump
+			simulateWalk()
+			task.wait(0.5)
+			simulateJump()
 
-			-- Small movement forward
-			local hrp = char:FindFirstChild("HumanoidRootPart")
-			if hrp then
-				local original = hrp.Position
-				hrp.CFrame = hrp.CFrame * CFrame.new(1, 0, 0)
-				task.wait(0.2)
-				hrp.CFrame = CFrame.new(original)
-			end
+			-- Simulate mouse movement
+			simulateMouseMovement()
 
-			if DEBUG_MODE then print("[DEBUG][AFK] Simulated activity") end
+			if DEBUG_MODE then print("[DEBUG][Anti-AFK] Simulated walking, jumping, and mouse movement.") end
 		end
 	end
 end)
+
+-- Function to stop Anti-AFK manually
+local function stopAFK()
+	stopAntiAFK = true  -- Set the control variable to true to stop the loop
+end
 
 
 if DEBUG_MODE then print("[DEBUG] AutoFarm "..VERSION.." fully loaded!") end
