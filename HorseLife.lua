@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.4"
+local VERSION = "v6.5 afk upd"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -494,6 +494,42 @@ end)
 
 -- Start farming loop in background
 task.spawn(startFarming)
+
+-- ==========================
+-- Anti-AFK / Simulated Movement
+-- ==========================
+task.spawn(function()
+	local VirtualUser = game:GetService("VirtualUser")
+	Players.LocalPlayer.Idled:Connect(function()
+		VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+		task.wait(1)
+		VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+	end)
+
+	while true do
+		task.wait(300)  -- every 5 minutes (adjust as needed)
+
+		local char = player.Character
+		if char and char:FindFirstChildOfClass("Humanoid") and char:FindFirstChild("HumanoidRootPart") then
+			local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+			-- Simulate jump
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+
+			-- Small movement forward
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				local original = hrp.Position
+				hrp.CFrame = hrp.CFrame * CFrame.new(1, 0, 0)
+				task.wait(0.2)
+				hrp.CFrame = CFrame.new(original)
+			end
+
+			if DEBUG_MODE then print("[DEBUG][AFK] Simulated activity") end
+		end
+	end
+end)
+
 
 if DEBUG_MODE then print("[DEBUG] AutoFarm "..VERSION.." fully loaded!") end
 
