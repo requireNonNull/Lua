@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 afk fix003"
+local VERSION = "v6.6 afk fix004"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -437,35 +437,6 @@ local function startFarming()
 	end
 end
 
--- ==========================
--- Setup Checkboxes
--- ==========================
-local order = 0
-createCheckbox("Coins",order,function(state) Farmer.Running=state Farmer.Mode=state and "Coins" or nil end) order=order+1
-createCheckbox("XP Agility",order,function(state) Farmer.Running=state Farmer.Mode=state and "XPAgility" or nil end) order=order+1
-createCheckbox("XP Jump",order,function(state) Farmer.Running=state Farmer.Mode=state and "XPJump" or nil end) order=order+1
-for _,res in ipairs(manualResources) do
-	createCheckbox(res, order, function(state)
-		Farmer.Running = state
-		Farmer.Mode = state and res or nil
-	end)
-	order = order + 1
-end
-
--- Close/Delete button functionality
-closeButton.MouseButton1Click:Connect(function()
-	Farmer.Running = false
-	Farmer.Mode = nil
-	stopAFK()
-	if DEBUG_MODE then print("[DEBUG] Closing UI and stopping all loops...") end
-	if screenGui then
-		screenGui:Destroy()
-	end
-end)
-
--- Start farming loop in background
-task.spawn(startFarming)
-
 -- Anti-AFK loop
 task.spawn(function()
 	local VirtualUser = game:GetService("VirtualUser")
@@ -473,6 +444,8 @@ task.spawn(function()
 	local char = player.Character or player.CharacterAdded:Wait()
 	local humanoid = char:WaitForChild("Humanoid")
 	local hrp = char:WaitForChild("HumanoidRootPart")
+	local UserInputService = game:GetService("UserInputService")
+	local keyboard = UserInputService.InputBegan
 
 	-- Function to simulate walking
 	local function simulateWalk()
@@ -481,9 +454,16 @@ task.spawn(function()
 		humanoid:MoveTo(targetPosition)
 	end
 
-	-- Function to simulate jump
+	-- Function to simulate jump using key press (Spacebar)
 	local function simulateJump()
-		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		-- Simulate pressing the spacebar key to jump
+		local jumpInput = Instance.new("InputObject", game)
+		jumpInput.UserInputType = Enum.UserInputType.Keyboard
+		jumpInput.KeyCode = Enum.KeyCode.Space
+
+		-- Simulate the key press
+		keyboard:Fire(jumpInput)  -- Simulate the key press event
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)  -- Ensure jump state
 	end
 	
 	-- Function to simulate mouse move
@@ -521,6 +501,34 @@ local function stopAFK()
 	stopAntiAFK = true  -- Set the control variable to true to stop the loop
 end
 
+-- ==========================
+-- Setup Checkboxes
+-- ==========================
+local order = 0
+createCheckbox("Coins",order,function(state) Farmer.Running=state Farmer.Mode=state and "Coins" or nil end) order=order+1
+createCheckbox("XP Agility",order,function(state) Farmer.Running=state Farmer.Mode=state and "XPAgility" or nil end) order=order+1
+createCheckbox("XP Jump",order,function(state) Farmer.Running=state Farmer.Mode=state and "XPJump" or nil end) order=order+1
+for _,res in ipairs(manualResources) do
+	createCheckbox(res, order, function(state)
+		Farmer.Running = state
+		Farmer.Mode = state and res or nil
+	end)
+	order = order + 1
+end
+
+-- Close/Delete button functionality
+closeButton.MouseButton1Click:Connect(function()
+	Farmer.Running = false
+	Farmer.Mode = nil
+	stopAFK()
+	if DEBUG_MODE then print("[DEBUG] Closing UI and stopping all loops...") end
+	if screenGui then
+		screenGui:Destroy()
+	end
+end)
+
+-- Start farming loop in background
+task.spawn(startFarming)
 
 if DEBUG_MODE then print("[DEBUG] AutoFarm "..VERSION.." fully loaded!") end
 
