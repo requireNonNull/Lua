@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.5 afk upd"
+local VERSION = "v6.6 afk upd"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -176,37 +176,6 @@ scrollFrame.BackgroundTransparency = 1  -- keep transparent
 scrollFrame.ScrollBarThickness = 8
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollFrame.Parent = frame
-
--- ==============================
--- Solid black background behind gradient
--- ==============================
-local bgFrame = Instance.new("Frame")
-bgFrame.Size = UDim2.new(1,0,1,0)
-bgFrame.Position = UDim2.new(0,0,0,0)
-bgFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-bgFrame.BorderSizePixel = 0
-bgFrame.ZIndex = 0
-bgFrame.Parent = scrollFrame
-
--- ==============================
--- Gradient overlay
--- ==============================
-local gradientFrame = Instance.new("Frame")
-gradientFrame.Size = UDim2.new(1,0,1,0)
-gradientFrame.Position = UDim2.new(0,0,0,0)
-gradientFrame.BackgroundTransparency = 0
-gradientFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-gradientFrame.BorderSizePixel = 0
-gradientFrame.ZIndex = 1
-gradientFrame.Parent = scrollFrame
-
-local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)), -- top
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))     -- bottom
-}
-gradient.Rotation = 45
-gradient.Parent = gradientFrame
 
 -- ==============================
 -- Container for buttons
