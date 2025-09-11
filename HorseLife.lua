@@ -1,6 +1,7 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 afk fix002"
+local VERSION = "v6.6 afk fix003"
 local DEBUG_MODE = true
+local stopAntiAFK = false
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -464,8 +465,6 @@ end)
 
 -- Start farming loop in background
 task.spawn(startFarming)
-
-local stopAntiAFK = false  -- Control variable to stop the loop
 
 -- Anti-AFK loop
 task.spawn(function()
