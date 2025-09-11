@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 upd: afk fix001"
+local VERSION = "v6.6 afk fix002"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
