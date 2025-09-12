@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien"
+local VERSION = "v6.7 alien2"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -354,8 +354,8 @@ local resourcePaths = {
 	Treasure = workspace.Interactions.Resource,
 	DailyChest = workspace.LocalResources,
 	DiggingNodes = workspace.LocalResources,
-	Infection = workspace.LocalResources,
-	InfectionEgg = workspace.LocalResources,
+	Infection = workspace.Interactions.Resource
+	InfectionEgg = workspace.Interactions.Resource
 	
 }
 
