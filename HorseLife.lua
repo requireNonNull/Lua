@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 tpfix005"
+local VERSION = "v6.6 tpfix006"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
