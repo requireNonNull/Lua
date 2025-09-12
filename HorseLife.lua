@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 tpfix006"
+local VERSION = "v6.6 tpfix007"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -363,7 +363,6 @@ local manualResources = {
 -- ==========================
 local function startFarming()
 	while true do
-		safeWait(0.1)
 		if not Farmer.Running or not Farmer.Mode then 
 		statusLabel.Text = "⏸️ Idle"  -- loop is idle
 		continue 
@@ -412,7 +411,7 @@ local function startFarming()
 			if pos then
 				statusLabel.Text = "▶️ Collecting "..current.."..."
 				tpTo(char,pos)
-				safeWait(1)
+				safeWait(TeleportDelay)
 			end
 
 			-- ClickDetector firing
