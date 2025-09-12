@@ -412,6 +412,7 @@ local function startFarming()
 			if pos then
 				statusLabel.Text = "▶️ Collecting "..current.."..."
 				tpTo(char,pos)
+				safeWait(1)
 			end
 
 			-- ClickDetector firing
