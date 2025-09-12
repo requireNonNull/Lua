@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 afk fix004"
+local VERSION = "v6.6 tpfix005"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -249,7 +249,7 @@ local function tpTo(char,pos)
 	if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
 	local hrp = char.HumanoidRootPart
 	pcall(function()
-		hrp.CFrame = CFrame.new(randomizePos(pos) + Vector3.new(0,10,0))
+		hrp.CFrame = CFrame.new(randomizePos(pos) + Vector3.new(0,1,0))
 	end)
 	if DEBUG_MODE then print("[DEBUG][TP] Teleported to", pos) end
 end
