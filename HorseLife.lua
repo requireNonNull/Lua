@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien3"
+local VERSION = "v6.7 alien4"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -234,6 +234,15 @@ local function safeWait(base)
 	end
 end
 
+local function safeFind(path)
+	local current = workspace
+	for part in string.gmatch(path, "[^%.]+") do
+		current = current:FindFirstChild(part)
+		if not current then return nil end
+	end
+	return current
+end
+
 local function randomizePos(pos)
 	if safeModeEnabled then
 		local offset = Vector3.new((math.random()-0.5)*2,0,(math.random()-0.5)*2)
@@ -337,32 +346,30 @@ local resourceTimeouts = {
 	InfectionEgg = 275 / 2
 }
 
--- Each resource's path
 local resourcePaths = {
-	Coins = workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned"),
-	XPAgility = workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned"),
-	XPJump = workspace.Interactions.CurrencyNodes:FindFirstChild("Spawned"),
-	AppleBarrel = workspace.Interactions.Resource,
-	BerryBush = workspace.Interactions.Resource,
-	FallenTree = workspace.Interactions.Resource,
-	FoodPallet = workspace.Interactions.Resource,
-	LargeBerryBush = workspace.Interactions.Resource,
-	SilkBush = workspace.Interactions.Resource,
-	StoneDeposit = workspace.Interactions.Resource,
-	Stump = workspace.Interactions.Resource,
-	CactusFruit = workspace.Interactions.Resource,
-	Treasure = workspace.Interactions.Resource,
-	DailyChest = workspace.LocalResources,
-	DiggingNodes = workspace.LocalResources,
-	Infection = workspace.Interactions.Resource,
-	InfectionEgg = workspace.Interactions.Resource
-	
+	Coins = safeFind("Interactions.CurrencyNodes.Spawned"),
+	XPAgility = safeFind("Interactions.CurrencyNodes.Spawned"),
+	XPJump = safeFind("Interactions.CurrencyNodes.Spawned"),
+	AppleBarrel = safeFind("Interactions.Resource"),
+	BerryBush = safeFind("Interactions.Resource"),
+	FallenTree = safeFind("Interactions.Resource"),
+	FoodPallet = safeFind("Interactions.Resource"),
+	LargeBerryBush = safeFind("Interactions.Resource"),
+	SilkBush = safeFind("Interactions.Resource"),
+	StoneDeposit = safeFind("Interactions.Resource"),
+	Stump = safeFind("Interactions.Resource"),
+	CactusFruit = safeFind("Interactions.Resource"),
+	Treasure = safeFind("Interactions.Resource"),
+	DailyChest = safeFind("LocalResources"),
+	DiggingNodes = safeFind("LocalResources"),
+	Infection = safeFind("Interactions.Resource"),
+	InfectionEgg = safeFind("Interactions.Resource")
 }
 
 local manualResources = {
 	"AppleBarrel","BerryBush","FallenTree","FoodPallet","LargeBerryBush",
 	"SilkBush","StoneDeposit","Stump","CactusFruit","Treasure","DailyChest","DiggingNodes",
-	"Infection", "InfectionEgg"
+	"Infection","InfectionEgg"
 }
 -- ==========================
 -- Farming Loop
@@ -381,7 +388,8 @@ local function startFarming()
 		local folder = resourcePaths[current]
 
 		if not folder then
-			statusLabel.Text = "⏳ Waiting for "..current.."..."
+			statusLabel.Text = "⏳ Waiting for "..current.."... (Not found)"
+			if DEBUG_MODE then warn("[DEBUG] Resource folder not found for:", current) end
 			safeWait(1)
 			continue
 		end
