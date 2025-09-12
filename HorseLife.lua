@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien8"
+local VERSION = "v6.7 alien9"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -499,25 +499,26 @@ local function startFarming()
 			if current ~= "Coins" and current ~= "XPAgility" and current ~= "XPJump" then
 				local startTime = tick()
 				while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
-					local success, err = pcall(function()
-						tryInvokeResourceRemote(obj, current)
-					end)
-					if not success then
-						warn("[DEBUG] Error invoking remote for object:", obj.Name, err)
-						break
-					end
-
-					if tick() - startTime > timeout then
-						print("[DEBUG] Timeout reached for object:", obj.Name)
-						break
-					end
-
-					task.wait(1)
-
-					if not obj or not obj.Parent then
-						print("[DEBUG] Object removed during remote invocation, breaking loop")
-						break
-					end
+				    local success, err = pcall(function()
+				        tryInvokeResourceRemote(obj, current)
+				    end)
+				    if not success then
+				        warn("[DEBUG] Error invoking remote for object:", obj.Name, err)
+				        break
+				    end
+				
+				    -- Check if obj still valid after invoke
+				    if not obj or not obj.Parent then
+				        print("[DEBUG] Object was removed during remote invocation, breaking loop")
+				        break
+				    end
+				
+				    if tick() - startTime > timeout then
+				        print("[DEBUG] Timeout reached for object:", obj.Name)
+				        break
+				    end
+				
+				    task.wait(1)
 				end
 			end
 		end
