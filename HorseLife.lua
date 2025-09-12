@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien5"
+local VERSION = "v6.7 alien6"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -447,7 +447,7 @@ local function startFarming()
 				-- Decide teleport Y offset based on resource type
 				local heightOffset = 1 -- Default (for Coins)
 				if current ~= "Coins" then
-					heightOffset = 6 -- Adjust as needed to keep player above resource
+					heightOffset = 12 -- Adjust as needed to keep player above resource
 				end
 			
 				tpTo(char, pos, heightOffset)
