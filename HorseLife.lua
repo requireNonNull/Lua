@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 tpfix008"
+local VERSION = "v6.7 alien"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -332,7 +332,9 @@ local resourceTimeouts = {
 	CactusFruit = 60 / 2,
 	Treasure = 50 / 2,
 	DailyChest = 200 / 2,
-	DiggingNodes = 20 / 2
+	DiggingNodes = 20 / 2,
+	Infection = 150 / 2,
+	InfectionEgg = 275 / 2
 }
 
 -- Each resource's path
@@ -351,12 +353,16 @@ local resourcePaths = {
 	CactusFruit = workspace.Interactions.Resource,
 	Treasure = workspace.Interactions.Resource,
 	DailyChest = workspace.LocalResources,
-	DiggingNodes = workspace.LocalResources
+	DiggingNodes = workspace.LocalResources,
+	Infection = workspace.LocalResources,
+	InfectionEgg = workspace.LocalResources,
+	
 }
 
 local manualResources = {
 	"AppleBarrel","BerryBush","FallenTree","FoodPallet","LargeBerryBush",
-	"SilkBush","StoneDeposit","Stump","CactusFruit","Treasure","DailyChest","DiggingNodes"
+	"SilkBush","StoneDeposit","Stump","CactusFruit","Treasure","DailyChest","DiggingNodes",
+	"Infection", "InfectionEgg"
 }
 -- ==========================
 -- Farming Loop
