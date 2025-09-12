@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.6 tpfix007"
+local VERSION = "v6.6 tpfix008"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -365,6 +365,7 @@ local function startFarming()
 	while true do
 		if not Farmer.Running or not Farmer.Mode then 
 		statusLabel.Text = "⏸️ Idle"  -- loop is idle
+		task.wait(0.1)
 		continue 
 		end
 		
@@ -456,21 +457,9 @@ task.spawn(function()
 
 	-- Function to simulate jump using key press (Spacebar)
 	local function simulateJump()
-		-- Simulate pressing the spacebar key to jump
-		local jumpInput = Instance.new("InputObject", game)
-		jumpInput.UserInputType = Enum.UserInputType.Keyboard
-		jumpInput.KeyCode = Enum.KeyCode.Space
-
 		-- Simulate the key press
 		keyboard:Fire(jumpInput)  -- Simulate the key press event
 		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)  -- Ensure jump state
-	end
-	
-	-- Function to simulate mouse move
-	local function simulateMouseMovement()
-		local mouse = player:GetMouse()
-		local randomOffset = Vector2.new(math.random(-5, 5), math.random(-5, 5))
-		mouse.MoveEvent:Fire(randomOffset)
 	end
 
 	while true do
