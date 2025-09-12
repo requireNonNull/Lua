@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien4"
+local VERSION = "v6.7 alien5"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -254,13 +254,13 @@ end
 -- ==========================
 -- Teleport Function
 -- ==========================
-local function tpTo(char,pos)
+local function tpTo(char, pos, heightOffset)
 	if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
 	local hrp = char.HumanoidRootPart
 	pcall(function()
-		hrp.CFrame = CFrame.new(randomizePos(pos) + Vector3.new(0,1,0))
+		hrp.CFrame = CFrame.new(randomizePos(pos) + Vector3.new(0, heightOffset or 1, 0))
 	end)
-	if DEBUG_MODE then print("[DEBUG][TP] Teleported to", pos) end
+	if DEBUG_MODE then print("[DEBUG][TP] Teleported to", pos, "with height offset:", heightOffset) end
 end
 
 -- ==========================
@@ -371,15 +371,31 @@ local manualResources = {
 	"SilkBush","StoneDeposit","Stump","CactusFruit","Treasure","DailyChest","DiggingNodes",
 	"Infection","InfectionEgg"
 }
+
+local function tryInvokeResourceRemote(obj, current)
+	if current == "Coins" or current == "XPAgility" or current == "XPJump" then return end
+	pcall(function()
+		local remote = obj:FindFirstChild("RemoteEvent")
+		if remote then
+			remote:InvokeServer(5, true)
+			if DEBUG_MODE then
+				print("[DEBUG][RemoteEvent] Invoked on", obj.Name, "with args {5, true}")
+			end
+		elseif DEBUG_MODE then
+			warn("[DEBUG][RemoteEvent] No RemoteEvent on", obj:GetFullName())
+		end
+	end)
+end
+
 -- ==========================
 -- Farming Loop
 -- ==========================
 local function startFarming()
 	while true do
 		if not Farmer.Running or not Farmer.Mode then 
-		statusLabel.Text = "⏸️ Idle"  -- loop is idle
-		task.wait(0.1)
-		continue 
+			statusLabel.Text = "⏸️ Idle"  -- loop is idle
+			task.wait(0.1)
+			continue 
 		end
 		
 		local char = player.Character or player.CharacterAdded:Wait()
@@ -415,8 +431,10 @@ local function startFarming()
 			local pos
 			pcall(function()
 				local ok, pivot = pcall(function() return obj:GetPivot().Position end)
-				if ok then pos = pivot
-				elseif obj.PrimaryPart then pos = obj.PrimaryPart.Position
+				if ok then
+					pos = pivot
+				elseif obj.PrimaryPart then
+					pos = obj.PrimaryPart.Position
 				else
 					local part = obj:FindFirstChildWhichIsA("BasePart")
 					if part then pos = part.Position end
@@ -425,7 +443,14 @@ local function startFarming()
 
 			if pos then
 				statusLabel.Text = "▶️ Collecting "..current.."..."
-				tpTo(char,pos)
+			
+				-- Decide teleport Y offset based on resource type
+				local heightOffset = 1 -- Default (for Coins)
+				if current ~= "Coins" then
+					heightOffset = 6 -- Adjust as needed to keep player above resource
+				end
+			
+				tpTo(char, pos, heightOffset)
 				safeWait(TeleportDelay)
 			end
 
@@ -439,69 +464,20 @@ local function startFarming()
 					fireclickdetector(cd)
 				end
 			end)
-
-			-- Only wait for part removal if Safe Mode is enabled
-			if safeModeEnabled then
+			
+			task.wait(0.1)
+			
+			-- Keep trying to invoke RemoteEvent until the object is gone or timeout reached
+			if current ~= "Coins" and current ~= "XPAgility" and current ~= "XPJump" then
 				local startTime = tick()
 				while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
+					tryInvokeResourceRemote(obj, current)
 					if tick() - startTime > timeout then break end
-					safeWait(TeleportDelay)
+					task.wait(1) -- 1 second delay between attempts
 				end
 			end
 		end
 	end
-end
-
--- Anti-AFK loop
-task.spawn(function()
-	local VirtualUser = game:GetService("VirtualUser")
-	local player = game.Players.LocalPlayer
-	local char = player.Character or player.CharacterAdded:Wait()
-	local humanoid = char:WaitForChild("Humanoid")
-	local hrp = char:WaitForChild("HumanoidRootPart")
-	local UserInputService = game:GetService("UserInputService")
-	local keyboard = UserInputService.InputBegan
-
-	-- Function to simulate walking
-	local function simulateWalk()
-		local randomDirection = Vector3.new(math.random(), 0, math.random()).unit
-		local targetPosition = hrp.Position + randomDirection * 2
-		humanoid:MoveTo(targetPosition)
-	end
-
-	-- Function to simulate jump using key press (Spacebar)
-	local function simulateJump()
-		-- Simulate the key press
-		keyboard:Fire(jumpInput)  -- Simulate the key press event
-		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)  -- Ensure jump state
-	end
-
-	while true do
-		if stopAntiAFK then
-			if DEBUG_MODE then print("[DEBUG][Anti-AFK] Stopped due to manual stop request.") end
-			break  -- Exit the loop if stopAntiAFK is true
-		end
-
-		-- Simulate some random AFK activity every 1 minute (or whatever interval you feel is safe)
-		task.wait(60)
-
-		if humanoid and hrp then
-			-- Simulate activity: Move and Jump
-			simulateWalk()
-			task.wait(0.5)
-			simulateJump()
-
-			-- Simulate mouse movement
-			simulateMouseMovement()
-
-			if DEBUG_MODE then print("[DEBUG][Anti-AFK] Simulated walking, jumping, and mouse movement.") end
-		end
-	end
-end)
-
--- Function to stop Anti-AFK manually
-local function stopAFK()
-	stopAntiAFK = true  -- Set the control variable to true to stop the loop
 end
 
 -- ==========================
@@ -523,7 +499,6 @@ end
 closeButton.MouseButton1Click:Connect(function()
 	Farmer.Running = false
 	Farmer.Mode = nil
-	stopAFK()
 	if DEBUG_MODE then print("[DEBUG] Closing UI and stopping all loops...") end
 	if screenGui then
 		screenGui:Destroy()
