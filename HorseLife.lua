@@ -397,20 +397,20 @@ local manualResources = {
 	"Infection","InfectionEgg"
 }
 
-local function tryInvokeResourceRemote(obj, current)
-	if current == "Coins" or current == "XPAgility" or current == "XPJump" then return end
-	pcall(function()
-		local remote = obj:FindFirstChild("RemoteEvent")
-		if remote then
-			remote:InvokeServer(5, true)
-			if DEBUG_MODE then
-				print("[DEBUG][RemoteEvent] Invoked on", obj.Name, "with args {5, true}")
-			end
-		elseif DEBUG_MODE then
-			warn("[DEBUG][RemoteEvent] No RemoteEvent on", obj:GetFullName())
-		end
-	end)
-end
+--local function tryInvokeResourceRemote(obj, current)
+--	if current == "Coins" or current == "XPAgility" or current == "XPJump" then return end
+--	pcall(function()
+--		local remote = obj:FindFirstChild("RemoteEvent")
+--		if remote then
+--			remote:InvokeServer(5, true)
+--			if DEBUG_MODE then
+--				print("[DEBUG][RemoteEvent] Invoked on", obj.Name, "with args {5, true}")
+--			end
+--		elseif DEBUG_MODE then
+--			warn("[DEBUG][RemoteEvent] No RemoteEvent on", obj:GetFullName())
+--		end
+--	end)
+--end
 
 -- ==========================
 -- Farming Loop
@@ -496,29 +496,29 @@ local function startFarming()
 			task.wait(0.1)
 			
 			-- Keep trying to invoke RemoteEvent until the object is gone or timeout reached
-			if current ~= "Coins" and current ~= "XPAgility" and current ~= "XPJump" then
-				local startTime = tick()
-				while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
-				    local success, err = pcall(function()
-				        tryInvokeResourceRemote(obj, current)
-				    end)
-				    if not success then
-				        warn("[DEBUG] Error invoking remote for object:", obj.Name, err)
-				        break
-				    end
-				
-				    -- Check if obj still valid after invoke
-				    if not obj or not obj.Parent then
-				        print("[DEBUG] Object was removed during remote invocation, breaking loop")
-				        break
-				    end
-				
-				    if tick() - startTime > timeout then
-				        print("[DEBUG] Timeout reached for object:", obj.Name)
-				        break
-				    end
-				
-				    task.wait(1)
+--			if current ~= "Coins" and current ~= "XPAgility" and current ~= "XPJump" then
+--				local startTime = tick()
+--				while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
+--				    local success, err = pcall(function()
+--				        tryInvokeResourceRemote(obj, current)
+--				    end)
+--				    if not success then
+--				        warn("[DEBUG] Error invoking remote for object:", obj.Name, err)
+--				        break
+--				    end
+--				
+--				    -- Check if obj still valid after invoke
+--				    if not obj or not obj.Parent then
+--				        print("[DEBUG] Object was removed during remote invocation, breaking loop")
+--				        break
+--				    end
+--				
+--				    if tick() - startTime > timeout then
+--				        print("[DEBUG] Timeout reached for object:", obj.Name)
+--				        break
+--				    end
+--				
+--				    task.wait(1)
 				end
 			end
 		end
