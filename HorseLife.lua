@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien9"
+local VERSION = "v6.7 alien10"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -192,31 +192,6 @@ local uiLayout = Instance.new("UIListLayout")
 uiLayout.Padding = UDim.new(0,5)
 uiLayout.SortOrder = Enum.SortOrder.LayoutOrder
 uiLayout.Parent = container
-
-local anchorEnabled = false
-
--- Anchor Player Button
-local anchorButton = Instance.new("TextButton")
-anchorButton.Size = UDim2.new(1, -10, 0, 30)
-anchorButton.Position = UDim2.new(0,5,0,40) -- Adjust position to be under Safe Mode
-anchorButton.BackgroundColor3 = Color3.fromRGB(30, 30, 150)
-anchorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-anchorButton.Font = Enum.Font.SourceSansBold
-anchorButton.TextSize = 18
-anchorButton.Text = "Anchor Player: OFF"
-anchorButton.Parent = settingsFrame
-
--- Toggle anchor logic
-anchorButton.MouseButton1Click:Connect(function()
-	anchorEnabled = not anchorEnabled
-	anchorButton.Text = anchorEnabled and "Anchor Player: ON" or "Anchor Player: OFF"
-	anchorButton.BackgroundColor3 = anchorEnabled and Color3.fromRGB(30, 150, 255) or Color3.fromRGB(30, 30, 150)
-
-	local char = player.Character
-	if char and char:FindFirstChild("HumanoidRootPart") then
-		char.HumanoidRootPart.Anchored = anchorEnabled
-	end
-end)
 
 -- ==========================
 -- Helper Variables
@@ -519,8 +494,8 @@ local function startFarming()
 --				    end
 --				
 --				    task.wait(1)
-				end
-			end
+--				end
+--			end
 		end
 	end
 end
