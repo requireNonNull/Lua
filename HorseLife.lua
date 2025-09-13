@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien11"
+local VERSION = "v6.7 alien12"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -475,7 +475,6 @@ local function startFarming()
 					print("[DEBUG] Timeout reached for object:", obj.Name)
 					break
 				end
-				task.wait(1) -- Wait before checking again
 			end
 			
 			task.wait(0.1)
