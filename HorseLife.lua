@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien16"
+local VERSION = "v6.7 alien17"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -468,14 +468,16 @@ local function startFarming()
 			end)
 
 			-- Wait until the object is deleted or no longer valid
-			local startTime = tick()
-			while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
-				if tick() - startTime > timeout then
-					print("[DEBUG] Timeout reached for object:", obj.Name)
-					break
+			if current ~= "Coins" and current ~= "XPAgility" and current ~= "XPJump" then
+				local startTime = tick()
+				while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
+					if tick() - startTime > timeout then
+						print("[DEBUG] Timeout reached for object:", obj.Name)
+						break
+					end
+					safeWait(0.1)
 				end
-				safeWait(0.1)
-			end
+			end	
 			
 			task.wait(0.1)
 			
