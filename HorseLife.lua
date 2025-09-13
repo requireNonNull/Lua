@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien14"
+local VERSION = "v6.7 alien15"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -474,7 +474,7 @@ local function startFarming()
 					print("[DEBUG] Timeout reached for object:", obj.Name)
 					break
 				end
-				safeWait(TeleportDelay)
+				safeWait(1)
 			end
 			
 			task.wait(0.1)
