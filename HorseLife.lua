@@ -1,7 +1,6 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien12"
+local VERSION = "v6.7 alien13"
 local DEBUG_MODE = true
-local stopAntiAFK = false
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
