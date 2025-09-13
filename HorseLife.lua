@@ -1,5 +1,5 @@
 -- // 🦄 Farmy by Breezingfreeze
-local VERSION = "v6.7 alien10"
+local VERSION = "v6.7 alien11"
 local DEBUG_MODE = true
 local stopAntiAFK = false
 
@@ -467,6 +467,16 @@ local function startFarming()
 					fireclickdetector(cd)
 				end
 			end)
+
+			-- Wait until the object is deleted or no longer valid
+			local startTime = tick()
+			while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
+				if tick() - startTime > timeout then
+					print("[DEBUG] Timeout reached for object:", obj.Name)
+					break
+				end
+				task.wait(1) -- Wait before checking again
+			end
 			
 			task.wait(0.1)
 			
@@ -485,11 +495,6 @@ local function startFarming()
 --				    -- Check if obj still valid after invoke
 --				    if not obj or not obj.Parent then
 --				        print("[DEBUG] Object was removed during remote invocation, breaking loop")
---				        break
---				    end
---				
---				    if tick() - startTime > timeout then
---				        print("[DEBUG] Timeout reached for object:", obj.Name)
 --				        break
 --				    end
 --				
