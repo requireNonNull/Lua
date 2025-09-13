@@ -474,6 +474,7 @@ local function startFarming()
 					print("[DEBUG] Timeout reached for object:", obj.Name)
 					break
 				end
+				safeWait(TeleportDelay)
 			end
 			
 			task.wait(0.1)
