@@ -1,5 +1,5 @@
--- 🦄 Farmy by Breezingfreeze
-local VERSION = "v2.0"
+-- 🦄 Farmy v2.0 (OOP UI Framework)
+local VERSION = "v2.1"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -7,275 +7,264 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
--- =====================================
--- UI Manager (OOP-like table)
--- =====================================
-local UIManager = {}
-UIManager.__index = UIManager
+-- ==========================
+-- UI Class
+-- ==========================
+local FarmUI = {}
+FarmUI.__index = FarmUI
 
 -- Themes
-local THEMES = {
-    Default = { Start = Color3.fromRGB(0, 170, 255), End = Color3.fromRGB(0, 255, 170) },
-    Purple  = { Start = Color3.fromRGB(170, 0, 255), End = Color3.fromRGB(255, 0, 170) },
-    Red     = { Start = Color3.fromRGB(255, 60, 60), End = Color3.fromRGB(255, 140, 140) },
-    Rainbow = "Rainbow"
+local Themes = {
+    Dark = {
+        Background = Color3.fromRGB(25,25,25),
+        Accent1 = Color3.fromRGB(0,170,255),
+        Accent2 = Color3.fromRGB(0,255,170),
+        Text = Color3.fromRGB(255,255,255),
+    },
+    Green = {
+        Background = Color3.fromRGB(20,30,20),
+        Accent1 = Color3.fromRGB(0,200,100),
+        Accent2 = Color3.fromRGB(0,255,170),
+        Text = Color3.fromRGB(240,240,240),
+    },
+    Rainbow = "Rainbow" -- special case
 }
 
 -- Constructor
-function UIManager.new()
-    local self = setmetatable({}, UIManager)
+function FarmUI.new()
+    local self = setmetatable({}, FarmUI)
 
-    -- ScreenGui
-    self.gui = Instance.new("ScreenGui")
-    self.gui.Name = "FarmUI"
-    self.gui.ResetOnSpawn = false
-    self.gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    self.gui.Parent = game:GetService("CoreGui")
+    -- Root ScreenGui
+    self.Screen = Instance.new("ScreenGui")
+    self.Screen.Name = "FarmUI"
+    self.Screen.ResetOnSpawn = false
+    self.Screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    self.Screen.Parent = game:GetService("CoreGui")
 
-    -- Outline
-    self.outline = Instance.new("Frame")
-    self.outline.Size = UDim2.new(0, 320, 0, 460)
-    self.outline.Position = UDim2.new(0.5, -160, 0.5, -230)
-    self.outline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    self.outline.BorderSizePixel = 0
-    self.outline.Parent = self.gui
+    -- Outline frame
+    self.Outline = Instance.new("Frame")
+    self.Outline.Size = UDim2.new(0, 320, 0, 460)
+    self.Outline.Position = UDim2.new(0.5, -160, 0.5, -230)
+    self.Outline.BorderSizePixel = 0
+    self.Outline.Parent = self.Screen
+    Instance.new("UICorner", self.Outline).CornerRadius = UDim.new(0, 16)
 
-    local oc = Instance.new("UICorner", self.outline)
-    oc.CornerRadius = UDim.new(0, 16)
+    self.OutlineGradient = Instance.new("UIGradient")
+    self.OutlineGradient.Rotation = 45
+    self.OutlineGradient.Parent = self.Outline
 
-    self.gradient = Instance.new("UIGradient", self.outline)
-    self.gradient.Color = ColorSequence.new(THEMES.Default.Start, THEMES.Default.End)
-    self.gradient.Rotation = 45
-
-    -- Inner panel
-    self.main = Instance.new("Frame", self.outline)
-    self.main.Size = UDim2.new(1, -8, 1, -8)
-    self.main.Position = UDim2.new(0, 4, 0, 4)
-    self.main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    self.main.BorderSizePixel = 0
-    local mc = Instance.new("UICorner", self.main)
-    mc.CornerRadius = UDim.new(0, 12)
+    -- Main frame
+    self.Main = Instance.new("Frame")
+    self.Main.Size = UDim2.new(1, -8, 1, -8)
+    self.Main.Position = UDim2.new(0, 4, 0, 4)
+    self.Main.BorderSizePixel = 0
+    self.Main.Parent = self.Outline
+    Instance.new("UICorner", self.Main).CornerRadius = UDim.new(0, 12)
 
     -- Title bar
-    self:BuildTitleBar()
+    self.TitleBar = Instance.new("Frame")
+    self.TitleBar.Size = UDim2.new(1, 0, 0, 36)
+    self.TitleBar.BorderSizePixel = 0
+    self.TitleBar.Parent = self.Main
+    self.TitleBar.ClipsDescendants = true
+    Instance.new("UICorner", self.TitleBar).CornerRadius = UDim.new(0, 12)
 
-    -- Tab system
-    self.tabs = {}
-    self.currentTab = nil
-    self:BuildTabs()
+    self.TitleLabel = Instance.new("TextLabel")
+    self.TitleLabel.Size = UDim2.new(1, -80, 1, 0)
+    self.TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+    self.TitleLabel.BackgroundTransparency = 1
+    self.TitleLabel.Font = Enum.Font.GothamBold
+    self.TitleLabel.Text = "🦄 Farmy " .. VERSION
+    self.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    self.TitleLabel.Parent = self.TitleBar
 
-    -- Dragging
-    self:EnableDragging()
+    -- Buttons
+    self.CloseButton = Instance.new("ImageButton")
+    self.CloseButton.Size = UDim2.new(0, 20, 0, 20)
+    self.CloseButton.Position = UDim2.new(1, -28, 0.5, -10)
+    self.CloseButton.BackgroundTransparency = 1
+    self.CloseButton.Image = "rbxassetid://6035047409"
+    self.CloseButton.Parent = self.TitleBar
 
-    -- Theme loop (rainbow)
-    self.rainbowRunning = false
+    self.MinimizeButton = Instance.new("TextButton")
+    self.MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
+    self.MinimizeButton.Position = UDim2.new(1, -52, 0.5, -10)
+    self.MinimizeButton.BackgroundTransparency = 1
+    self.MinimizeButton.Font = Enum.Font.GothamBold
+    self.MinimizeButton.Text = "—"
+    self.MinimizeButton.TextSize = 20
+    self.MinimizeButton.Parent = self.TitleBar
 
+    -- Tabs container
+    self.TabsContainer = Instance.new("Frame")
+    self.TabsContainer.Size = UDim2.new(1, 0, 1, -46)
+    self.TabsContainer.Position = UDim2.new(0, 0, 0, 46)
+    self.TabsContainer.BackgroundTransparency = 1
+    self.TabsContainer.Parent = self.Main
+
+    -- Tab buttons
+    self.TabButtons = Instance.new("Frame")
+    self.TabButtons.Size = UDim2.new(1, 0, 0, 30)
+    self.TabButtons.BackgroundTransparency = 1
+    self.TabButtons.Parent = self.TabsContainer
+
+    local layout = Instance.new("UIListLayout", self.TabButtons)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.Padding = UDim.new(0, 8)
+
+    -- Content area
+    self.ContentArea = Instance.new("Frame")
+    self.ContentArea.Size = UDim2.new(1, -20, 1, -30)
+    self.ContentArea.Position = UDim2.new(0, 10, 0, 30)
+    self.ContentArea.BackgroundTransparency = 1
+    self.ContentArea.Parent = self.TabsContainer
+
+    self.CurrentTab = nil
+    self.CurrentTheme = nil
+    self.Minimized = false
+
+    self:makeDraggable(self.TitleBar)
+    self:setupEvents()
+    self:applyTheme("Dark") -- default
     return self
 end
 
--- TitleBar
-function UIManager:BuildTitleBar()
-    local bar = Instance.new("Frame", self.main)
-    bar.Name = "TitleBar"
-    bar.Size = UDim2.new(1, 0, 0, 36)
-    bar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+-- ==========================
+-- Methods
+-- ==========================
+function FarmUI:makeDraggable(dragHandle)
+    local dragging, dragInput, startPos, startInputPos
 
-    local title = Instance.new("TextLabel", bar)
-    title.Name = "Title"
-    title.Size = UDim2.new(1, -80, 1, 0)
-    title.Position = UDim2.new(0, 10, 0, 0)
-    title.BackgroundTransparency = 1
-    title.Font = Enum.Font.GothamBold
-    title.Text = "🦄 Farmy " .. VERSION
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextSize = 18
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    self.titleLabel = title
-
-    local close = Instance.new("TextButton", bar)
-    close.Text = "✖"
-    close.Font = Enum.Font.GothamBold
-    close.Size = UDim2.new(0, 30, 0, 30)
-    close.Position = UDim2.new(1, -34, 0.5, -15)
-    close.BackgroundTransparency = 1
-    close.TextColor3 = Color3.fromRGB(200, 80, 80)
-    close.MouseButton1Click:Connect(function() self.gui:Destroy() end)
-
-    local minimize = Instance.new("TextButton", bar)
-    minimize.Text = "—"
-    minimize.Font = Enum.Font.GothamBold
-    minimize.Size = UDim2.new(0, 30, 0, 30)
-    minimize.Position = UDim2.new(1, -68, 0.5, -15)
-    minimize.BackgroundTransparency = 1
-    minimize.TextColor3 = Color3.fromRGB(200, 200, 200)
-
-    local minimized = false
-    minimize.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        local goal = minimized and UDim2.new(0, 320, 0, 44) or UDim2.new(0, 320, 0, 460)
-        TweenService:Create(self.outline, TweenInfo.new(0.3), {Size = goal}):Play()
-        for _, tab in pairs(self.tabs) do
-            tab.Frame.Visible = not minimized
-        end
-        self.titleLabel.Text = minimized and "⏳ Waiting..." or "🦄 Farmy " .. VERSION
-    end)
-end
-
--- Tabs
-function UIManager:BuildTabs()
-    local tabBar = Instance.new("Frame", self.main)
-    tabBar.Name = "TabBar"
-    tabBar.Size = UDim2.new(1, 0, 0, 30)
-    tabBar.Position = UDim2.new(0, 0, 0, 36)
-    tabBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-
-    local uiList = Instance.new("UIListLayout", tabBar)
-    uiList.FillDirection = Enum.FillDirection.Horizontal
-    uiList.SortOrder = Enum.SortOrder.LayoutOrder
-
-    self:AddTab("Farming")
-    self:AddTab("Settings")
-end
-
-function UIManager:AddTab(name)
-    local btn = Instance.new("TextButton", self.main.TabBar)
-    btn.Size = UDim2.new(0, 80, 1, 0)
-    btn.Text = name
-    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-
-    local frame = Instance.new("ScrollingFrame", self.main)
-    frame.Name = name .. "Tab"
-    frame.Size = UDim2.new(1, -20, 1, -76)
-    frame.Position = UDim2.new(0, 10, 0, 66)
-    frame.BackgroundTransparency = 1
-    frame.Visible = false
-    frame.CanvasSize = UDim2.new(0, 0, 2, 0)
-    frame.ScrollBarThickness = 6
-
-    self.tabs[name] = {Button = btn, Frame = frame}
-    btn.MouseButton1Click:Connect(function() self:SwitchTab(name) end)
-
-    -- fill sample UI
-    if name == "Farming" then
-        self:BuildFarmingTab(frame)
-    elseif name == "Settings" then
-        self:BuildSettingsTab(frame)
-    end
-
-    if not self.currentTab then
-        self:SwitchTab(name)
-    end
-end
-
-function UIManager:SwitchTab(name)
-    for k, v in pairs(self.tabs) do
-        v.Frame.Visible = (k == name)
-    end
-    self.currentTab = name
-end
-
--- Farming tab sample
-function UIManager:BuildFarmingTab(frame)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0, 200, 0, 40)
-    btn.Position = UDim2.new(0, 10, 0, 10)
-    btn.Text = "▶️ Start Farming"
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 16
-end
-
--- Settings tab
-function UIManager:BuildSettingsTab(frame)
-    -- Slider (TP Speed)
-    local sliderLabel = Instance.new("TextLabel", frame)
-    sliderLabel.Text = "TP Speed"
-    sliderLabel.Position = UDim2.new(0, 10, 0, 10)
-    sliderLabel.Size = UDim2.new(0, 200, 0, 20)
-    sliderLabel.BackgroundTransparency = 1
-    sliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    sliderLabel.Font = Enum.Font.Gotham
-    sliderLabel.TextSize = 14
-
-    local slider = Instance.new("Frame", frame)
-    slider.Position = UDim2.new(0, 10, 0, 40)
-    slider.Size = UDim2.new(0, 200, 0, 6)
-    slider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-
-    local fill = Instance.new("Frame", slider)
-    fill.Size = UDim2.new(0.5, 0, 1, 0)
-    fill.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-
-    -- Theme buttons
-    local y = 80
-    for theme, colors in pairs(THEMES) do
-        local btn = Instance.new("TextButton", frame)
-        btn.Size = UDim2.new(0, 200, 0, 30)
-        btn.Position = UDim2.new(0, 10, 0, y)
-        btn.Text = "Theme: " .. theme
-        btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.MouseButton1Click:Connect(function() self:SetTheme(theme) end)
-        y = y + 40
-    end
-end
-
--- Themes
-function UIManager:SetTheme(theme)
-    if theme == "Rainbow" then
-        self.rainbowRunning = true
-        task.spawn(function()
-            while self.rainbowRunning do
-                for h = 0, 1, 0.01 do
-                    local c = Color3.fromHSV(h, 1, 1)
-                    self.gradient.Color = ColorSequence.new(c, c)
-                    task.wait(0.03)
-                end
-            end
-        end)
-    else
-        self.rainbowRunning = false
-        self.gradient.Color = ColorSequence.new(THEMES[theme].Start, THEMES[theme].End)
-    end
-end
-
--- Dragging
-function UIManager:EnableDragging()
-    local dragToggle = nil
-    local dragStart = nil
-    local startPos = nil
-
-    self.main.TitleBar.InputBegan:Connect(function(input)
+    dragHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragToggle = true
-            dragStart = input.Position
-            startPos = self.outline.Position
+            dragging = true
+            startPos = self.Outline.Position
+            startInputPos = input.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    dragHandle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
         end
     end)
 
     UserInputService.InputChanged:Connect(function(input)
-        if dragToggle and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            self.outline.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragToggle = false
+        if input == dragInput and dragging then
+            local delta = input.Position - startInputPos
+            self.Outline.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 end
 
--- =====================================
--- Init
--- =====================================
-local ui = UIManager.new()
+function FarmUI:setupEvents()
+    self.CloseButton.MouseButton1Click:Connect(function()
+        self.Screen:Destroy()
+    end)
+
+    self.MinimizeButton.MouseButton1Click:Connect(function()
+        self.Minimized = not self.Minimized
+        if self.Minimized then
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, 320, 0, 44)}):Play()
+            self.TabsContainer.Visible = false
+            self.TitleLabel.Text = "⏳ Waiting..."
+        else
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, 320, 0, 460)}):Play()
+            self.TabsContainer.Visible = true
+            self.TitleLabel.Text = "🦄 Farmy " .. VERSION
+            -- restore only current tab
+            for _,tab in ipairs(self.ContentArea:GetChildren()) do
+                if tab:IsA("ScrollingFrame") then
+                    tab.Visible = (tab == self.CurrentTab)
+                end
+            end
+        end
+    end)
+end
+
+function FarmUI:applyTheme(name)
+    self.CurrentTheme = name
+    if name == "Rainbow" then
+        task.spawn(function()
+            while self.CurrentTheme == "Rainbow" do
+                local t = tick()
+                local r = 0.5 + 0.5 * math.sin(t)
+                local g = 0.5 + 0.5 * math.sin(t + 2)
+                local b = 0.5 + 0.5 * math.sin(t + 4)
+                self.OutlineGradient.Color = ColorSequence.new(Color3.new(r,g,b), Color3.new(b,r,g))
+                task.wait(0.05)
+            end
+        end)
+    else
+        local th = Themes[name]
+        self.Main.BackgroundColor3 = th.Background
+        self.OutlineGradient.Color = ColorSequence.new(th.Accent1, th.Accent2)
+        self.TitleLabel.TextColor3 = th.Text
+    end
+end
+
+function FarmUI:addTab(name)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 100, 1, 0)
+    button.Text = name
+    button.BackgroundTransparency = 0.2
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 14
+    button.Parent = self.TabButtons
+
+    local content = Instance.new("ScrollingFrame")
+    content.Name = name.."Content"
+    content.Size = UDim2.new(1, 0, 1, 0)
+    content.CanvasSize = UDim2.new(0,0,0,600)
+    content.ScrollBarThickness = 0
+    content.BackgroundTransparency = 1
+    content.Visible = false
+    content.Parent = self.ContentArea
+
+    button.MouseButton1Click:Connect(function()
+        if self.CurrentTab then self.CurrentTab.Visible = false end
+        self.CurrentTab = content
+        content.Visible = true
+    end)
+
+    if not self.CurrentTab then
+        self.CurrentTab = content
+        content.Visible = true
+    end
+
+    return content
+end
+
+-- ==========================
+-- Example Usage
+-- ==========================
+local ui = FarmUI.new()
+
+local farmingTab = ui:addTab("Farming")
+local settingsTab = ui:addTab("Settings")
+
+-- Add a slider under Settings (example placeholder)
+local slider = Instance.new("TextLabel")
+slider.Text = "TP Speed Slider (placeholder)"
+slider.Size = UDim2.new(1,0,0,30)
+slider.Parent = settingsTab
+
+-- Theme buttons
+for _,themeName in ipairs({"Dark","Green","Rainbow"}) do
+    local btn = Instance.new("TextButton")
+    btn.Text = "Theme: "..themeName
+    btn.Size = UDim2.new(1,0,0,30)
+    btn.Parent = settingsTab
+    btn.MouseButton1Click:Connect(function()
+        ui:applyTheme(themeName)
+    end)
+end
 
 if DEBUG_MODE then
-    print("[Farmy] v" .. VERSION .. " UI loaded with tabs, dragging, themes, slider")
+    print("[Farmy] UI v"..VERSION.." initialized.")
 end
