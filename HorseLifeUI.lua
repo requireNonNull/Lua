@@ -1,7 +1,7 @@
 -- Modern UI for HorseLife - by Breezingfreeze (Visual Redesign Only)
 
 -- Constants
-local VERSION = "v1.2"
+local VERSION = "v1.3"
 local COLORS = {
     Background = Color3.fromRGB(24, 24, 24),
     Panel = Color3.fromRGB(40, 40, 40),
@@ -72,11 +72,6 @@ minimizeBtn.Position = UDim2.new(1, -60, 0.5, -12)
 minimizeBtn.Image = "rbxassetid://6035047074" -- Minimize icon
 minimizeBtn.BackgroundTransparency = 1
 
--- Close button functionality
-closeBtn.MouseButton1Click:Connect(function()
-    gui:Destroy()
-end)
-
 -- Minimize button functionality
 local minimized = false
 minimizeBtn.MouseButton1Click:Connect(function()
@@ -87,6 +82,11 @@ minimizeBtn.MouseButton1Click:Connect(function()
     else
         mainFrame.Size = UDim2.new(0, 300, 0, 460)  -- Restore full UI size
     end
+end)
+
+-- Close button functionality
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
 end)
 
 -- Tabs (Main, Settings, Changelog)
