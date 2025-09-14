@@ -1,7 +1,7 @@
 -- Modern UI for HorseLife - by Breezingfreeze (Visual Redesign Only)
 
 -- Constants
-local VERSION = "v1.0"
+local VERSION = "v1.1"
 local COLORS = {
     Background = Color3.fromRGB(24, 24, 24),
     Panel = Color3.fromRGB(40, 40, 40),
@@ -12,22 +12,33 @@ local COLORS = {
     ToggleOff = Color3.fromRGB(100, 100, 100),
 }
 
+-- Gradient Colors (Adjustable)
+local GRADIENT_COLORS = {
+    Start = Color3.fromRGB(0, 0, 255),  -- Blue
+    End = Color3.fromRGB(0, 255, 255),  -- Cyan
+}
+
 -- Create UI
 local player = game.Players.LocalPlayer
 local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 gui.Name = "HorseLifeUI"
 gui.ResetOnSpawn = false
 
--- Main frame
+-- Main frame with rounded corners on all sides
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 300, 0, 460)
 mainFrame.Position = UDim2.new(0, 60, 0, 100)
 mainFrame.BackgroundColor3 = COLORS.Panel
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+local uiCorner = Instance.new("UICorner", mainFrame)
+uiCorner.CornerRadius = UDim.new(0, 12)
 
--- Title Bar
+-- Gradient Background for Main Frame
+local gradient = Instance.new("UIGradient", mainFrame)
+gradient.Color = ColorSequence.new(GRADIENT_COLORS.Start, GRADIENT_COLORS.End)
+
+-- Title Bar with Minimize and Close
 local titleBar = Instance.new("Frame", mainFrame)
 titleBar.Size = UDim2.new(1, 0, 0, 36)
 titleBar.BackgroundColor3 = COLORS.Background
@@ -49,11 +60,30 @@ closeBtn.Position = UDim2.new(1, -30, 0.5, -12)
 closeBtn.Image = "rbxassetid://6035047409" -- Close icon
 closeBtn.BackgroundTransparency = 1
 
+local minimizeBtn = Instance.new("ImageButton", titleBar)
+minimizeBtn.Size = UDim2.new(0, 24, 0, 24)
+minimizeBtn.Position = UDim2.new(1, -60, 0.5, -12)
+minimizeBtn.Image = "rbxassetid://6035047074" -- Minimize icon
+minimizeBtn.BackgroundTransparency = 1
+
+-- Close button functionality
 closeBtn.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
--- Tabs
+-- Minimize button functionality
+local minimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        mainFrame.Size = UDim2.new(0, 300, 0, 36)  -- Only show the title bar
+        mainFrame.Position = UDim2.new(0, 60, 0, 100)  -- Adjust position if needed
+    else
+        mainFrame.Size = UDim2.new(0, 300, 0, 460)  -- Restore full UI size
+    end
+end)
+
+-- Tabs (Main, Settings, Changelog)
 local tabNames = { "Main", "Settings", "Changelog" }
 local tabFrames = {}
 
@@ -166,6 +196,13 @@ changelogLabel.TextColor3 = COLORS.TextSecondary
 changelogLabel.BackgroundTransparency = 1
 changelogLabel.TextYAlignment = Enum.TextYAlignment.Top
 changelogLabel.TextWrapped = true
+
+-- Auto Resizing Text (e.g. in changelog)
+changelogLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
+    if changelogLabel.TextBounds.Y > changelogLabel.Size.Y.Offset then
+        changelogLabel.TextSize = math.max(14, changelogLabel.TextSize - 2)
+    end
+end)
 
 -- Dragging Support
 local dragging, dragInput, dragStart, startPos
