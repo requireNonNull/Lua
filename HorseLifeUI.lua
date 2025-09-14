@@ -1,7 +1,7 @@
 -- Modern UI for HorseLife - by Breezingfreeze (Visual Redesign Only)
 
 -- Constants
-local VERSION = "v1.1"
+local VERSION = "v1.2"
 local COLORS = {
     Background = Color3.fromRGB(24, 24, 24),
     Panel = Color3.fromRGB(40, 40, 40),
@@ -34,8 +34,12 @@ mainFrame.Parent = gui
 local uiCorner = Instance.new("UICorner", mainFrame)
 uiCorner.CornerRadius = UDim.new(0, 12)
 
--- Gradient Background for Main Frame
-local gradient = Instance.new("UIGradient", mainFrame)
+-- Gradient Border for Main Frame
+local gradientBorder = Instance.new("Frame", mainFrame)
+gradientBorder.Size = UDim2.new(1, 4, 1, 4)  -- Border with slight padding
+gradientBorder.Position = UDim2.new(0, -2, 0, -2)  -- Slightly outside the main frame
+gradientBorder.BackgroundTransparency = 1
+local gradient = Instance.new("UIGradient", gradientBorder)
 gradient.Color = ColorSequence.new(GRADIENT_COLORS.Start, GRADIENT_COLORS.End)
 
 -- Title Bar with Minimize and Close
@@ -43,9 +47,11 @@ local titleBar = Instance.new("Frame", mainFrame)
 titleBar.Size = UDim2.new(1, 0, 0, 36)
 titleBar.BackgroundColor3 = COLORS.Background
 titleBar.BorderSizePixel = 0
+local titleBarCorner = Instance.new("UICorner", titleBar)
+titleBarCorner.CornerRadius = UDim.new(0, 12)
 
 local titleLabel = Instance.new("TextLabel", titleBar)
-titleLabel.Text = "🐴 Farmy " .. VERSION
+titleLabel.Text = "🦄 Farmy " .. VERSION
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextColor3 = COLORS.TextPrimary
 titleLabel.TextSize = 20
@@ -109,6 +115,14 @@ for i, name in ipairs(tabNames) do
     tabBtn.TextColor3 = COLORS.TextSecondary
     Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 6)
 
+    -- Add button hover effects for modern UI feel
+    tabBtn.MouseEnter:Connect(function()
+        tabBtn.TextColor3 = COLORS.Accent
+    end)
+    tabBtn.MouseLeave:Connect(function()
+        tabBtn.TextColor3 = COLORS.TextSecondary
+    end)
+
     tabBtn.MouseButton1Click:Connect(function()
         switchTab(name)
     end)
@@ -137,6 +151,14 @@ startBtn.TextSize = 18
 startBtn.TextColor3 = Color3.new(1,1,1)
 startBtn.BackgroundColor3 = COLORS.Accent
 Instance.new("UICorner", startBtn).CornerRadius = UDim.new(0, 8)
+
+-- Add button hover effect for modern look
+startBtn.MouseEnter:Connect(function()
+    startBtn.BackgroundColor3 = Color3.fromRGB(0, 140, 255)  -- Darker Accent
+end)
+startBtn.MouseLeave:Connect(function()
+    startBtn.BackgroundColor3 = COLORS.Accent
+end)
 
 startBtn.MouseButton1Click:Connect(function()
     -- Test button behavior
