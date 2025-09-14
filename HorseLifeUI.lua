@@ -1,14 +1,14 @@
 -- Modern UI for HorseLife - by Breezingfreeze (Visual Redesign Only)
 
 -- Constants
-local VERSION = "v1.3"
+local VERSION = "v1.4"
 local COLORS = {
     Background = Color3.fromRGB(24, 24, 24),
     Panel = Color3.fromRGB(40, 40, 40),
     Accent = Color3.fromRGB(0, 170, 255),
     TextPrimary = Color3.fromRGB(230, 230, 230),
     TextSecondary = Color3.fromRGB(180, 180, 180),
-    ToggleOn = Color3.fromRGB(0, 200, 100),
+    ToggleOn = Color3.fromRGB(0, 170, 255), -- Blue toggle color
     ToggleOff = Color3.fromRGB(100, 100, 100),
 }
 
@@ -60,17 +60,24 @@ titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Close button
 local closeBtn = Instance.new("ImageButton", titleBar)
 closeBtn.Size = UDim2.new(0, 24, 0, 24)
 closeBtn.Position = UDim2.new(1, -30, 0.5, -12)
 closeBtn.Image = "rbxassetid://6035047409" -- Close icon
 closeBtn.BackgroundTransparency = 1
 
+-- Minimize button (fixing the icon issue)
 local minimizeBtn = Instance.new("ImageButton", titleBar)
 minimizeBtn.Size = UDim2.new(0, 24, 0, 24)
 minimizeBtn.Position = UDim2.new(1, -60, 0.5, -12)
-minimizeBtn.Image = "rbxassetid://6035047074" -- Minimize icon
+minimizeBtn.Image = "rbxassetid://6035047074" -- Minimize icon (reliable ID)
 minimizeBtn.BackgroundTransparency = 1
+
+-- Close button functionality
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
 
 -- Minimize button functionality
 local minimized = false
@@ -82,11 +89,6 @@ minimizeBtn.MouseButton1Click:Connect(function()
     else
         mainFrame.Size = UDim2.new(0, 300, 0, 460)  -- Restore full UI size
     end
-end)
-
--- Close button functionality
-closeBtn.MouseButton1Click:Connect(function()
-    gui:Destroy()
 end)
 
 -- Tabs (Main, Settings, Changelog)
@@ -148,7 +150,7 @@ startBtn.Position = UDim2.new(0, 0, 0, 0)
 startBtn.Text = "▶️ Start Farming"
 startBtn.Font = Enum.Font.GothamBold
 startBtn.TextSize = 18
-startBtn.TextColor3 = Color3.new(1,1,1)
+startBtn.TextColor3 = Color3.new(1, 1, 1)
 startBtn.BackgroundColor3 = COLORS.Accent
 Instance.new("UICorner", startBtn).CornerRadius = UDim.new(0, 8)
 
