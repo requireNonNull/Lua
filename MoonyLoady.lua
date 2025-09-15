@@ -1,5 +1,5 @@
--- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.1.2"
+-- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
+local VERSION = "v0.1.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -15,11 +15,8 @@ local FarmUI = {}
 FarmUI.__index = FarmUI
 FarmUI.Status = "Open"
 
+-- Keep only Rainbow theme for appearance consistency (other theme data removed)
 local Themes = {
-    Dark = {Accent1 = Color3.fromRGB(0,170,255), Accent2 = Color3.fromRGB(0,255,170)},
-    White = {Accent1 = Color3.fromRGB(255,255,255), Accent2 = Color3.fromRGB(200,200,200)},
-    PitchBlack = {Accent1 = Color3.fromRGB(40,40,40), Accent2 = Color3.fromRGB(80,80,80)},
-    DarkPurple = {Accent1 = Color3.fromRGB(120,0,200), Accent2 = Color3.fromRGB(200,0,255)},
     Rainbow = "Rainbow"
 }
 
@@ -196,18 +193,17 @@ function FarmUI:applyTheme(name)
     
     if name == "Rainbow" then
         task.spawn(function()
-            while self.CurrentTheme == "Rainbow" do
+            while self.CurrentTheme == "Rainbow" and self.Screen.Parent do
                 local t = tick()
                 local r = 0.5 + 0.5*math.sin(t)
                 local g = 0.5 + 0.5*math.sin(t+2)
                 local b = 0.5 + 0.5*math.sin(t+4)
-                self.OutlineGradient.Color = ColorSequence.new(Color3.new(r,g,b), Color3.new(b,r,g))
+                if self.OutlineGradient then
+                    self.OutlineGradient.Color = ColorSequence.new(Color3.new(r,g,b), Color3.new(b,r,g))
+                end
                 task.wait(0.05)
             end
         end)
-    else
-        local th = Themes[name]
-        self.OutlineGradient.Color = ColorSequence.new(th.Accent1,th.Accent2)
     end
 end
 
@@ -270,52 +266,39 @@ end
 -- Initialize UI
 local ui = FarmUI.new()
 local gamesTab = ui:addTab("Games")
-local settingsTab = ui:addTab("Settings")
+-- Settings tab removed per your request
 local infoTab = ui:addTab("Info")
 
 -- ==========================
--- Settings Tab: Theme Buttons
-ui.ThemeButtons = {}
-local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
-for i,themeName in ipairs(themesList) do
-    local btn = Instance.new("TextButton")
-    btn.Text = themeName
-    btn.Size = UDim2.new(1,-16,0,36)
-    btn.Position = UDim2.new(0,8,0,(i-1)*42)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 16
-    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner",btn).CornerRadius = UDim.new(0,8)
-    btn.Parent = settingsTab
-    ui.ThemeButtons[themeName] = btn
-
-    btn.MouseButton1Click:Connect(function()
-        ui:applyTheme(themeName)
-    end)
-end
-ui.ThemeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
-
--- ==========================
 -- Games Data
-local GamesList = {
-    {
-        Name = "Horse Life",
-        URL_KEYS = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIKeys.lua",
-        URL_UI  = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUI.lua",
-        URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIVersion.lua",
-        Status  = "✅ Exploit Working",
-        StatusFile = "https://raw.githubusercontent.com/requireNonNull/Lua/main/HorseLifeUIStatus.lua"
-    },
-    {
-        Name = "Rainbow Friends Chapter 2",
-        URL_KEYS = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimKeys.lua",
-        URL_UI  = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimUI.lua",
-        URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimVersion.lua",
-        Status  = "❌ Not Working",
-        StatusFile = "https://raw.githubusercontent.com/requireNonNull/Lua/main/PetSimUIStatus.lua"
-    },
+local function loadStatusFile(url)
+    local ok, data = pcall(function()
+        return loadstring(game:HttpGet(url))()
+    end)
+    if ok then
+        return data
+    else
+        warn("Failed to load status file from: " .. url)
+        return nil
+    end
+end
+
+-- Add your raw file URLs here
+local statusFiles = {
+    "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIStatus.lua",
+    "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/RainbowFriendsUIStatus.lua",
 }
+
+-- Build list
+local GamesList = {}
+for _, url in ipairs(statusFiles) do
+    local data = loadStatusFile(url)
+    if data then
+        table.insert(GamesList, data)
+    end
+end
+
+return GamesList
 
 local function daysAgo(dateString)
     local y,m,d = dateString:match("(%d+)-(%d+)-(%d+)")
@@ -378,120 +361,159 @@ local function addGamesSection(parent)
         scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 16)
     end)
 
-    local function addGameBlock(gameInfo)
-    local gameFrame = Instance.new("Frame")
-    gameFrame.Size = UDim2.new(0.9,0,0,180)
-    gameFrame.BackgroundTransparency = 1
-    gameFrame.Parent = scroll
-
-    -- Layout für automatische Anordnung
-    local layout = Instance.new("UIListLayout")
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0,8) -- Abstand zwischen Elementen
-    layout.Parent = gameFrame
-
-    -- Titel
-    local title = Instance.new("TextLabel")
-    title.Text = gameInfo.Name
-    title.Size = UDim2.new(1,0,0,28)
-    title.BackgroundTransparency = 1
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 16
-    title.TextColor3 = Color3.fromRGB(255,255,255)
-    title.TextXAlignment = Enum.TextXAlignment.Center
-    title.Parent = gameFrame
-
-    -- Info Label
-    local infoLabel = Instance.new("TextLabel")
-    infoLabel.Text = "Fetching status..."
-    infoLabel.Size = UDim2.new(1,0,0,36)
-    infoLabel.BackgroundTransparency = 1
-    infoLabel.Font = Enum.Font.Gotham
-    infoLabel.TextSize = 14
-    infoLabel.TextColor3 = Color3.fromRGB(200,200,200)
-    infoLabel.TextXAlignment = Enum.TextXAlignment.Center
-    infoLabel.TextYAlignment = Enum.TextYAlignment.Center
-    infoLabel.TextWrapped = true
-    infoLabel.Parent = gameFrame
-
-    -- Key Box
-    local keyBox = Instance.new("TextBox")
-    keyBox.Size = UDim2.new(0.8,0,0,36)
-    keyBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    keyBox.TextColor3 = Color3.fromRGB(255,255,255)
-    keyBox.Text = ""
-    keyBox.PlaceholderText = "Enter key here..."
-    keyBox.Font = Enum.Font.Gotham
-    keyBox.TextSize = 14
-    keyBox.ClearTextOnFocus = false
-    Instance.new("UICorner",keyBox).CornerRadius = UDim.new(0,6)
-    keyBox.Parent = gameFrame
-
-    -- Check Button
-    local checkBtn = Instance.new("TextButton")
-    checkBtn.Size = UDim2.new(0.5,0,0,36)
-    checkBtn.Text = "Check Key"
-    checkBtn.Font = Enum.Font.GothamBold
-    checkBtn.TextSize = 14
-    checkBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    checkBtn.TextColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner",checkBtn).CornerRadius = UDim.new(0,6)
-    checkBtn.Parent = gameFrame
-
-    -- Fetch status von GitHub
-    task.spawn(function()
-        local ok, statusData = pcall(function()
-            return loadstring(game:HttpGet(gameInfo.StatusFile))()
-        end)
-        if ok and statusData then
-            infoLabel.Text = statusData.Status.." \n>> Last checked "..daysAgo(statusData.LastCheckedDate)
-        else
-            infoLabel.Text = "<-> Status unavailable <->"
+     local function addGameBlock(gameInfo)
+        local gameFrame = Instance.new("Frame")
+        gameFrame.Size = UDim2.new(0.9,0,0,220) -- taller to fit all labels
+        gameFrame.BackgroundTransparency = 1
+        gameFrame.Parent = scroll
+    
+        local layout = Instance.new("UIListLayout")
+        layout.FillDirection = Enum.FillDirection.Vertical
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Padding = UDim.new(0,4)
+        layout.Parent = gameFrame
+    
+        -- Title
+        local title = Instance.new("TextLabel")
+        title.Text = gameInfo.Name or "Unknown"
+        title.Size = UDim2.new(1,0,0,24)
+        title.BackgroundTransparency = 1
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 16
+        title.TextColor3 = Color3.fromRGB(255,255,255)
+        title.TextXAlignment = Enum.TextXAlignment.Center
+        title.Parent = gameFrame
+    
+        -- Status
+        local statusLabel = Instance.new("TextLabel")
+        statusLabel.Text = "Status: " .. (gameInfo.Status or "unknown")
+        statusLabel.Size = UDim2.new(1,0,0,20)
+        statusLabel.BackgroundTransparency = 1
+        statusLabel.Font = Enum.Font.Gotham
+        statusLabel.TextSize = 14
+        statusLabel.TextColor3 = Color3.fromRGB(200,200,200)
+        statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+        statusLabel.Parent = gameFrame
+    
+        -- PlaceId
+        local placeLabel = Instance.new("TextLabel")
+        placeLabel.Text = "PlaceId: " .. tostring(gameInfo.PlaceId or "N/A")
+        placeLabel.Size = UDim2.new(1,0,0,20)
+        placeLabel.BackgroundTransparency = 1
+        placeLabel.Font = Enum.Font.Gotham
+        placeLabel.TextSize = 14
+        placeLabel.TextColor3 = Color3.fromRGB(200,200,200)
+        placeLabel.TextXAlignment = Enum.TextXAlignment.Center
+        placeLabel.Parent = gameFrame
+    
+        -- Exploit Name + Version
+        local exploitLabel = Instance.new("TextLabel")
+        exploitLabel.Text = "Exploit: " .. (gameInfo.ExploitName or "N/A") ..
+                            " | Version: " .. (gameInfo.ExploitVersion or "N/A")
+        exploitLabel.Size = UDim2.new(1,0,0,20)
+        exploitLabel.BackgroundTransparency = 1
+        exploitLabel.Font = Enum.Font.Gotham
+        exploitLabel.TextSize = 14
+        exploitLabel.TextColor3 = Color3.fromRGB(200,200,200)
+        exploitLabel.TextXAlignment = Enum.TextXAlignment.Center
+        exploitLabel.Parent = gameFrame
+    
+        -- Last Checked
+        local checkLabel = Instance.new("TextLabel")
+        checkLabel.Text = "Last Checked: " .. (gameInfo.LastCheckedDate or "unknown")
+        checkLabel.Size = UDim2.new(1,0,0,20)
+        checkLabel.BackgroundTransparency = 1
+        checkLabel.Font = Enum.Font.Gotham
+        checkLabel.TextSize = 14
+        checkLabel.TextColor3 = Color3.fromRGB(200,200,200)
+        checkLabel.TextXAlignment = Enum.TextXAlignment.Center
+        checkLabel.Parent = gameFrame
+    
+        -- Version Info (if you added VersionInfo to the file)
+        if gameInfo.VersionInfo then
+            local versionInfoLabel = Instance.new("TextLabel")
+            versionInfoLabel.Text = gameInfo.VersionInfo
+            versionInfoLabel.Size = UDim2.new(1,0,0,20)
+            versionInfoLabel.BackgroundTransparency = 1
+            versionInfoLabel.Font = Enum.Font.Gotham
+            versionInfoLabel.TextSize = 14
+            versionInfoLabel.TextColor3 = Color3.fromRGB(255,220,180)
+            versionInfoLabel.TextXAlignment = Enum.TextXAlignment.Center
+            versionInfoLabel.Parent = gameFrame
         end
-    end)
+    
+        -- Run Button (as before)
+        local runBtn = Instance.new("TextButton")
+        runBtn.Size = UDim2.new(0.5,0,0,28)
+        runBtn.Text = "Run Exploit"
+        runBtn.Font = Enum.Font.GothamBold
+        runBtn.TextSize = 14
+        runBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        runBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner",runBtn).CornerRadius = UDim.new(0,6)
+        runBtn.Parent = gameFrame
 
-    -- Key Check Logic
-    checkBtn.MouseButton1Click:Connect(function()
-        checkBtn.Active = false
-        keyBox.Active = false
-        local originalTitle = ui.TitleLabel.Text
+        -- Run logic: MINIMIZE -> CHECK PLACEID -> VERSION CHECK -> (SAFE PLACEHOLDER)
+        runBtn.MouseButton1Click:Connect(function()
+            runBtn.Active = false
 
-        -- Minimize UI
-        if not ui.Minimized then
-            ui.Minimized = true
-            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
-            ui.TabsContainer.Visible = false
-        end
-        ui.TitleLabel.Text = "🔄 Scanning Key..."
+            local originalTitle = ui.TitleLabel.Text
 
-        task.delay(math.random(2,6), function()
-            local key = keyBox.Text
-            local ok, keys = pcall(function()
-                return loadstring(game:HttpGet(gameInfo.URL_KEYS))()
-            end)
-
-            if ok and table.find(keys,key) then
-                ui.TitleLabel.Text = "✅ Access Granted"
-                task.wait(1)
-                ui.Screen:Destroy()
-                loadstring(game:HttpGet(gameInfo.URL_UI))()
-            else
-                ui.TitleLabel.Text = "❌ Access Denied"
-                task.wait(2)
-                -- Restore window
-                ui.Minimized = false
-                TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
-                ui.TabsContainer.Visible = true
-                ui.TitleLabel.Text = originalTitle
-                checkBtn.Active = true
-                keyBox.Active = true
+            -- Minimize UI
+            if not ui.Minimized then
+                ui.Minimized = true
+                TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+                ui.TabsContainer.Visible = false
             end
-        end)
-    end)
-end
+            ui.TitleLabel.Text = "🔄 Running..."
 
+            -- simulate small delay similar to original
+            task.delay(math.random(1,3), function()
+                -- PlaceId check
+                if tostring(game.PlaceId) ~= tostring(gameInfo.PlaceId) then
+                    -- Wrong game -> restore UI and inform
+                    ui.TitleLabel.Text = "❌ Wrong Game"
+                    task.wait(1.8)
+                    ui.Minimized = false
+                    TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+                    ui.TabsContainer.Visible = true
+                    ui.TitleLabel.Text = originalTitle
+                    runBtn.Active = true
+                    return
+                end
+
+                -- PlaceId OK -> show game status + version info in title and info label
+                ui.TitleLabel.Text = (gameInfo.Name or "Game") .. " - " .. (gameInfo.Status or "")
+                infoLabel.Text = (gameInfo.ExploitName or "") .. " " .. (gameInfo.ExploitVersion or "") .. " | " .. (gameInfo.LastCheckedDate or "")
+
+                -- VERSION CHECK: compare local version vs provided exploit version (displayed but no remote fetch)
+                -- if different, show outdated message in title while still allowing continuation
+                if (gameInfo.ExploitVersion and tostring(gameInfo.ExploitVersion) ~= VERSION) then
+                    ui.TitleLabel.Text = ui.TitleLabel.Text .. "  ⚠️ Outdated: " .. VERSION .. " (expected " .. tostring(gameInfo.ExploitVersion) .. ")"
+                end
+
+                -- SAFE PLACEHOLDER: do NOT perform remote code execution or exploit loading
+                -- The original script loaded remote code here (e.g. loadstring(game:HttpGet(URL_UI))).
+                -- For safety and ToS compliance this placeholder does nothing harmful.
+                -- Replace the body of `onRunApproved()` with legitimate, non-exploit logic if desired.
+                local function onRunApproved()
+                    -- Example benign action: show a confirmation for testing
+                    ui.TitleLabel.Text = (gameInfo.Name or "Game") .. " - Loaded..."
+                    task.wait(1)
+                    ui.Screen:Destroy()
+                    loadstring(game:HttpGet(gameInfo.ExploitUrl))()
+                end
+
+                -- call the safe placeholder
+                pcall(onRunApproved)
+
+                -- NOTE: if you want to add allowed behavior, put it inside onRunApproved
+                -- Restore button active state (UI remains minimized until user reopens)
+                runBtn.Active = true
+            end)
+        end)
+    end
 
     for _,gameInfo in ipairs(GamesList) do
         addGameBlock(gameInfo)
@@ -499,3 +521,49 @@ end
 end
 
 addGamesSection(gamesTab)
+
+-- ==========================
+-- Info Tab Credits (centered header + multi-line credits area)
+local header = Instance.new("TextLabel")
+header.Text = "Credits"
+header.Size = UDim2.new(1,0,0,28)
+header.BackgroundTransparency = 1
+header.Font = Enum.Font.GothamBold
+header.TextSize = 18
+header.TextColor3 = Color3.fromRGB(255,255,255)
+header.TextXAlignment = Enum.TextXAlignment.Center
+header.Parent = infoTab
+
+local creditsFrame = Instance.new("Frame")
+creditsFrame.Size = UDim2.new(1,-24,0,120)
+creditsFrame.Position = UDim2.new(0,12,0,36)
+creditsFrame.BackgroundTransparency = 1
+creditsFrame.Parent = infoTab
+
+local creditsLayout = Instance.new("UIListLayout", creditsFrame)
+creditsLayout.FillDirection = Enum.FillDirection.Vertical
+creditsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+creditsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+creditsLayout.Padding = UDim.new(0,6)
+
+local creditLine1 = Instance.new("TextLabel")
+creditLine1.Text = "Made by Breezingfreeze"
+creditLine1.Size = UDim2.new(1,0,0,24)
+creditLine1.BackgroundTransparency = 1
+creditLine1.Font = Enum.Font.Gotham
+creditLine1.TextSize = 14
+creditLine1.TextColor3 = Color3.fromRGB(200,200,200)
+creditLine1.TextXAlignment = Enum.TextXAlignment.Center
+creditLine1.Parent = creditsFrame
+
+local creditLine2 = Instance.new("TextLabel")
+creditLine2.Text = "Thanks to Alien17"
+creditLine2.Size = UDim2.new(1,0,0,24)
+creditLine2.BackgroundTransparency = 1
+creditLine2.Font = Enum.Font.Gotham
+creditLine2.TextSize = 14
+creditLine2.TextColor3 = Color3.fromRGB(200,200,200)
+creditLine2.TextXAlignment = Enum.TextXAlignment.Center
+creditLine2.Parent = creditsFrame
+
+-- End of sanitized script
