@@ -1,5 +1,5 @@
 -- 🦄 Moony Loady v1.5 (Farmy-style modern, minimized titlebar only)
-local VERSION = "v1.5"
+local VERSION = "v1.6"
 local DEBUG_MODE = true
 
 local GamesList = {
