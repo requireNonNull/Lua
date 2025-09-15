@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.5"
+local VERSION = "v0.0.6"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -428,17 +428,38 @@ end
 ui.ThemeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
 
 -- ==========================
--- Farming Tab: Placeholder buttons to test scrolling
+-- Farming Tab: Placeholder buttons to test
 
 local function attachTestTask(button, label)
     button.MouseButton1Click:Connect(function()
+        -- ✅ minimize UI when task starts
+        if not ui.Minimized then
+            ui.Minimized = true
+            FarmUI.Status = "Minimized"
+            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+            ui.TabsContainer.Visible = false
+        end
+
         -- Start looping animation
         ui:animateTitle(label, "dots")
-        
-        -- Stop after 5s
+
+        -- Stop after 5s and restore
         task.delay(5, function()
             ui:stopTitleAnimation()
             ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION -- restore normal title
+
+            -- ✅ unminimize back
+            ui.Minimized = false
+            FarmUI.Status = "Open"
+            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+            ui.TabsContainer.Visible = true
+
+            -- restore only current tab visible
+            for _,tab in ipairs(ui.ContentArea:GetChildren()) do
+                if tab:IsA("ScrollingFrame") then
+                    tab.Visible = (tab == ui.CurrentTab)
+                end
+            end
         end)
     end)
 end
