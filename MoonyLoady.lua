@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.1.7"
+local VERSION = "v0.1.8"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -521,18 +521,32 @@ end
 addGamesSection(gamesTab)
 
 -- ==========================
--- Credits
-local creditsFrame = Instance.new("Frame")
-creditsFrame.Size = UDim2.new(1, -24, 0, 0) -- start with 0, will expand
-creditsFrame.Position = UDim2.new(0, 12, 0, 36)
-creditsFrame.BackgroundTransparency = 1
-creditsFrame.Parent = infoTab
+-- Credits (scrollable)
+local creditsHeader = Instance.new("TextLabel")
+creditsHeader.Text = "Credits"
+creditsHeader.Size = UDim2.new(1,0,0,28)
+creditsHeader.BackgroundTransparency = 1
+creditsHeader.Font = Enum.Font.GothamBold
+creditsHeader.TextSize = 18
+creditsHeader.TextColor3 = Color3.fromRGB(255,255,255)
+creditsHeader.TextXAlignment = Enum.TextXAlignment.Center
+creditsHeader.Position = UDim2.new(0,0,0,36)
+creditsHeader.Parent = infoTab
 
-local creditsLayout = Instance.new("UIListLayout", creditsFrame)
+local creditsScroll = Instance.new("ScrollingFrame")
+creditsScroll.Size = UDim2.new(1,-24,0,160)
+creditsScroll.Position = UDim2.new(0,12,0,72)
+creditsScroll.BackgroundTransparency = 1
+creditsScroll.ScrollBarImageTransparency = 1
+creditsScroll.ScrollBarThickness = 0
+creditsScroll.CanvasSize = UDim2.new(0,0,0,0)
+creditsScroll.Parent = infoTab
+
+local creditsLayout = Instance.new("UIListLayout", creditsScroll)
 creditsLayout.FillDirection = Enum.FillDirection.Vertical
 creditsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 creditsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-creditsLayout.Padding = UDim.new(0, 6)
+creditsLayout.Padding = UDim.new(0,6)
 
 local creditLines = {
     "Made by Breezingfreeze",
@@ -541,32 +555,25 @@ local creditLines = {
     "UI design helped by AI assistance!"
 }
 
--- Add labels with AutomaticSize
 for _, text in ipairs(creditLines) do
     local label = Instance.new("TextLabel")
     label.Text = text
-    label.Size = UDim2.new(1, 0, 0, 24) -- initial, auto-adjusts
     label.BackgroundTransparency = 1
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
-    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.TextColor3 = Color3.fromRGB(200,200,200)
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.TextYAlignment = Enum.TextYAlignment.Top
     label.TextWrapped = true
     label.AutomaticSize = Enum.AutomaticSize.Y
-    label.TextXAlignment = Enum.TextXAlignment.Center
-    label.Parent = creditsFrame
+    label.Size = UDim2.new(1,0,0,24)
+    label.Parent = creditsScroll
 end
 
--- Resize the credits frame to fit all children
-local totalCreditsHeight = 0
-for _, child in ipairs(creditsFrame:GetChildren()) do
-    if child:IsA("TextLabel") then
-        totalCreditsHeight = totalCreditsHeight + child.AbsoluteSize.Y + creditsLayout.Padding.Offset
-    end
-end
-creditsFrame.Size = UDim2.new(1, -24, 0, totalCreditsHeight)
+creditsScroll.CanvasSize = UDim2.new(0,0,0,creditsLayout.AbsoluteContentSize.Y)
 
 -- ==========================
--- Open Source / Educational Info (Developer-focused)
+-- Open Source / Educational Info (scrollable)
 local eduHeader = Instance.new("TextLabel")
 eduHeader.Text = "Open Source / Educational"
 eduHeader.Size = UDim2.new(1,0,0,28)
@@ -575,16 +582,19 @@ eduHeader.Font = Enum.Font.GothamBold
 eduHeader.TextSize = 18
 eduHeader.TextColor3 = Color3.fromRGB(255,255,255)
 eduHeader.TextXAlignment = Enum.TextXAlignment.Center
-eduHeader.Position = UDim2.new(0,0,0,36 + totalCreditsHeight + 8) -- below credits
+eduHeader.Position = UDim2.new(0,0,0,72 + 160 + 12) -- below credits
 eduHeader.Parent = infoTab
 
-local eduFrame = Instance.new("Frame")
-eduFrame.Size = UDim2.new(1,-24,0,0) -- start with 0, will expand
-eduFrame.Position = UDim2.new(0,12,0,36 + totalCreditsHeight + 36) -- below header
-eduFrame.BackgroundTransparency = 1
-eduFrame.Parent = infoTab
+local eduScroll = Instance.new("ScrollingFrame")
+eduScroll.Size = UDim2.new(1,-24,0,300)
+eduScroll.Position = UDim2.new(0,12,0,72 + 160 + 36)
+eduScroll.BackgroundTransparency = 1
+eduScroll.ScrollBarImageTransparency = 1
+eduScroll.ScrollBarThickness = 0
+eduScroll.CanvasSize = UDim2.new(0,0,0,0)
+eduScroll.Parent = infoTab
 
-local eduLayout = Instance.new("UIListLayout", eduFrame)
+local eduLayout = Instance.new("UIListLayout", eduScroll)
 eduLayout.FillDirection = Enum.FillDirection.Vertical
 eduLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 eduLayout.VerticalAlignment = Enum.VerticalAlignment.Top
@@ -604,11 +614,9 @@ local guideLines = {
     "   https://github.com/requireNonNull/Lua"
 }
 
--- Add labels with AutomaticSize
 for _, text in ipairs(guideLines) do
     local lineLabel = Instance.new("TextLabel")
     lineLabel.Text = text
-    lineLabel.Size = UDim2.new(1,0,0,22)
     lineLabel.BackgroundTransparency = 1
     lineLabel.Font = Enum.Font.Gotham
     lineLabel.TextSize = 14
@@ -617,14 +625,8 @@ for _, text in ipairs(guideLines) do
     lineLabel.TextYAlignment = Enum.TextYAlignment.Top
     lineLabel.TextWrapped = true
     lineLabel.AutomaticSize = Enum.AutomaticSize.Y
-    lineLabel.Parent = eduFrame
+    lineLabel.Size = UDim2.new(1,0,0,22)
+    lineLabel.Parent = eduScroll
 end
 
--- Resize the edu frame to fit all children
-local totalEduHeight = 0
-for _, child in ipairs(eduFrame:GetChildren()) do
-    if child:IsA("TextLabel") then
-        totalEduHeight = totalEduHeight + child.AbsoluteSize.Y + eduLayout.Padding.Offset
-    end
-end
-eduFrame.Size = UDim2.new(1,-24,0,totalEduHeight)
+eduScroll.CanvasSize = UDim2.new(0,0,0,eduLayout.AbsoluteContentSize.Y)
