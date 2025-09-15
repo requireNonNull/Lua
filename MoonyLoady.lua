@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.2.2"
+local VERSION = "v0.2.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -581,20 +581,23 @@ eduHeader.TextXAlignment = Enum.TextXAlignment.Center
 eduHeader.Position = UDim2.new(0,0,0,72 + 160 + 12) -- below credits
 eduHeader.Parent = infoTab
 
--- Edu Frame (auto-resizing, no scrollbars)
+-- Edu Frame (no scrollbar, auto-height)
 local eduFrame = Instance.new("Frame")
-eduFrame.Size = UDim2.new(1,-24,0,0) -- height grows automatically
-eduFrame.Position = UDim2.new(0,12,0,72 + 160 + 36) -- below header
+eduFrame.Size = UDim2.new(1, -24, 0, 0) -- height grows automatically
+eduFrame.Position = UDim2.new(0, 12, 0, 72 + 160 + 36) -- below header
 eduFrame.BackgroundTransparency = 1
 eduFrame.AutomaticSize = Enum.AutomaticSize.Y
 eduFrame.Parent = infoTab
 
-local eduLayout = Instance.new("UIListLayout", eduFrame)
+-- Layout
+local eduLayout = Instance.new("UIListLayout")
 eduLayout.FillDirection = Enum.FillDirection.Vertical
 eduLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 eduLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-eduLayout.Padding = UDim.new(0,4)
+eduLayout.Padding = UDim.new(0, 4)
+eduLayout.Parent = eduFrame
 
+-- Content lines
 local guideLines = {
     "⚠️ Disclaimer: For educational purposes only—do not use to exploit games.",
     "🔧 This loader project is designed to demonstrate how automation works for learning.",
@@ -620,6 +623,6 @@ for _, text in ipairs(guideLines) do
     lineLabel.TextYAlignment = Enum.TextYAlignment.Top
     lineLabel.TextWrapped = true
     lineLabel.AutomaticSize = Enum.AutomaticSize.Y
-    lineLabel.Size = UDim2.new(1,0,0,0)
+    lineLabel.Size = UDim2.new(1, 0, 0, 0)
     lineLabel.Parent = eduFrame
 end
