@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v7.0"
+local VERSION = "v8.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -227,15 +227,13 @@ end
 -- ==========================
 -- Add Tabs
 function FarmUI:addTab(name)
-    local th = Themes[self.CurrentTheme] or Themes.Dark
-
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 100, 1, 0)
     button.Text = name
     button.Font = Enum.Font.GothamBold
     button.TextSize = 14
-    button.BackgroundColor3 = th.Button
-    button.TextColor3 = th.Text
+    button.BackgroundColor3 = Color3.fromRGB(30,30,30) -- fixed background
+    button.TextColor3 = Color3.fromRGB(255,255,255) -- fixed text color
     button.AutoButtonColor = false
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
     button.Parent = self.TabButtons
