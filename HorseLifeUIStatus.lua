@@ -1,5 +1,6 @@
 local VERSION = "v6.7 alien17"
 local NAME = "🦄 Farmy"
+local URL = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUI.lua"
 
 -- Version Check
 local LATEST_VERSION = "v6.7 alien17"
@@ -18,5 +19,6 @@ return {
     LastCheckedDate = "2025-09-15",
     ExploitName = NAME,
     ExploitVersion = VERSION,
-    VersionInfo = versionMessage
+    VersionInfo = versionMessage,
+    ExploitUrl = URL
 }
