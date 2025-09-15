@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.8"
+local VERSION = "v0.0.9"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -108,7 +108,7 @@ function FarmUI.new()
     self.StopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     self.StopButton.Font = Enum.Font.GothamBold
     self.StopButton.TextSize = 14
-    self.StopButton.Text = "🚫 STOP"
+    self.StopButton.Text = "STOP"
     self.StopButton.Visible = false
     Instance.new("UICorner", self.StopButton).CornerRadius = UDim.new(0, 6)
     self.StopButton.Parent = self.TitleBar
@@ -492,7 +492,7 @@ local function attachTestTask(button, label)
         ui:animateTitle(label, "dots")
 
         -- Stop after 5s and restore
-        task.delay(5, function()
+        task.delay(20, function()
             ui:stopTitleAnimation()
             ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
 
