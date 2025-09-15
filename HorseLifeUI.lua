@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.9"
+local VERSION = "v0.0.3"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -102,16 +102,26 @@ function FarmUI.new()
 
     -- STOP button (hidden by default, replaces close+minimize when farming)
     self.StopButton = Instance.new("TextButton")
-    self.StopButton.Size = UDim2.new(0, 60, 0, 30) -- slightly bigger
-    self.StopButton.Position = UDim2.new(1, -70, 0.5, -15)
-    self.StopButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    self.StopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    self.StopButton.Size = UDim2.new(0, 20, 0, 20)
+    self.StopButton.Position = UDim2.new(1, -28, 0.5, -10)
+    self.StopButton.BackgroundTransparency = 1
     self.StopButton.Font = Enum.Font.GothamBold
-    self.StopButton.TextSize = 14
-    self.StopButton.Text = "STOP"
-    self.StopButton.Visible = false
-    Instance.new("UICorner", self.StopButton).CornerRadius = UDim.new(0, 6)
+    self.StopButton.Text = "⏹️" -- UTF-8 cross
+    self.StopButton.TextSize = 18
+    self.StopButton.TextColor3 = Color3.fromRGB(255,255,255)
     self.StopButton.Parent = self.TitleBar
+    self.StopButton.Visible = false
+    
+    self.taskToggleButton = Instance.new("TextButton")
+    self.taskToggleButton.Size = UDim2.new(0, 20, 0, 20)
+    self.taskToggleButton.Position = UDim2.new(1, -52, 0.5, -10)
+    self.taskToggleButton.BackgroundTransparency = 1
+    self.taskToggleButton.Font = Enum.Font.GothamBold
+    self.taskToggleButton.Text = "⏸️"
+    self.taskToggleButton.TextSize = 20
+    self.taskToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
+    self.taskToggleButton.Parent = self.TitleBar
+    self.TaskToggleButton.Visible = false
 
     -- Tabs container
     self.TabsContainer = Instance.new("Frame")
@@ -238,6 +248,45 @@ function FarmUI:setupEvents()
     self.CloseButton.Visible = true
     self.MinimizeButton.Visible = true
     self.StopButton.Visible = false
+end)
+
+    -- ==========================
+-- Toggle button functionality
+self.taskToggleButton.MouseButton1Click:Connect(function()
+    if not self.TaskActive then
+        -- Start/resume the task
+        self.TaskActive = true
+        self.taskToggleButton.Text = "⏸️" -- show pause icon
+        self:animateTitle("Task running", "dots") -- optional animation
+
+        -- minimize UI while task is active
+        self.Minimized = true
+        FarmUI.Status = "Minimized"
+        TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+        self.TabsContainer.Visible = false
+
+        -- Show Stop button and toggle
+        self.StopButton.Visible = true
+        self.taskToggleButton.Visible = true
+        self.CloseButton.Visible = false
+        self.MinimizeButton.Visible = false
+
+    else
+        -- Pause the task
+        self.TaskActive = false
+        self.taskToggleButton.Text = "▶️" -- show play icon
+        self:stopTitleAnimation()
+        self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
+
+        -- keep Stop button visible
+        self.StopButton.Visible = true
+        self.taskToggleButton.Visible = true
+        -- menu still minimized while paused
+        self.Minimized = true
+        FarmUI.Status = "Minimized"
+        TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+        self.TabsContainer.Visible = false
+    end
 end)
 
 end
@@ -474,11 +523,13 @@ local function attachTestTask(button, label)
     button.MouseButton1Click:Connect(function()
         if ui.TaskActive then return end -- 🚫 already busy, ignore new clicks
         ui.TaskActive = true
-        -- hide normal buttons, show STOP
+
+        -- hide normal buttons, show STOP and toggle
         ui.CloseButton.Visible = false
         ui.MinimizeButton.Visible = false
         ui.StopButton.Visible = true
-
+        ui.taskToggleButton.Visible = true
+        ui.taskToggleButton.Text = "⏸️" -- start as pause icon
 
         -- minimize UI when task starts
         if not ui.Minimized then
@@ -491,30 +542,35 @@ local function attachTestTask(button, label)
         -- Start looping animation
         ui:animateTitle(label, "dots")
 
-        -- Stop after 5s and restore
+        -- Stop after 20s and restore
         task.delay(20, function()
-            ui:stopTitleAnimation()
-            ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
+            if ui.TaskActive then
+                -- Stop task automatically
+                ui:stopTitleAnimation()
+                ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
 
-            -- unminimize back
-            ui.Minimized = false
-            FarmUI.Status = "Open"
-            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
-            ui.TabsContainer.Visible = true
+                -- unminimize back
+                ui.Minimized = false
+                FarmUI.Status = "Open"
+                TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+                ui.TabsContainer.Visible = true
 
-            -- restore only current tab visible
-            for _,tab in ipairs(ui.ContentArea:GetChildren()) do
-                if tab:IsA("ScrollingFrame") then
-                    tab.Visible = (tab == ui.CurrentTab)
+                -- restore only current tab visible
+                for _,tab in ipairs(ui.ContentArea:GetChildren()) do
+                    if tab:IsA("ScrollingFrame") then
+                        tab.Visible = (tab == ui.CurrentTab)
+                    end
                 end
-            end
 
-            -- ✅ unlock for next task
-            ui.TaskActive = false
-            -- restore buttons
-            ui.CloseButton.Visible = true
-            ui.MinimizeButton.Visible = true
-            ui.StopButton.Visible = false
+                -- ✅ unlock for next task
+                ui.TaskActive = false
+
+                -- restore normal buttons
+                ui.CloseButton.Visible = true
+                ui.MinimizeButton.Visible = true
+                ui.StopButton.Visible = false
+                ui.taskToggleButton.Visible = false
+            end
         end)
     end)
 end
