@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.4"
+local VERSION = "v0.0.5"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -248,6 +248,7 @@ function FarmUI:setupEvents()
     self.CloseButton.Visible = true
     self.MinimizeButton.Visible = true
     self.StopButton.Visible = false
+    self.taskToggleButton.Visible = false
 end)
 
     -- ==========================
