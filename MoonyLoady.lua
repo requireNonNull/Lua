@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.0.2"
+local VERSION = "v0.0.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -305,7 +305,8 @@ local GamesList = {
         URL_UI  = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUI.lua",
         URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIVersion.lua",
         Status  = "✅ Exploit Working",
-        Notes   = "Supports v1.6"
+        Notes   = "Alpha Testing",
+        StatusFile = "https://raw.githubusercontent.com/requireNonNull/Lua/main/HorseLifeUIStatus.lua"
     },
     {
         Name = "PetSimulator",
@@ -313,9 +314,18 @@ local GamesList = {
         URL_UI  = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimUI.lua",
         URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimVersion.lua",
         Status  = "⚠️ Limited",
-        Notes   = "Partial exploit, some features disabled"
+        Notes   = "Partial exploit, some features disabled",
+        StatusFile = "https://raw.githubusercontent.com/requireNonNull/Lua/main/PetSimUIStatus.lua"
     },
 }
+
+local function daysAgo(dateString)
+    local y,m,d = dateString:match("(%d+)-(%d+)-(%d+)")
+    if not y then return "unknown" end
+    local lastDate = os.time({year=tonumber(y), month=tonumber(m), day=tonumber(d)})
+    local now = os.time()
+    return math.floor((os.time() - lastDate)/(24*60*60))
+end
 
 -- Add Games to Tab (Dynamic CanvasSize + Scan Simulation)
 local function addGamesSection(parent)
@@ -371,6 +381,32 @@ local function addGamesSection(parent)
         title.TextColor3 = Color3.fromRGB(255,255,255)
         title.TextXAlignment = Enum.TextXAlignment.Center
         title.Parent = gameFrame
+
+        local infoLabel = Instance.new("TextLabel")
+        infoLabel.Text = "Fetching status..."
+        infoLabel.Size = UDim2.new(1,0,0,36)
+        infoLabel.Position = UDim2.new(0,0,0,32)
+        infoLabel.BackgroundTransparency = 1
+        infoLabel.Font = Enum.Font.Gotham
+        infoLabel.TextSize = 14
+        infoLabel.TextColor3 = Color3.fromRGB(200,200,200)
+        infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+        infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+        infoLabel.TextWrapped = true
+        infoLabel.Parent = gameFrame
+    
+        -- Fetch status file
+        task.spawn(function()
+            local ok, statusData = pcall(function()
+                return loadstring(game:HttpGet(gameInfo.StatusFile))()
+            end)
+            if ok and statusData then
+                local days = daysAgo(statusData.LastCheckedDate)
+                infoLabel.Text = statusData.Status.." – Last checked "..days.." day"..(days ~= 1 and "s" or "").." ago"
+            else
+                infoLabel.Text = "⚠️ Status unavailable"
+            end
+        end)
 
         local infoLabel = Instance.new("TextLabel")
         infoLabel.Text = gameInfo.Status.."\n"..gameInfo.Notes
