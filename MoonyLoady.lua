@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.1.6"
+local VERSION = "v0.1.7"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -523,7 +523,7 @@ addGamesSection(gamesTab)
 -- ==========================
 -- Credits
 local creditsFrame = Instance.new("Frame")
-creditsFrame.Size = UDim2.new(1, -24, 0, 160) -- initial height
+creditsFrame.Size = UDim2.new(1, -24, 0, 0) -- start with 0, will expand
 creditsFrame.Position = UDim2.new(0, 12, 0, 36)
 creditsFrame.BackgroundTransparency = 1
 creditsFrame.Parent = infoTab
@@ -541,23 +541,29 @@ local creditLines = {
     "UI design helped by AI assistance!"
 }
 
+-- Add labels with AutomaticSize
 for _, text in ipairs(creditLines) do
     local label = Instance.new("TextLabel")
     label.Text = text
-    label.Size = UDim2.new(1, 0, 0, 24)
+    label.Size = UDim2.new(1, 0, 0, 24) -- initial, auto-adjusts
     label.BackgroundTransparency = 1
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
     label.TextColor3 = Color3.fromRGB(200, 200, 200)
-    label.TextWrapped = true           -- wrap text inside the label
+    label.TextWrapped = true
+    label.AutomaticSize = Enum.AutomaticSize.Y
     label.TextXAlignment = Enum.TextXAlignment.Center
-    label.AutomaticSize = Enum.AutomaticSize.Y  -- label height adjusts automatically
     label.Parent = creditsFrame
 end
 
--- Adjust frame height dynamically to fit all children
-creditsFrame.Size = UDim2.new(1, -24, 0, creditsFrame:GetChildren()[1].AbsoluteSize.Y * #creditLines)
-
+-- Resize the credits frame to fit all children
+local totalCreditsHeight = 0
+for _, child in ipairs(creditsFrame:GetChildren()) do
+    if child:IsA("TextLabel") then
+        totalCreditsHeight = totalCreditsHeight + child.AbsoluteSize.Y + creditsLayout.Padding.Offset
+    end
+end
+creditsFrame.Size = UDim2.new(1, -24, 0, totalCreditsHeight)
 
 -- ==========================
 -- Open Source / Educational Info (Developer-focused)
@@ -569,11 +575,12 @@ eduHeader.Font = Enum.Font.GothamBold
 eduHeader.TextSize = 18
 eduHeader.TextColor3 = Color3.fromRGB(255,255,255)
 eduHeader.TextXAlignment = Enum.TextXAlignment.Center
+eduHeader.Position = UDim2.new(0,0,0,36 + totalCreditsHeight + 8) -- below credits
 eduHeader.Parent = infoTab
 
 local eduFrame = Instance.new("Frame")
-eduFrame.Size = UDim2.new(1,-24,0,300) -- increased height for all text
-eduFrame.Position = UDim2.new(0,12,0,160) -- below credits
+eduFrame.Size = UDim2.new(1,-24,0,0) -- start with 0, will expand
+eduFrame.Position = UDim2.new(0,12,0,36 + totalCreditsHeight + 36) -- below header
 eduFrame.BackgroundTransparency = 1
 eduFrame.Parent = infoTab
 
@@ -597,6 +604,7 @@ local guideLines = {
     "   https://github.com/requireNonNull/Lua"
 }
 
+-- Add labels with AutomaticSize
 for _, text in ipairs(guideLines) do
     local lineLabel = Instance.new("TextLabel")
     lineLabel.Text = text
@@ -608,6 +616,15 @@ for _, text in ipairs(guideLines) do
     lineLabel.TextXAlignment = Enum.TextXAlignment.Left
     lineLabel.TextYAlignment = Enum.TextYAlignment.Top
     lineLabel.TextWrapped = true
+    lineLabel.AutomaticSize = Enum.AutomaticSize.Y
     lineLabel.Parent = eduFrame
 end
 
+-- Resize the edu frame to fit all children
+local totalEduHeight = 0
+for _, child in ipairs(eduFrame:GetChildren()) do
+    if child:IsA("TextLabel") then
+        totalEduHeight = totalEduHeight + child.AbsoluteSize.Y + eduLayout.Padding.Offset
+    end
+end
+eduFrame.Size = UDim2.new(1,-24,0,totalEduHeight)
