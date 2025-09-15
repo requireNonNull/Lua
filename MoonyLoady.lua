@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.0.9"
+local VERSION = "v0.1.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -451,32 +451,6 @@ local function addGamesSection(parent)
             infoLabel.Text = "<-> Status unavailable <->"
         end
     end)
-
-    -- Key Box
-    local keyBox = Instance.new("TextBox")
-    keyBox.Size = UDim2.new(0.8,0,0,36)
-    keyBox.Position = UDim2.new(0.1,0,0,100)
-    keyBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    keyBox.TextColor3 = Color3.fromRGB(255,255,255)
-    keyBox.Text = ""
-    keyBox.PlaceholderText = "Enter key here..."
-    keyBox.Font = Enum.Font.Gotham
-    keyBox.TextSize = 14
-    keyBox.ClearTextOnFocus = false
-    Instance.new("UICorner",keyBox).CornerRadius = UDim.new(0,6)
-    keyBox.Parent = gameFrame
-
-    -- Check Button
-    local checkBtn = Instance.new("TextButton")
-    checkBtn.Size = UDim2.new(0.5,0,0,36)
-    checkBtn.Position = UDim2.new(0.25,0,0,140)
-    checkBtn.Text = "Check Key"
-    checkBtn.Font = Enum.Font.GothamBold
-    checkBtn.TextSize = 14
-    checkBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    checkBtn.TextColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner",checkBtn).CornerRadius = UDim.new(0,6)
-    checkBtn.Parent = gameFrame
 
     -- Key Check Logic
     checkBtn.MouseButton1Click:Connect(function()
