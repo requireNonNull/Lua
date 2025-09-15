@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.3"
+local VERSION = "v0.0.5"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -388,7 +388,7 @@ local infoTab = ui:addTab("Info")
 -- init loading sequence
 ui:initLoadingAnimation(
     {"Loading", "Checking", "Configuring", "Almost ready"},
-    1.5, -- delay per step
+    1.0, -- delay per step
     true -- auto open
 )
 
@@ -429,6 +429,20 @@ ui.ThemeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
 
 -- ==========================
 -- Farming Tab: Placeholder buttons to test scrolling
+
+local function attachTestTask(button, label)
+    button.MouseButton1Click:Connect(function()
+        -- Start looping animation
+        ui:animateTitle(label, "dots")
+        
+        -- Stop after 5s
+        task.delay(5, function()
+            ui:stopTitleAnimation()
+            ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION -- restore normal title
+        end)
+    end)
+end
+
 local function createSection(parent, title, yOffset)
     -- Section header
     local header = Instance.new("TextLabel")
@@ -460,6 +474,7 @@ btn.Font = Enum.Font.Gotham
 btn.TextSize = 14
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 btn.Parent = farmingTab
+attachTestTask(btn, "Collecting Coins") -- 🟢 test task
 currentY = currentY + 42 -- button height + spacing
 
 -- XP Section
@@ -477,6 +492,7 @@ for i=1,2 do
     btn.TextSize = 14
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
     btn.Parent = farmingTab
+    attachTestTask(btn, "Collecting XP") -- 🟢 test task
     currentY = currentY + 42
 end
 
@@ -495,6 +511,7 @@ for i=1,20 do
     btn.TextSize = 14
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
     btn.Parent = farmingTab
+    attachTestTask(btn, "Collecting Resource " .. i .. " of 20") -- 🟢 test task
     currentY = currentY + 42
 end
 
