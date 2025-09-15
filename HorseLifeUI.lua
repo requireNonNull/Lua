@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.0.4"
+local VERSION = "v0.0.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -490,7 +490,8 @@ changelogLabel:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateCanvasSize
 
 -- ==========================
 -- Stats updater
-local startTime = tick()
+local startTime = tick()  -- for runtime
+local fpsStartTime = tick() -- for FPS calculation
 local frameCount = 0
 local fps = 0
 
@@ -498,10 +499,10 @@ RunService.Heartbeat:Connect(function(delta)
     frameCount += 1
 
     -- Update FPS every second
-    if tick() - startTime >= 1 then
+    if tick() - fpsStartTime >= 1 then
         fps = frameCount
         frameCount = 0
-        startTime = tick()
+        fpsStartTime = tick()
     end
 
     -- Runtime
@@ -510,32 +511,20 @@ RunService.Heartbeat:Connect(function(delta)
     local minutes = math.floor((runtime%3600)/60)
     local seconds = math.floor(runtime%60)
 
-    -- Approx ping
+    -- Approx ping (local)
     local pingStat = StatsService.Network.ServerStatsItem["Data Ping"]
     local ping = pingStat and math.floor(pingStat:GetValue()) or 0
 
     -- Update stats text
     statsLabel.Text = string.format(
-        "Runtime: %02d:%02d:%02d\nFPS: %d\nPlayers: %d\nPlaceID: %d\nPing: %d ms",
+        "PlaceID: %d\nRuntime: %02d:%02d:%02d\nFPS: %d\nPlayers: %d\nPing: %d ms",
+        game.PlaceId,
         hours, minutes, seconds,
         fps,
         #Players:GetPlayers(),
-        game.PlaceId,
         ping
     )
 end)
-
--- Initialize start time
-local startTime = tick()
-
--- Update runtime every frame
-RunService.Heartbeat:Connect(function()
-    if statsLabel and statsLabel.Parent then
-        local elapsed = math.floor(tick() - startTime)
-        statsLabel.Text = "Runtime: " .. elapsed .. "s"
-    end
-end)
-
 
 if DEBUG_MODE then
     print("[Farmy] UI "..VERSION.." initialized.")
