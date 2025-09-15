@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v10.0"
+local VERSION = "v11.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
