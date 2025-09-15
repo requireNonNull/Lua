@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.0.3"
+local VERSION = "v0.0.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -366,133 +366,124 @@ local function addGamesSection(parent)
     end)
 
     local function addGameBlock(gameInfo)
-        local gameFrame = Instance.new("Frame")
-        gameFrame.Size = UDim2.new(0.9,0,0,160) -- slightly taller
-        gameFrame.BackgroundTransparency = 1
-        gameFrame.Parent = scroll
+    local gameFrame = Instance.new("Frame")
+    gameFrame.Size = UDim2.new(0.9,0,0,180)
+    gameFrame.BackgroundTransparency = 1
+    gameFrame.Parent = scroll
 
-        local title = Instance.new("TextLabel")
-        title.Text = gameInfo.Name
-        title.Size = UDim2.new(1,0,0,28)
-        title.Position = UDim2.new(0,0,0,0)
-        title.BackgroundTransparency = 1
-        title.Font = Enum.Font.GothamBold
-        title.TextSize = 16
-        title.TextColor3 = Color3.fromRGB(255,255,255)
-        title.TextXAlignment = Enum.TextXAlignment.Center
-        title.Parent = gameFrame
+    local title = Instance.new("TextLabel")
+    title.Text = gameInfo.Name
+    title.Size = UDim2.new(1,0,0,28)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 16
+    title.TextColor3 = Color3.fromRGB(255,255,255)
+    title.TextXAlignment = Enum.TextXAlignment.Center
+    title.Parent = gameFrame
 
-        local infoLabel = Instance.new("TextLabel")
-        infoLabel.Text = "Fetching status..."
-        infoLabel.Size = UDim2.new(1,0,0,36)
-        infoLabel.Position = UDim2.new(0,0,0,32)
-        infoLabel.BackgroundTransparency = 1
-        infoLabel.Font = Enum.Font.Gotham
-        infoLabel.TextSize = 14
-        infoLabel.TextColor3 = Color3.fromRGB(200,200,200)
-        infoLabel.TextXAlignment = Enum.TextXAlignment.Left
-        infoLabel.TextYAlignment = Enum.TextYAlignment.Top
-        infoLabel.TextWrapped = true
-        infoLabel.Parent = gameFrame
-    
-        -- Fetch status file
-        task.spawn(function()
-            local ok, statusData = pcall(function()
-                return loadstring(game:HttpGet(gameInfo.StatusFile))()
+    -- Info label (status + last checked)
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Text = "Fetching status..."
+    infoLabel.Size = UDim2.new(1,0,0,36)
+    infoLabel.Position = UDim2.new(0,0,0,32)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.Font = Enum.Font.Gotham
+    infoLabel.TextSize = 14
+    infoLabel.TextColor3 = Color3.fromRGB(200,200,200)
+    infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+    infoLabel.TextWrapped = true
+    infoLabel.Parent = gameFrame
+
+    -- Fetch status from GitHub
+    task.spawn(function()
+        local ok, statusData = pcall(function()
+            return loadstring(game:HttpGet(gameInfo.StatusFile))()
+        end)
+        if ok and statusData then
+            local days = daysAgo(statusData.LastCheckedDate)
+            infoLabel.Text = statusData.Status.." – Last checked "..days.." day"..(days~=1 and "s" or "").." ago"
+        else
+            infoLabel.Text = "⚠️ Status unavailable"
+        end
+    end)
+
+    -- Notes label
+    local notesLabel = Instance.new("TextLabel")
+    notesLabel.Text = gameInfo.Notes
+    notesLabel.Size = UDim2.new(1,0,0,28)
+    notesLabel.Position = UDim2.new(0,0,0,70)
+    notesLabel.BackgroundTransparency = 1
+    notesLabel.Font = Enum.Font.Gotham
+    notesLabel.TextSize = 14
+    notesLabel.TextColor3 = Color3.fromRGB(180,180,180)
+    notesLabel.TextXAlignment = Enum.TextXAlignment.Center
+    notesLabel.Parent = gameFrame
+
+    -- Key Box
+    local keyBox = Instance.new("TextBox")
+    keyBox.Size = UDim2.new(0.8,0,0,36)
+    keyBox.Position = UDim2.new(0.1,0,0,100)
+    keyBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    keyBox.TextColor3 = Color3.fromRGB(255,255,255)
+    keyBox.Text = ""
+    keyBox.Font = Enum.Font.Gotham
+    keyBox.TextSize = 14
+    keyBox.ClearTextOnFocus = false
+    Instance.new("UICorner",keyBox).CornerRadius = UDim.new(0,6)
+    keyBox.Parent = gameFrame
+
+    -- Check Button
+    local checkBtn = Instance.new("TextButton")
+    checkBtn.Size = UDim2.new(0.5,0,0,36)
+    checkBtn.Position = UDim2.new(0.25,0,0,140)
+    checkBtn.Text = "Check Key"
+    checkBtn.Font = Enum.Font.GothamBold
+    checkBtn.TextSize = 14
+    checkBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    checkBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner",checkBtn).CornerRadius = UDim.new(0,6)
+    checkBtn.Parent = gameFrame
+
+    -- Key Check Logic
+    checkBtn.MouseButton1Click:Connect(function()
+        checkBtn.Active = false
+        keyBox.Active = false
+        local originalTitle = ui.TitleLabel.Text
+
+        -- Minimize UI
+        if not ui.Minimized then
+            ui.Minimized = true
+            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+            ui.TabsContainer.Visible = false
+        end
+        ui.TitleLabel.Text = "🔄 Scanning Key..."
+
+        task.delay(math.random(2,6), function()
+            local key = keyBox.Text
+            local ok, keys = pcall(function()
+                return loadstring(game:HttpGet(gameInfo.URL_KEYS))()
             end)
-            if ok and statusData then
-                local days = daysAgo(statusData.LastCheckedDate)
-                infoLabel.Text = statusData.Status.." – Last checked "..days.." day"..(days ~= 1 and "s" or "").." ago"
+
+            if ok and table.find(keys,key) then
+                ui.TitleLabel.Text = "✅ Access Granted"
+                task.wait(1)
+                ui.Screen:Destroy()
+                loadstring(game:HttpGet(gameInfo.URL_UI))()
             else
-                infoLabel.Text = "⚠️ Status unavailable"
+                ui.TitleLabel.Text = "❌ Access Denied"
+                task.wait(2)
+                -- Restore window
+                ui.Minimized = false
+                TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+                ui.TabsContainer.Visible = true
+                ui.TitleLabel.Text = originalTitle
+                checkBtn.Active = true
+                keyBox.Active = true
             end
         end)
+    end)
+end
 
-        local infoLabel = Instance.new("TextLabel")
-        infoLabel.Text = gameInfo.Status.."\n"..gameInfo.Notes
-        infoLabel.Size = UDim2.new(1,0,0,40)
-        infoLabel.Position = UDim2.new(0,0,0,32)
-        infoLabel.BackgroundTransparency = 1
-        infoLabel.Font = Enum.Font.Gotham
-        infoLabel.TextSize = 14
-        infoLabel.TextColor3 = Color3.fromRGB(200,200,200)
-        infoLabel.TextXAlignment = Enum.TextXAlignment.Center
-        infoLabel.TextYAlignment = Enum.TextYAlignment.Top
-        infoLabel.TextWrapped = true
-        infoLabel.Parent = gameFrame
-
-        local keyBox = Instance.new("TextBox")
-        keyBox.Size = UDim2.new(0.8,0,0,36)
-        keyBox.Position = UDim2.new(0.1,0,0,80)
-        keyBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-        keyBox.TextColor3 = Color3.fromRGB(255,255,255)
-        keyBox.Text = ""
-        keyBox.Font = Enum.Font.Gotham
-        keyBox.TextSize = 14
-        keyBox.ClearTextOnFocus = false
-        Instance.new("UICorner",keyBox).CornerRadius = UDim.new(0,6)
-        keyBox.Parent = gameFrame
-
-        local checkBtn = Instance.new("TextButton")
-        checkBtn.Size = UDim2.new(0.5,0,0,36)
-        checkBtn.Position = UDim2.new(0.25,0,0,124)
-        checkBtn.Text = "Check Key"
-        checkBtn.Font = Enum.Font.GothamBold
-        checkBtn.TextSize = 14
-        checkBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-        checkBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        Instance.new("UICorner",checkBtn).CornerRadius = UDim.new(0,6)
-        checkBtn.Parent = gameFrame
-
-        -- Key Check Logic with random scan delay & minimize animation
-        checkBtn.MouseButton1Click:Connect(function()
-            checkBtn.Active = false
-            keyBox.Active = false
-
-            -- Random delay between 2 and 10 seconds
-            local scanDelay = math.random(2,10)
-            local originalTitle = ui.TitleLabel.Text
-
-            -- Minimize and show scanning
-            if not ui.Minimized then
-                ui.Minimized = true
-                TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
-                ui.TabsContainer.Visible = false
-            end
-            ui.TitleLabel.Text = "🔄 Scanning Key..."
-
-            task.delay(scanDelay, function()
-                local keySuccess, keysRaw = pcall(function() return game:HttpGet(gameInfo.URL_KEYS) end)
-                local key = keyBox.Text
-                local accessGranted = false
-
-                if keySuccess and keysRaw then
-                    keysRaw = keysRaw:gsub("return",""):gsub("{",""):gsub("}",""):gsub("\"","")
-                    local keysList = {}
-                    for k in keysRaw:gmatch("[^,]+") do table.insert(keysList,k:match("^%s*(.-)%s*$")) end
-                    accessGranted = table.find(keysList,key) ~= nil
-                end
-
-                if accessGranted then
-                    ui.TitleLabel.Text = "✅ Access Granted"
-                    task.wait(0.5)
-                    ui.Screen:Destroy()
-                    local uiCode = game:HttpGet(gameInfo.URL_UI)
-                    loadstring(uiCode)()
-                else
-                    ui.TitleLabel.Text = "❌ Access Denied"
-                    task.wait(3) -- show denied for 3 seconds
-                    ui.TitleLabel.Text = originalTitle
-                    -- Restore window
-                    ui.Minimized = false
-                    TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
-                    ui.TabsContainer.Visible = true
-                    checkBtn.Active = true
-                    keyBox.Active = true
-                end
-            end)
-        end)
-    end
 
     for _,gameInfo in ipairs(GamesList) do
         addGameBlock(gameInfo)
