@@ -285,5 +285,5 @@ end
 -- Init loader
 local loader = LoaderUI.new()
 if DEBUG_MODE then
-    print("[MoonyLoady] Loader initialized with "..#GamesList.." game(s)")
+    print("[MoonyLoady "..VERSION.."] Loader initialized with "..#GamesList.." game(s)")
 end
