@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v6.0"
+local VERSION = "v7.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -18,38 +18,10 @@ FarmUI.Status = "Open" -- static variable for minimized/open
 
 -- Themes
 local Themes = {
-    Dark = {
-        Background = Color3.fromRGB(25,25,25),
-        Accent1 = Color3.fromRGB(0,170,255),
-        Accent2 = Color3.fromRGB(0,255,170),
-        Button = Color3.fromRGB(40,40,40),
-        ButtonHover = Color3.fromRGB(55,55,55),
-        Text = Color3.fromRGB(255,255,255),
-    },
-    White = {
-        Background = Color3.fromRGB(245,245,245),
-        Accent1 = Color3.fromRGB(0,120,255),
-        Accent2 = Color3.fromRGB(0,200,255),
-        Button = Color3.fromRGB(220,220,220),
-        ButtonHover = Color3.fromRGB(200,200,200),
-        Text = Color3.fromRGB(25,25,25),
-    },
-    PitchBlack = {
-        Background = Color3.fromRGB(10,10,10),
-        Accent1 = Color3.fromRGB(0,255,255),
-        Accent2 = Color3.fromRGB(0,150,255),
-        Button = Color3.fromRGB(20,20,20),
-        ButtonHover = Color3.fromRGB(35,35,35),
-        Text = Color3.fromRGB(255,255,255),
-    },
-    DarkPurple = {
-        Background = Color3.fromRGB(30,0,50),
-        Accent1 = Color3.fromRGB(150,0,255),
-        Accent2 = Color3.fromRGB(255,0,200),
-        Button = Color3.fromRGB(40,10,60),
-        ButtonHover = Color3.fromRGB(60,20,80),
-        Text = Color3.fromRGB(255,255,255),
-    },
+    Dark = {Accent1 = Color3.fromRGB(0,170,255), Accent2 = Color3.fromRGB(0,255,170)},
+    White = {Accent1 = Color3.fromRGB(255,255,255), Accent2 = Color3.fromRGB(200,200,200)},
+    PitchBlack = {Accent1 = Color3.fromRGB(40,40,40), Accent2 = Color3.fromRGB(80,80,80)},
+    DarkPurple = {Accent1 = Color3.fromRGB(120,0,200), Accent2 = Color3.fromRGB(200,0,255)},
     Rainbow = "Rainbow"
 }
 
@@ -217,8 +189,13 @@ end
 
 -- ==========================
 -- Theme Application
+
 function FarmUI:applyTheme(name)
     self.CurrentTheme = name
+    -- always keep background pitch black
+    self.Main.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    self.TitleBar.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    
     if name == "Rainbow" then
         task.spawn(function()
             while self.CurrentTheme == "Rainbow" do
@@ -227,22 +204,21 @@ function FarmUI:applyTheme(name)
                 local g = 0.5 + 0.5 * math.sin(t + 2)
                 local b = 0.5 + 0.5 * math.sin(t + 4)
                 self.OutlineGradient.Color = ColorSequence.new(Color3.new(r,g,b), Color3.new(b,r,g))
-                self.Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
-                self.TitleBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
-                self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
                 task.wait(0.05)
             end
         end)
     else
         local th = Themes[name]
-        self.Main.BackgroundColor3 = th.Background
         self.OutlineGradient.Color = ColorSequence.new(th.Accent1, th.Accent2)
-        self.TitleBar.BackgroundColor3 = th.Background
-        self.TitleLabel.TextColor3 = th.Text
-        for _,btn in ipairs(self.TabButtons:GetChildren()) do
-            if btn:IsA("TextButton") then
-                btn.BackgroundColor3 = th.Button
-                btn.TextColor3 = th.Text
+    end
+
+    -- update theme buttons to show active
+    if self.ThemeButtons then
+        for tName,button in pairs(self.ThemeButtons) do
+            if tName == name then
+                button.BackgroundTransparency = 0.6
+            else
+                button.BackgroundTransparency = 0
             end
         end
     end
@@ -337,7 +313,7 @@ headerDesign.TextSize = 18
 headerDesign.TextColor3 = Color3.fromRGB(255,255,255)
 headerDesign.Parent = settingsTab
 
-local themeButtons = {}
+ui.ThemeButtons = {}
 local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
 for i,themeName in ipairs(themesList) do
     local btn = Instance.new("TextButton")
@@ -350,23 +326,15 @@ for i,themeName in ipairs(themesList) do
     btn.TextColor3 = Color3.fromRGB(255,255,255)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
     btn.Parent = settingsTab
-    themeButtons[themeName] = btn
+    ui.ThemeButtons[themeName] = btn
 
     btn.MouseButton1Click:Connect(function()
         ui:applyTheme(themeName)
-        -- update all buttons transparency
-        for tName,button in pairs(themeButtons) do
-            if tName == themeName then
-                button.BackgroundTransparency = 0.6 -- grayed out for active
-            else
-                button.BackgroundTransparency = 0
-            end
-        end
     end)
 end
 
--- Set initial active theme transparency
-themeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
+-- mark initial theme button as active
+ui.ThemeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
 
 -- ==========================
 -- Farming Tab: Placeholder buttons to test scrolling
@@ -384,54 +352,98 @@ end
 
 -- ==========================
 -- Info Tab
+local infoTab = ui:addTab("Info")
+
+-- Stats Header
 local statsHeader = Instance.new("TextLabel")
 statsHeader.Text = "Stats"
-statsHeader.Size = UDim2.new(1,0,0,28)
-statsHeader.Position = UDim2.new(0,0,0,0)
+statsHeader.Size = UDim2.new(1, -16, 0, 24)
+statsHeader.Position = UDim2.new(0, 8, 0, 8)
 statsHeader.BackgroundTransparency = 1
 statsHeader.Font = Enum.Font.GothamBold
 statsHeader.TextSize = 18
 statsHeader.TextColor3 = Color3.fromRGB(255,255,255)
+statsHeader.TextXAlignment = Enum.TextXAlignment.Left
 statsHeader.Parent = infoTab
 
+-- Stats placeholder
 local statsLabel = Instance.new("TextLabel")
-statsLabel.Text = "Runtime info: 0s"
-statsLabel.Size = UDim2.new(1,0,0,24)
-statsLabel.Position = UDim2.new(0,0,0,32)
+statsLabel.Text = "Runtime: 0s\nOther stats here..."
+statsLabel.Size = UDim2.new(1, -16, 0, 48)
+statsLabel.Position = UDim2.new(0, 8, 0, 32)
 statsLabel.BackgroundTransparency = 1
 statsLabel.Font = Enum.Font.Gotham
 statsLabel.TextSize = 14
 statsLabel.TextColor3 = Color3.fromRGB(255,255,255)
 statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+statsLabel.TextYAlignment = Enum.TextYAlignment.Top
+statsLabel.TextWrapped = true
 statsLabel.Parent = infoTab
 
+-- Changelog Header
 local changelogHeader = Instance.new("TextLabel")
 changelogHeader.Text = "Changelog"
-changelogHeader.Size = UDim2.new(1,0,0,28)
-changelogHeader.Position = UDim2.new(0,0,0,64)
+changelogHeader.Size = UDim2.new(1, -16, 0, 24)
+changelogHeader.Position = UDim2.new(0, 8, 0, 88)
 changelogHeader.BackgroundTransparency = 1
 changelogHeader.Font = Enum.Font.GothamBold
 changelogHeader.TextSize = 18
 changelogHeader.TextColor3 = Color3.fromRGB(255,255,255)
+changelogHeader.TextXAlignment = Enum.TextXAlignment.Left
 changelogHeader.Parent = infoTab
 
+-- Changelog Scrollable Frame
+local changelogFrame = Instance.new("ScrollingFrame")
+changelogFrame.Size = UDim2.new(1, -16, 1, -120) -- leave space for headers
+changelogFrame.Position = UDim2.new(0, 8, 0, 120)
+changelogFrame.BackgroundTransparency = 1
+changelogFrame.ScrollBarThickness = 0 -- invisible scroll
+changelogFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+changelogFrame.Parent = infoTab
+
+-- UIListLayout for auto layout
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0,4)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = changelogFrame
+
+local padding = Instance.new("UIPadding")
+padding.PaddingTop = UDim.new(0,4)
+padding.PaddingBottom = UDim.new(0,4)
+padding.PaddingLeft = UDim.new(0,8)
+padding.PaddingRight = UDim.new(0,8)
+padding.Parent = changelogFrame
+
+-- Changelog Label
 local changelogLabel = Instance.new("TextLabel")
-changelogLabel.Text = "- v2.7: Theme dropdown, titlebar themed, scrolling test \n \n- v2.3: Theme dropdown fix, titlebar themed fix, scrolling test fix \n"
-changelogLabel.Size = UDim2.new(1,0,0,24)
-changelogLabel.Position = UDim2.new(0,0,0,96)
+changelogLabel.Text = "- v2.7: Theme buttons, titlebar themed, scrolling test\n- v2.4: Minor fixes\n- v2.3: Theme dropdown fix, titlebar themed fix, scrolling test fix\n- v2.0: Initial rewrite\nAdd more changelog lines here..."
+changelogLabel.Size = UDim2.new(1, 0, 0, 0) -- auto-height
 changelogLabel.BackgroundTransparency = 1
 changelogLabel.Font = Enum.Font.Gotham
 changelogLabel.TextSize = 14
 changelogLabel.TextColor3 = Color3.fromRGB(255,255,255)
 changelogLabel.TextXAlignment = Enum.TextXAlignment.Left
-changelogLabel.Parent = infoTab
+changelogLabel.TextYAlignment = Enum.TextYAlignment.Top
+changelogLabel.TextWrapped = true
+changelogLabel.Parent = changelogFrame
+
+-- Auto-resize function
+local function updateCanvasSize()
+    changelogLabel.Size = UDim2.new(1, 0, 0, changelogLabel.TextBounds.Y)
+    changelogFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y)
+end
+
+updateCanvasSize()
+changelogLabel:GetPropertyChangedSignal("Text"):Connect(updateCanvasSize)
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
+
 
 -- Update runtime every second
 local startTime = tick()
 RunService.Heartbeat:Connect(function()
     if statsLabel and statsLabel.Parent then
         local elapsed = math.floor(tick()-startTime)
-        statsLabel.Text = "Runtime info: " .. elapsed .. "s"
+        statsLabel.Text = "Runtime: " .. elapsed .. "s"
     end
 end)
 
