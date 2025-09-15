@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.1.9"
+local VERSION = "v0.2.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -521,7 +521,7 @@ end
 addGamesSection(gamesTab)
 
 -- ==========================
--- Credits (scrollable)
+-- Credits (no scrollbar)
 local creditsHeader = Instance.new("TextLabel")
 creditsHeader.Text = "Credits"
 creditsHeader.Size = UDim2.new(1,0,0,28)
@@ -533,20 +533,18 @@ creditsHeader.TextXAlignment = Enum.TextXAlignment.Center
 creditsHeader.Position = UDim2.new(0,0,0,36)
 creditsHeader.Parent = infoTab
 
-local creditsScroll = Instance.new("ScrollingFrame")
-creditsScroll.Size = UDim2.new(1,-24,0,160)
-creditsScroll.Position = UDim2.new(0,12,0,72)
-creditsScroll.BackgroundTransparency = 1
-creditsScroll.ScrollBarImageTransparency = 1
-creditsScroll.ScrollBarThickness = 0
-creditsScroll.CanvasSize = UDim2.new(0,0,0,0)
-creditsScroll.Parent = infoTab
+local creditsFrame = Instance.new("Frame")
+creditsFrame.Size = UDim2.new(1,-24,0,0)
+creditsFrame.Position = UDim2.new(0,12,0,72)
+creditsFrame.BackgroundTransparency = 1
+creditsFrame.AutomaticSize = Enum.AutomaticSize.Y -- grow with content
+creditsFrame.Parent = infoTab
 
-local creditsLayout = Instance.new("UIListLayout", creditsScroll)
+local creditsLayout = Instance.new("UIListLayout", creditsFrame)
 creditsLayout.FillDirection = Enum.FillDirection.Vertical
-creditsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+creditsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 creditsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-creditsLayout.Padding = UDim.new(0,6)
+creditsLayout.Padding = UDim.new(0,4)
 
 local creditLines = {
     "Made by Breezingfreeze",
@@ -562,18 +560,16 @@ for _, text in ipairs(creditLines) do
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
     label.TextColor3 = Color3.fromRGB(200,200,200)
-    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextYAlignment = Enum.TextYAlignment.Top
     label.TextWrapped = true
     label.AutomaticSize = Enum.AutomaticSize.Y
-    label.Size = UDim2.new(1,0,0,24)
-    label.Parent = creditsScroll
+    label.Size = UDim2.new(1,0,0,0)
+    label.Parent = creditsFrame
 end
 
-creditsScroll.CanvasSize = UDim2.new(0,0,0,creditsLayout.AbsoluteContentSize.Y)
-
 -- ==========================
--- Open Source / Educational Info (Developer-focused)
+-- Open Source / Educational Info (no scrollbar)
 local eduHeader = Instance.new("TextLabel")
 eduHeader.Text = "Open Source / Educational"
 eduHeader.Size = UDim2.new(1,0,0,28)
@@ -582,13 +578,14 @@ eduHeader.Font = Enum.Font.GothamBold
 eduHeader.TextSize = 18
 eduHeader.TextColor3 = Color3.fromRGB(255,255,255)
 eduHeader.TextXAlignment = Enum.TextXAlignment.Center
-eduHeader.Position = UDim2.new(0,0,0,72 + 160 + 12) -- below credits
+eduHeader.Position = UDim2.new(0,0,0,36 + creditsFrame.AbsoluteSize.Y + 8)
 eduHeader.Parent = infoTab
 
 local eduFrame = Instance.new("Frame")
-eduFrame.Size = UDim2.new(1,-24,0,0) -- initial height 0, will grow
-eduFrame.Position = UDim2.new(0,12,0,72 + 160 + 36)
+eduFrame.Size = UDim2.new(1,-24,0,0)
+eduFrame.Position = UDim2.new(0,12,0,36 + creditsFrame.AbsoluteSize.Y + 36)
 eduFrame.BackgroundTransparency = 1
+eduFrame.AutomaticSize = Enum.AutomaticSize.Y
 eduFrame.Parent = infoTab
 
 local eduLayout = Instance.new("UIListLayout", eduFrame)
@@ -604,7 +601,6 @@ local guideLines = {
     "💡 Developers can use this to identify vulnerabilities and fix them.",
     "Best practices to prevent exploits:",
     "   • Randomize internal Part and Folder names.",
-    "   • Avoid predictable naming for triggers, values, and events.",
     "   • Validate all actions server-side instead of trusting client input.",
     "   • Limit remote execution and verify user permissions.",
     "Repository for reference and educational use:",
@@ -622,9 +618,6 @@ for _, text in ipairs(guideLines) do
     lineLabel.TextYAlignment = Enum.TextYAlignment.Top
     lineLabel.TextWrapped = true
     lineLabel.AutomaticSize = Enum.AutomaticSize.Y
-    lineLabel.Size = UDim2.new(1,0,0,22)
+    lineLabel.Size = UDim2.new(1,0,0,0)
     lineLabel.Parent = eduFrame
 end
-
--- Dynamically resize the frame to fit all content
-eduFrame.Size = UDim2.new(1,-24,0,eduLayout.AbsoluteContentSize.Y)
