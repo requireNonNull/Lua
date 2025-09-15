@@ -1,10 +1,11 @@
--- 🦄 Farmy v2.6 (Modern UI Framework)
-local VERSION = "v4.0"
+-- 🦄 Farmy v5.0 (Modern UI Framework)
+local VERSION = "v5.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- ==========================
@@ -132,7 +133,9 @@ function FarmUI.new()
     self.TabButtons.Parent = self.TabsContainer
     local layout = Instance.new("UIListLayout", self.TabButtons)
     layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.Padding = UDim.new(0, 8)
+
     Instance.new("UIPadding", self.TabButtons).PaddingLeft = UDim.new(0, 8)
 
     -- Content area
@@ -225,6 +228,7 @@ function FarmUI:applyTheme(name)
                 local b = 0.5 + 0.5 * math.sin(t + 4)
                 self.OutlineGradient.Color = ColorSequence.new(Color3.new(r,g,b), Color3.new(b,r,g))
                 self.Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+                self.TitleBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
                 self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
                 task.wait(0.05)
             end
@@ -233,6 +237,7 @@ function FarmUI:applyTheme(name)
         local th = Themes[name]
         self.Main.BackgroundColor3 = th.Background
         self.OutlineGradient.Color = ColorSequence.new(th.Accent1, th.Accent2)
+        self.TitleBar.BackgroundColor3 = th.Background
         self.TitleLabel.TextColor3 = th.Text
         for _,btn in ipairs(self.TabButtons:GetChildren()) do
             if btn:IsA("TextButton") then
@@ -320,7 +325,8 @@ local farmingTab = ui:addTab("Farming")
 local settingsTab = ui:addTab("Settings")
 local infoTab = ui:addTab("Info")
 
--- Example headers and theme selector in Settings
+-- ==========================
+-- Settings Tab: Design Header + Theme Dropdown
 local headerDesign = Instance.new("TextLabel")
 headerDesign.Text = "Design"
 headerDesign.Size = UDim2.new(1,0,0,28)
@@ -330,7 +336,7 @@ headerDesign.TextSize = 18
 headerDesign.TextColor3 = Color3.fromRGB(255,255,255)
 headerDesign.Parent = settingsTab
 
--- Theme dropdown (compact)
+-- Theme dropdown button
 local themeDropdown = Instance.new("TextButton")
 themeDropdown.Text = "Select Theme"
 themeDropdown.Size = UDim2.new(0,160,0,30)
@@ -342,10 +348,10 @@ themeDropdown.BackgroundColor3 = Color3.fromRGB(50,50,50)
 Instance.new("UICorner", themeDropdown).CornerRadius = UDim.new(0,6)
 themeDropdown.Parent = settingsTab
 
+-- Dropdown container
 local dropdownFrame = Instance.new("Frame")
 dropdownFrame.Size = UDim2.new(1,0,0,0)
 dropdownFrame.Position = UDim2.new(0,0,0,66)
-dropdownFrame.BackgroundTransparency = 0
 dropdownFrame.BackgroundColor3 = Color3.fromRGB(45,45,45)
 Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0,6)
 dropdownFrame.ClipsDescendants = true
@@ -358,7 +364,7 @@ dropdownLayout.Parent = dropdownFrame
 
 themeDropdown.MouseButton1Click:Connect(function()
     if dropdownFrame.Size.Y.Offset == 0 then
-        dropdownFrame:TweenSize(UDim2.new(1,0,0,#dropdownLayout:GetChildren()*32), "Out", "Quad", 0.2, true)
+        dropdownFrame:TweenSize(UDim2.new(1,0,0,#dropdownLayout:GetChildren()*28), "Out", "Quad", 0.2, true)
     else
         dropdownFrame:TweenSize(UDim2.new(1,0,0,0), "Out", "Quad", 0.2, true)
     end
@@ -381,7 +387,22 @@ for _,themeName in ipairs({"Dark","White","PitchBlack","DarkPurple","Rainbow"}) 
     end)
 end
 
--- Info Tab example
+-- ==========================
+-- Farming Tab: Placeholder buttons to test scrolling
+for i=1,25 do
+    local btn = Instance.new("TextButton")
+    btn.Text = "Farm Action #" .. i
+    btn.Size = UDim2.new(0.9,0,0,36)
+    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+    btn.Parent = farmingTab
+end
+
+-- ==========================
+-- Info Tab
 local statsHeader = Instance.new("TextLabel")
 statsHeader.Text = "Stats"
 statsHeader.Size = UDim2.new(1,0,0,28)
@@ -393,7 +414,7 @@ statsHeader.TextColor3 = Color3.fromRGB(255,255,255)
 statsHeader.Parent = infoTab
 
 local statsLabel = Instance.new("TextLabel")
-statsLabel.Text = "Runtime info: ..."
+statsLabel.Text = "Runtime info: 0s"
 statsLabel.Size = UDim2.new(1,0,0,24)
 statsLabel.Position = UDim2.new(0,0,0,32)
 statsLabel.BackgroundTransparency = 1
@@ -414,7 +435,7 @@ changelogHeader.TextColor3 = Color3.fromRGB(255,255,255)
 changelogHeader.Parent = infoTab
 
 local changelogLabel = Instance.new("TextLabel")
-changelogLabel.Text = "- v2.6: Modernized UI, theme dropdown, minimize fix"
+changelogLabel.Text = "- v2.7: Theme dropdown, titlebar themed, scrolling test \n \n- v2.3: Theme dropdown fix, titlebar themed fix, scrolling test fix \n"
 changelogLabel.Size = UDim2.new(1,0,0,24)
 changelogLabel.Position = UDim2.new(0,0,0,96)
 changelogLabel.BackgroundTransparency = 1
@@ -423,6 +444,15 @@ changelogLabel.TextSize = 14
 changelogLabel.TextColor3 = Color3.fromRGB(255,255,255)
 changelogLabel.TextXAlignment = Enum.TextXAlignment.Left
 changelogLabel.Parent = infoTab
+
+-- Update runtime every second
+local startTime = tick()
+RunService.Heartbeat:Connect(function()
+    if statsLabel and statsLabel.Parent then
+        local elapsed = math.floor(tick()-startTime)
+        statsLabel.Text = "Runtime info: " .. elapsed .. "s"
+    end
+end)
 
 if DEBUG_MODE then
     print("[Farmy] UI v"..VERSION.." initialized.")
