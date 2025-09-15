@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.2"
+local VERSION = "v0.0.3"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -189,14 +189,9 @@ function FarmUI:setupEvents()
         if self.Minimized then
             TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
             self.TabsContainer.Visible = false
-            -- later you can call anywhere:
-            ui:animateTitle("⏳ Minimized", "dots") -- loops until stopped
-            task.delay(5, function() ui:stopTitleAnimation() end)
-            
         else
             TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
             self.TabsContainer.Visible = true
-            self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
             -- restore current tab only
             for _,tab in ipairs(self.ContentArea:GetChildren()) do
                 if tab:IsA("ScrollingFrame") then
