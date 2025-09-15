@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v12.0"
+local VERSION = "v13.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -131,7 +131,7 @@ function FarmUI.new()
     -- Setup
     self:makeDraggable(self.TitleBar)
     self:setupEvents()
-    self:applyTheme("Dark") -- default
+    self:applyTheme("Rainbow") -- default
     return self
 end
 
@@ -243,18 +243,6 @@ function FarmUI:addTab(name)
     button.AutoButtonColor = false
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
     button.Parent = self.TabButtons
-
-    -- hover effect
-    button.MouseEnter:Connect(function()
-        if self.CurrentTheme ~= "Rainbow" then
-            button.BackgroundColor3 = th.ButtonHover
-        end
-    end)
-    button.MouseLeave:Connect(function()
-        if self.CurrentTheme ~= "Rainbow" then
-            button.BackgroundColor3 = th.Button
-        end
-    end)
 
     -- content scrolling frame
     local content = Instance.new("ScrollingFrame")
