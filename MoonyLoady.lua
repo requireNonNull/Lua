@@ -532,10 +532,11 @@ header.TextColor3 = Color3.fromRGB(255,255,255)
 header.TextXAlignment = Enum.TextXAlignment.Center
 header.Parent = infoTab
 
-local creditsFrame = Instance.new("Frame")
-creditsFrame.Size = UDim2.new(1,-24,0,160)  -- Increased size for more lines
+local creditsFrame = Instance.new("ScrollingFrame")
+creditsFrame.Size = UDim2.new(1,-24,0,160)  -- scrollable frame
 creditsFrame.Position = UDim2.new(0,12,0,36)
 creditsFrame.BackgroundTransparency = 1
+creditsFrame.ScrollBarThickness = 6
 creditsFrame.Parent = infoTab
 
 local creditsLayout = Instance.new("UIListLayout", creditsFrame)
@@ -544,45 +545,29 @@ creditsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 creditsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 creditsLayout.Padding = UDim.new(0,6)
 
-local creditLine1 = Instance.new("TextLabel")
-creditLine1.Text = "Made by Breezingfreeze"
-creditLine1.Size = UDim2.new(1,0,0,24)
-creditLine1.BackgroundTransparency = 1
-creditLine1.Font = Enum.Font.Gotham
-creditLine1.TextSize = 14
-creditLine1.TextColor3 = Color3.fromRGB(200,200,200)
-creditLine1.TextXAlignment = Enum.TextXAlignment.Center
-creditLine1.Parent = creditsFrame
+local creditLines = {
+    "Made by Breezingfreeze",
+    "Thanks to SPDMTeam for their awesome executors!",
+    "Dex Explorer by Moon for cracking everything open!",
+    "UI design helped by AI assistance!"
+}
 
-local creditLine2 = Instance.new("TextLabel")
-creditLine2.Text = "Thanks to SPDMTeam for their awesome executors!"
-creditLine2.Size = UDim2.new(1,0,0,24)
-creditLine2.BackgroundTransparency = 1
-creditLine2.Font = Enum.Font.Gotham
-creditLine2.TextSize = 14
-creditLine2.TextColor3 = Color3.fromRGB(200,200,200)
-creditLine2.TextXAlignment = Enum.TextXAlignment.Center
-creditLine2.Parent = creditsFrame
+for _, text in ipairs(creditLines) do
+    local lineLabel = Instance.new("TextLabel")
+    lineLabel.Text = text
+    lineLabel.Size = UDim2.new(1,0,0,24)
+    lineLabel.BackgroundTransparency = 1
+    lineLabel.Font = Enum.Font.Gotham
+    lineLabel.TextSize = 14
+    lineLabel.TextColor3 = Color3.fromRGB(200,200,200)
+    lineLabel.TextXAlignment = Enum.TextXAlignment.Center
+    lineLabel.TextWrapped = true  -- <--- wrap text
+    lineLabel.Parent = creditsFrame
+end
 
-local creditLine3 = Instance.new("TextLabel")
-creditLine3.Text = "Dex Explorer by Moon for cracking everything open!"
-creditLine3.Size = UDim2.new(1,0,0,24)
-creditLine3.BackgroundTransparency = 1
-creditLine3.Font = Enum.Font.Gotham
-creditLine3.TextSize = 14
-creditLine3.TextColor3 = Color3.fromRGB(200,200,200)
-creditLine3.TextXAlignment = Enum.TextXAlignment.Center
-creditLine3.Parent = creditsFrame
-
-local creditLine4 = Instance.new("TextLabel")
-creditLine4.Text = "UI design helped by AI assistance!"
-creditLine4.Size = UDim2.new(1,0,0,24)
-creditLine4.BackgroundTransparency = 1
-creditLine4.Font = Enum.Font.Gotham
-creditLine4.TextSize = 14
-creditLine4.TextColor3 = Color3.fromRGB(200,200,200)
-creditLine4.TextXAlignment = Enum.TextXAlignment.Center
-creditLine4.Parent = creditsFrame
+creditsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    creditsFrame.CanvasSize = UDim2.new(0,0,0,creditsLayout.AbsoluteContentSize.Y + 8)
+end)
 
 -- ==========================
 -- Open Source / Educational Info (Developer-focused)
@@ -596,10 +581,11 @@ eduHeader.TextColor3 = Color3.fromRGB(255,255,255)
 eduHeader.TextXAlignment = Enum.TextXAlignment.Center
 eduHeader.Parent = infoTab
 
-local eduFrame = Instance.new("Frame")
+local eduFrame = Instance.new("ScrollingFrame")
 eduFrame.Size = UDim2.new(1,-24,0,260)
-eduFrame.Position = UDim2.new(0,12,0,72)
+eduFrame.Position = UDim2.new(0,12,0,200) -- position below credits
 eduFrame.BackgroundTransparency = 1
+eduFrame.ScrollBarThickness = 6
 eduFrame.Parent = infoTab
 
 local eduLayout = Instance.new("UIListLayout", eduFrame)
@@ -608,7 +594,6 @@ eduLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 eduLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 eduLayout.Padding = UDim.new(0,8)
 
--- Guide content for developers
 local guideLines = {
     "⚠️ Disclaimer: For educational purposes only—do not use to exploit games.",
     "🔧 This loader project is designed to demonstrate how automation works for learning.",
@@ -633,6 +618,10 @@ for _, text in ipairs(guideLines) do
     lineLabel.TextColor3 = Color3.fromRGB(200,200,200)
     lineLabel.TextXAlignment = Enum.TextXAlignment.Left
     lineLabel.TextYAlignment = Enum.TextYAlignment.Top
+    lineLabel.TextWrapped = true  -- <--- wrap text
     lineLabel.Parent = eduFrame
 end
 
+eduLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    eduFrame.CanvasSize = UDim2.new(0,0,0,eduLayout.AbsoluteContentSize.Y + 8)
+end)
