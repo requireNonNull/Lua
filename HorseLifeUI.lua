@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v8.0"
+local VERSION = "v9.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -64,6 +64,7 @@ function FarmUI.new()
     self.TitleBar.Parent = self.Main
     Instance.new("UICorner", self.TitleBar).CornerRadius = UDim.new(0, 14)
 
+    -- Title label
     self.TitleLabel = Instance.new("TextLabel")
     self.TitleLabel.Size = UDim2.new(1, -80, 1, 0)
     self.TitleLabel.Position = UDim2.new(0, 12, 0, 0)
@@ -72,23 +73,28 @@ function FarmUI.new()
     self.TitleLabel.Text = "🦄 Farmy " .. VERSION
     self.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     self.TitleLabel.TextSize = 18
+    self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
     self.TitleLabel.Parent = self.TitleBar
-
-    -- Close & Minimize buttons
-    self.CloseButton = Instance.new("ImageButton")
+    
+    -- Close & Minimize buttons (text buttons, white)
+    self.CloseButton = Instance.new("TextButton")
     self.CloseButton.Size = UDim2.new(0, 20, 0, 20)
     self.CloseButton.Position = UDim2.new(1, -28, 0.5, -10)
     self.CloseButton.BackgroundTransparency = 1
-    self.CloseButton.Image = "rbxassetid://6035047409"
+    self.CloseButton.Font = Enum.Font.GothamBold
+    self.CloseButton.Text = "✖" -- UTF-8 cross
+    self.CloseButton.TextSize = 18
+    self.CloseButton.TextColor3 = Color3.fromRGB(255,255,255)
     self.CloseButton.Parent = self.TitleBar
-
+    
     self.MinimizeButton = Instance.new("TextButton")
     self.MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
     self.MinimizeButton.Position = UDim2.new(1, -52, 0.5, -10)
     self.MinimizeButton.BackgroundTransparency = 1
     self.MinimizeButton.Font = Enum.Font.GothamBold
-    self.MinimizeButton.Text = "—"
+    self.MinimizeButton.Text = "—" -- minus for minimize
     self.MinimizeButton.TextSize = 20
+    self.MinimizeButton.TextColor3 = Color3.fromRGB(255,255,255)
     self.MinimizeButton.Parent = self.TitleBar
 
     -- Tabs container
@@ -350,25 +356,24 @@ end
 
 -- ==========================
 -- Info Tab
-local infoTab = ui:addTab("Info")
 
 -- Stats Header
 local statsHeader = Instance.new("TextLabel")
 statsHeader.Text = "Stats"
-statsHeader.Size = UDim2.new(1, -16, 0, 24)
-statsHeader.Position = UDim2.new(0, 8, 0, 8)
+statsHeader.Size = UDim2.new(1, 0, 0, 28) -- full width
+statsHeader.Position = UDim2.new(0, 0, 0, 8) -- top margin
 statsHeader.BackgroundTransparency = 1
 statsHeader.Font = Enum.Font.GothamBold
 statsHeader.TextSize = 18
 statsHeader.TextColor3 = Color3.fromRGB(255,255,255)
-statsHeader.TextXAlignment = Enum.TextXAlignment.Left
+statsHeader.TextXAlignment = Enum.TextXAlignment.Center -- text centered
 statsHeader.Parent = infoTab
 
--- Stats placeholder
+-- Stats placeholder (below header)
 local statsLabel = Instance.new("TextLabel")
 statsLabel.Text = "Runtime: 0s\nOther stats here..."
 statsLabel.Size = UDim2.new(1, -16, 0, 48)
-statsLabel.Position = UDim2.new(0, 8, 0, 32)
+statsLabel.Position = UDim2.new(0, 8, 0, 44) -- slightly below header
 statsLabel.BackgroundTransparency = 1
 statsLabel.Font = Enum.Font.Gotham
 statsLabel.TextSize = 14
@@ -378,16 +383,16 @@ statsLabel.TextYAlignment = Enum.TextYAlignment.Top
 statsLabel.TextWrapped = true
 statsLabel.Parent = infoTab
 
--- Changelog Header
+-- Changelog Header (centered)
 local changelogHeader = Instance.new("TextLabel")
 changelogHeader.Text = "Changelog"
-changelogHeader.Size = UDim2.new(1, -16, 0, 24)
-changelogHeader.Position = UDim2.new(0, 8, 0, 88)
+changelogHeader.Size = UDim2.new(1, 0, 0, 28) -- full width
+changelogHeader.Position = UDim2.new(0, 0, 0, 100) -- adjust as needed below stats
 changelogHeader.BackgroundTransparency = 1
 changelogHeader.Font = Enum.Font.GothamBold
 changelogHeader.TextSize = 18
 changelogHeader.TextColor3 = Color3.fromRGB(255,255,255)
-changelogHeader.TextXAlignment = Enum.TextXAlignment.Left
+changelogHeader.TextXAlignment = Enum.TextXAlignment.Center -- text centered
 changelogHeader.Parent = infoTab
 
 -- Changelog Scrollable Frame
@@ -412,10 +417,10 @@ padding.PaddingLeft = UDim.new(0,8)
 padding.PaddingRight = UDim.new(0,8)
 padding.Parent = changelogFrame
 
--- Changelog Label
+-- Changelog Label (fixed width, wraps properly)
 local changelogLabel = Instance.new("TextLabel")
 changelogLabel.Text = "- v2.7: Theme buttons, titlebar themed, scrolling test\n- v2.4: Minor fixes\n- v2.3: Theme dropdown fix, titlebar themed fix, scrolling test fix\n- v2.0: Initial rewrite\nAdd more changelog lines here..."
-changelogLabel.Size = UDim2.new(1, 0, 0, 0) -- auto-height
+changelogLabel.Size = UDim2.new(1, 0, 0, 0)  -- start with zero height
 changelogLabel.BackgroundTransparency = 1
 changelogLabel.Font = Enum.Font.Gotham
 changelogLabel.TextSize = 14
@@ -423,18 +428,21 @@ changelogLabel.TextColor3 = Color3.fromRGB(255,255,255)
 changelogLabel.TextXAlignment = Enum.TextXAlignment.Left
 changelogLabel.TextYAlignment = Enum.TextYAlignment.Top
 changelogLabel.TextWrapped = true
+changelogLabel.RichText = true
+changelogLabel.AutomaticSize = Enum.AutomaticSize.Y  -- auto-height
 changelogLabel.Parent = changelogFrame
 
--- Auto-resize function
+-- Auto-resize function for canvas
 local function updateCanvasSize()
-    changelogLabel.Size = UDim2.new(1, 0, 0, changelogLabel.TextBounds.Y)
-    changelogFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y)
+    -- Wait a frame to ensure TextLabel has measured the height
+    task.defer(function()
+        changelogFrame.CanvasSize = UDim2.new(0, 0, 0, changelogLabel.AbsoluteSize.Y + 8)
+    end)
 end
 
 updateCanvasSize()
 changelogLabel:GetPropertyChangedSignal("Text"):Connect(updateCanvasSize)
-layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
-
+changelogLabel:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateCanvasSize)
 
 -- Update runtime every second
 local startTime = tick()
