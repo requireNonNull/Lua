@@ -1,5 +1,5 @@
--- 🦄 Moony Loady v1.3 (Tween Animations, Multi-game, Farmy-style)
-local VERSION = "v1.3"
+-- 🦄 Moony Loady v1.4 (Modern Tab + Minimize on Key Scan)
+local VERSION = "v1.4"
 local DEBUG_MODE = true
 
 local GamesList = {
@@ -28,35 +28,41 @@ local function tweenObject(obj, properties, duration, easingStyle, easingDir)
     return tween
 end
 
--- Show Key Input Tab for a game
-function LoaderUI:showGameKeyTab(gameInfo)
+-- Minimize frame to titlebar only
+function LoaderUI:minimizeFrame()
+    tweenObject(self.Outline, {Size = UDim2.new(0, 360, 0, 42)}, 0.3)
+end
+
+-- Restore frame to full size
+function LoaderUI:restoreFrame()
+    tweenObject(self.Outline, {Size = UDim2.new(0, 360, 0, 220)}, 0.3)
+end
+
+-- Show game tab (header only, modern layout)
+function LoaderUI:showGameTab(gameInfo)
     if self.CurrentTab then
-        tweenObject(self.CurrentTab, {BackgroundTransparency = 1}, 0.3).Completed:Wait()
         self.CurrentTab:Destroy()
     end
 
-    self.TitleLabel.Text = gameInfo.Name
-    self.TabButtons:ClearAllChildren()
+    local tab = Instance.new("Frame")
+    tab.Size = UDim2.new(1,0,1,0)
+    tab.BackgroundTransparency = 1
+    tab.Parent = self.ContentArea
+    self.CurrentTab = tab
 
-    local keyContent = Instance.new("Frame")
-    keyContent.Size = UDim2.new(1,0,1,0)
-    keyContent.BackgroundTransparency = 1
-    keyContent.Parent = self.ContentArea
-    self.CurrentTab = keyContent
-
-    -- Key Header
+    -- Header for the tab (title only)
     local header = Instance.new("TextLabel")
-    header.Text = "Key ("..gameInfo.Name..")"
-    header.Size = UDim2.new(1,0,0,28)
-    header.Position = UDim2.new(0,0,0,8)
+    header.Text = gameInfo.Name
+    header.Size = UDim2.new(1,-16,0,28)
+    header.Position = UDim2.new(0,8,0,8)
     header.BackgroundTransparency = 1
     header.Font = Enum.Font.GothamBold
     header.TextSize = 18
     header.TextColor3 = Color3.fromRGB(255,255,255)
-    header.TextXAlignment = Enum.TextXAlignment.Center
-    header.Parent = keyContent
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.Parent = tab
 
-    -- Input Box
+    -- Key Input Box
     local inputBox = Instance.new("TextBox")
     inputBox.Size = UDim2.new(0.8,0,0,36)
     inputBox.Position = UDim2.new(0.1,0,0,48)
@@ -67,7 +73,7 @@ function LoaderUI:showGameKeyTab(gameInfo)
     inputBox.PlaceholderText = "Enter your key"
     inputBox.ClearTextOnFocus = false
     Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0,6)
-    inputBox.Parent = keyContent
+    inputBox.Parent = tab
 
     -- Check Key Button
     local checkBtn = Instance.new("TextButton")
@@ -79,16 +85,17 @@ function LoaderUI:showGameKeyTab(gameInfo)
     checkBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
     checkBtn.TextColor3 = Color3.fromRGB(255,255,255)
     Instance.new("UICorner", checkBtn).CornerRadius = UDim.new(0,6)
-    checkBtn.Parent = keyContent
+    checkBtn.Parent = tab
 
-    keyContent.BackgroundTransparency = 1
-    tweenObject(keyContent, {BackgroundTransparency = 0}, 0.3)
-
-    -- Key Checking Logic
+    -- Key Checking Logic with static scan delay
     checkBtn.MouseButton1Click:Connect(function()
         checkBtn.Active = false
         inputBox.Active = false
+
+        -- Minimize frame while scanning
+        self:minimizeFrame()
         self.TitleLabel.Text = "🔄 Scanning Key..."
+        task.wait(1) -- static delay for visual effect
 
         task.spawn(function()
             local keySuccess, keysRaw = pcall(function() return game:HttpGet(gameInfo.URL_KEYS) end)
@@ -116,11 +123,13 @@ function LoaderUI:showGameKeyTab(gameInfo)
                     loadstring(uiCode)()
                 else
                     self.TitleLabel.Text = "❌ Access Denied"
+                    self:restoreFrame()
                     checkBtn.Active = true
                     inputBox.Active = true
                 end
             else
                 self.TitleLabel.Text = "⚠️ Failed to fetch keys"
+                self:restoreFrame()
                 checkBtn.Active = true
                 inputBox.Active = true
             end
@@ -216,7 +225,7 @@ function LoaderUI.new()
     self.ContentArea.BackgroundTransparency = 1
     self.ContentArea.Parent = self.TabsContainer
 
-    -- Games tab
+    -- Games Tab
     local gamesBtn = Instance.new("TextButton")
     gamesBtn.Size = UDim2.new(0,100,1,0)
     gamesBtn.Text = "Games"
@@ -248,7 +257,7 @@ function LoaderUI.new()
 
         btn.MouseButton1Click:Connect(function()
             tweenObject(gamesContent, {BackgroundTransparency = 1}, 0.3).Completed:Wait()
-            self:showGameKeyTab(gameInfo)
+            self:showGameTab(gameInfo)
         end)
     end
 
