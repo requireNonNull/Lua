@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.0.7"
+local VERSION = "v0.0.8"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -357,7 +357,7 @@ local function addGamesSection(parent)
     scroll.Size = UDim2.new(1,0,1,-40)
     scroll.Position = UDim2.new(0,0,0,36)
     scroll.BackgroundTransparency = 1
-    scroll.ScrollBarThickness = 6
+    scroll.ScrollBarThickness = 0
     scroll.Parent = parent
 
     local layout = Instance.new("UIListLayout")
@@ -417,7 +417,7 @@ local function addGamesSection(parent)
             local days = daysAgo(statusData.LastCheckedDate)
             infoLabel.Text = statusData.Status.." \n>> Last checked "..daysAgo(statusData.LastCheckedDate)
         else
-            infoLabel.Text = "⚠️ Status unavailable"
+            infoLabel.Text = "<-> Status unavailable <->"
         end
     end)
 
