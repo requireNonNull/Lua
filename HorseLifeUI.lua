@@ -1,11 +1,12 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.0.2"
+local VERSION = "v0.0.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local StatsService = game:GetService("Stats")
 local player = Players.LocalPlayer
 
 -- ==========================
@@ -402,11 +403,11 @@ end
 -- ==========================
 -- Info Tab
 
--- Advanced Stats Header
+-- Stats Header (centered)
 local statsHeader = Instance.new("TextLabel")
 statsHeader.Text = "Stats"
-statsHeader.Size = UDim2.new(1, 0, 0, 28)
-statsHeader.Position = UDim2.new(0, 0, 0, 8)
+statsHeader.Size = UDim2.new(1, 0, 0, 28) -- full width
+statsHeader.Position = UDim2.new(0, 0, 0, 8) -- top margin
 statsHeader.BackgroundTransparency = 1
 statsHeader.Font = Enum.Font.GothamBold
 statsHeader.TextSize = 18
@@ -414,10 +415,9 @@ statsHeader.TextColor3 = Color3.fromRGB(255,255,255)
 statsHeader.TextXAlignment = Enum.TextXAlignment.Center
 statsHeader.Parent = infoTab
 
--- Advanced Stats Label
+-- Stats Label (below header)
 local statsLabel = Instance.new("TextLabel")
-statsLabel.Text = ""
-statsLabel.Size = UDim2.new(1, -16, 0, 100) -- enough for multiple lines
+statsLabel.Size = UDim2.new(1, -16, 0, 80)
 statsLabel.Position = UDim2.new(0, 8, 0, 44)
 statsLabel.BackgroundTransparency = 1
 statsLabel.Font = Enum.Font.Gotham
@@ -426,88 +426,30 @@ statsLabel.TextColor3 = Color3.fromRGB(255,255,255)
 statsLabel.TextXAlignment = Enum.TextXAlignment.Left
 statsLabel.TextYAlignment = Enum.TextYAlignment.Top
 statsLabel.TextWrapped = true
-statsLabel.RichText = true
 statsLabel.Parent = infoTab
-
--- Start time
-local startTime = tick()
-
--- FPS tracker
-local lastFrame = tick()
-local fps = 0
-
--- Update stats every heartbeat
-RunService.Heartbeat:Connect(function(delta)
-    -- Runtime
-    local elapsed = tick() - startTime
-    local hours = math.floor(elapsed / 3600)
-    local minutes = math.floor((elapsed % 3600) / 60)
-    local seconds = math.floor(elapsed % 60)
-    local runtime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-
-    -- Player count
-    local playerCount = #Players:GetPlayers()
-
-    -- Ping (simulated using a round-trip method)
-    local ping = 0
-    if player and player.Parent then
-        local startPing = tick()
-        ping = math.floor((tick() - startPing) * 1000) -- ms, rough estimate
-    end
-
-    -- FPS
-    local current = tick()
-    fps = 1 / delta
-
-    -- PlaceId
-    local placeId = game.PlaceId
-
-    -- Optional additional info: job id, session id, team info, local humanoid
-    local jobId = game.JobId
-    local localPlayerTeam = player.Team and player.Team.Name or "None"
-    local humanoidHealth = 0
-    if player.Character and player.Character:FindFirstChild("Humanoid") then
-        humanoidHealth = math.floor(player.Character.Humanoid.Health)
-    end
-
-    -- Compose stats text
-    statsLabel.Text = string.format(
-        [[
-Runtime: %s
-Players: %d
-Ping: %d ms
-FPS: %d
-Place ID: %d
-Job ID: %s
-Team: %s
-Health: %d
-        ]],
-        runtime, playerCount, ping, fps, placeId, jobId, localPlayerTeam, humanoidHealth
-    )
-end)
 
 -- Changelog Header (centered)
 local changelogHeader = Instance.new("TextLabel")
 changelogHeader.Text = "Changelog"
-changelogHeader.Size = UDim2.new(1, 0, 0, 28) -- full width
-changelogHeader.Position = UDim2.new(0, 0, 0, 100) -- adjust as needed below stats
+changelogHeader.Size = UDim2.new(1, 0, 0, 28)
+changelogHeader.Position = UDim2.new(0, 0, 0, 140)
 changelogHeader.BackgroundTransparency = 1
 changelogHeader.Font = Enum.Font.GothamBold
 changelogHeader.TextSize = 18
 changelogHeader.TextColor3 = Color3.fromRGB(255,255,255)
-changelogHeader.TextXAlignment = Enum.TextXAlignment.Center -- text centered
+changelogHeader.TextXAlignment = Enum.TextXAlignment.Center
 changelogHeader.Parent = infoTab
 
 -- Changelog Scrollable Frame
 local changelogFrame = Instance.new("ScrollingFrame")
-changelogFrame.Size = UDim2.new(1, -16, 1, -120) -- leave space for headers
-changelogFrame.Position = UDim2.new(0, 8, 0, 120)
+changelogFrame.Size = UDim2.new(1, -16, 1, -200) -- leave space for headers
+changelogFrame.Position = UDim2.new(0, 8, 0, 180)
 changelogFrame.BackgroundTransparency = 1
-changelogFrame.ScrollBarThickness = 0 -- invisible scroll
+changelogFrame.ScrollBarThickness = 4
 changelogFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 changelogFrame.Parent = infoTab
 
--- UIListLayout for auto layout
+-- Layout
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0,4)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -520,10 +462,10 @@ padding.PaddingLeft = UDim.new(0,8)
 padding.PaddingRight = UDim.new(0,8)
 padding.Parent = changelogFrame
 
--- Changelog Label (fixed width, wraps properly)
+-- Changelog Label
 local changelogLabel = Instance.new("TextLabel")
 changelogLabel.Text = "- v2.7: Theme buttons, titlebar themed, scrolling test\n- v2.4: Minor fixes\n- v2.3: Theme dropdown fix, titlebar themed fix, scrolling test fix\n- v2.0: Initial rewrite\nAdd more changelog lines here..."
-changelogLabel.Size = UDim2.new(1, 0, 0, 0)  -- start with zero height
+changelogLabel.Size = UDim2.new(1, 0, 0, 0)
 changelogLabel.BackgroundTransparency = 1
 changelogLabel.Font = Enum.Font.Gotham
 changelogLabel.TextSize = 14
@@ -532,12 +474,11 @@ changelogLabel.TextXAlignment = Enum.TextXAlignment.Left
 changelogLabel.TextYAlignment = Enum.TextYAlignment.Top
 changelogLabel.TextWrapped = true
 changelogLabel.RichText = true
-changelogLabel.AutomaticSize = Enum.AutomaticSize.Y  -- auto-height
+changelogLabel.AutomaticSize = Enum.AutomaticSize.Y
 changelogLabel.Parent = changelogFrame
 
--- Auto-resize function for canvas
+-- Auto-update canvas size
 local function updateCanvasSize()
-    -- Wait a frame to ensure TextLabel has measured the height
     task.defer(function()
         changelogFrame.CanvasSize = UDim2.new(0, 0, 0, changelogLabel.AbsoluteSize.Y + 8)
     end)
@@ -547,13 +488,41 @@ updateCanvasSize()
 changelogLabel:GetPropertyChangedSignal("Text"):Connect(updateCanvasSize)
 changelogLabel:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateCanvasSize)
 
--- Update runtime every second
+-- ==========================
+-- Stats updater
 local startTime = tick()
-RunService.Heartbeat:Connect(function()
-    if statsLabel and statsLabel.Parent then
-        local elapsed = math.floor(tick()-startTime)
-        statsLabel.Text = "Runtime: " .. elapsed .. "s"
+local frameCount = 0
+local fps = 0
+
+RunService.Heartbeat:Connect(function(delta)
+    frameCount += 1
+
+    -- Update FPS every second
+    if tick() - startTime >= 1 then
+        fps = frameCount
+        frameCount = 0
+        startTime = tick()
     end
+
+    -- Runtime
+    local runtime = tick() - startTime
+    local hours = math.floor(runtime/3600)
+    local minutes = math.floor((runtime%3600)/60)
+    local seconds = math.floor(runtime%60)
+
+    -- Approx ping
+    local pingStat = StatsService.Network.ServerStatsItem["Data Ping"]
+    local ping = pingStat and math.floor(pingStat:GetValue()) or 0
+
+    -- Update stats text
+    statsLabel.Text = string.format(
+        "Runtime: %02d:%02d:%02d\nFPS: %d\nPlayers: %d\nPlaceID: %d\nPing: %d ms",
+        hours, minutes, seconds,
+        fps,
+        #Players:GetPlayers(),
+        game.PlaceId,
+        ping
+    )
 end)
 
 if DEBUG_MODE then
