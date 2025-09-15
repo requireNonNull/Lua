@@ -1,6 +1,5 @@
--- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.7"
-local EXPLOIT_NAME = "🦄 Farmy"
+local VERSION = "v0.0.8"
+local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -775,5 +774,5 @@ RunService.Heartbeat:Connect(function(delta)
 end)
 
 if DEBUG_MODE then
-    print("[Farmy] UI "..VERSION.." initialized.")
+    print("Horse Life 🐎 Menu "..VERSION.." initialized.")
 end
