@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.5"
+local VERSION = "v0.0.7"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -96,7 +96,7 @@ function FarmUI.new()
     self.MinimizeButton.BackgroundTransparency = 1
     self.MinimizeButton.Font = Enum.Font.GothamBold
     self.MinimizeButton.Text = "—" -- minus for minimize
-    self.MinimizeButton.TextSize = 20
+    self.MinimizeButton.TextSize = 18
     self.MinimizeButton.TextColor3 = Color3.fromRGB(255,255,255)
     self.MinimizeButton.Parent = self.TitleBar
 
@@ -118,7 +118,7 @@ function FarmUI.new()
     self.taskToggleButton.BackgroundTransparency = 1
     self.taskToggleButton.Font = Enum.Font.GothamBold
     self.taskToggleButton.Text = "⏸️"
-    self.taskToggleButton.TextSize = 20
+    self.taskToggleButton.TextSize = 18
     self.taskToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
     self.taskToggleButton.Visible = false
     self.taskToggleButton.Parent = self.TitleBar
