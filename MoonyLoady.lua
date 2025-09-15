@@ -298,8 +298,6 @@ for _, url in ipairs(statusFiles) do
     end
 end
 
-return GamesList
-
 local function daysAgo(dateString)
     local y,m,d = dateString:match("(%d+)-(%d+)-(%d+)")
     if not y then return "unknown" end
@@ -565,5 +563,3 @@ creditLine2.TextSize = 14
 creditLine2.TextColor3 = Color3.fromRGB(200,200,200)
 creditLine2.TextXAlignment = Enum.TextXAlignment.Center
 creditLine2.Parent = creditsFrame
-
--- End of sanitized script
