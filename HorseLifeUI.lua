@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.6"
+local VERSION = "v0.0.7"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -130,6 +130,7 @@ function FarmUI.new()
     self.CurrentTab = nil
     self.CurrentTheme = nil
     self.Minimized = true -- start minimized
+    self.TaskActive = false
     FarmUI.Status = "Minimized"
     
     -- Setup
@@ -432,7 +433,10 @@ ui.ThemeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
 
 local function attachTestTask(button, label)
     button.MouseButton1Click:Connect(function()
-        -- ✅ minimize UI when task starts
+        if ui.TaskActive then return end -- 🚫 already busy, ignore new clicks
+        ui.TaskActive = true
+
+        -- minimize UI when task starts
         if not ui.Minimized then
             ui.Minimized = true
             FarmUI.Status = "Minimized"
@@ -446,9 +450,9 @@ local function attachTestTask(button, label)
         -- Stop after 5s and restore
         task.delay(5, function()
             ui:stopTitleAnimation()
-            ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION -- restore normal title
+            ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
 
-            -- ✅ unminimize back
+            -- unminimize back
             ui.Minimized = false
             FarmUI.Status = "Open"
             TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
@@ -460,6 +464,9 @@ local function attachTestTask(button, label)
                     tab.Visible = (tab == ui.CurrentTab)
                 end
             end
+
+            -- ✅ unlock for next task
+            ui.TaskActive = false
         end)
     end)
 end
