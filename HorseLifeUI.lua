@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.0.1"
+local VERSION = "v0.0.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -402,23 +402,23 @@ end
 -- ==========================
 -- Info Tab
 
--- Stats Header
+-- Advanced Stats Header
 local statsHeader = Instance.new("TextLabel")
 statsHeader.Text = "Stats"
-statsHeader.Size = UDim2.new(1, 0, 0, 28) -- full width
-statsHeader.Position = UDim2.new(0, 0, 0, 8) -- top margin
+statsHeader.Size = UDim2.new(1, 0, 0, 28)
+statsHeader.Position = UDim2.new(0, 0, 0, 8)
 statsHeader.BackgroundTransparency = 1
 statsHeader.Font = Enum.Font.GothamBold
 statsHeader.TextSize = 18
 statsHeader.TextColor3 = Color3.fromRGB(255,255,255)
-statsHeader.TextXAlignment = Enum.TextXAlignment.Center -- text centered
+statsHeader.TextXAlignment = Enum.TextXAlignment.Center
 statsHeader.Parent = infoTab
 
--- Stats placeholder (below header)
+-- Advanced Stats Label
 local statsLabel = Instance.new("TextLabel")
-statsLabel.Text = "Runtime: 0s\nOther stats here..."
-statsLabel.Size = UDim2.new(1, -16, 0, 48)
-statsLabel.Position = UDim2.new(0, 8, 0, 44) -- slightly below header
+statsLabel.Text = ""
+statsLabel.Size = UDim2.new(1, -16, 0, 100) -- enough for multiple lines
+statsLabel.Position = UDim2.new(0, 8, 0, 44)
 statsLabel.BackgroundTransparency = 1
 statsLabel.Font = Enum.Font.Gotham
 statsLabel.TextSize = 14
@@ -426,7 +426,65 @@ statsLabel.TextColor3 = Color3.fromRGB(255,255,255)
 statsLabel.TextXAlignment = Enum.TextXAlignment.Left
 statsLabel.TextYAlignment = Enum.TextYAlignment.Top
 statsLabel.TextWrapped = true
+statsLabel.RichText = true
 statsLabel.Parent = infoTab
+
+-- Start time
+local startTime = tick()
+
+-- FPS tracker
+local lastFrame = tick()
+local fps = 0
+
+-- Update stats every heartbeat
+RunService.Heartbeat:Connect(function(delta)
+    -- Runtime
+    local elapsed = tick() - startTime
+    local hours = math.floor(elapsed / 3600)
+    local minutes = math.floor((elapsed % 3600) / 60)
+    local seconds = math.floor(elapsed % 60)
+    local runtime = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+    -- Player count
+    local playerCount = #Players:GetPlayers()
+
+    -- Ping (simulated using a round-trip method)
+    local ping = 0
+    if player and player.Parent then
+        local startPing = tick()
+        ping = math.floor((tick() - startPing) * 1000) -- ms, rough estimate
+    end
+
+    -- FPS
+    local current = tick()
+    fps = 1 / delta
+
+    -- PlaceId
+    local placeId = game.PlaceId
+
+    -- Optional additional info: job id, session id, team info, local humanoid
+    local jobId = game.JobId
+    local localPlayerTeam = player.Team and player.Team.Name or "None"
+    local humanoidHealth = 0
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        humanoidHealth = math.floor(player.Character.Humanoid.Health)
+    end
+
+    -- Compose stats text
+    statsLabel.Text = string.format(
+        [[
+Runtime: %s
+Players: %d
+Ping: %d ms
+FPS: %d
+Place ID: %d
+Job ID: %s
+Team: %s
+Health: %d
+        ]],
+        runtime, playerCount, ping, fps, placeId, jobId, localPlayerTeam, humanoidHealth
+    )
+end)
 
 -- Changelog Header (centered)
 local changelogHeader = Instance.new("TextLabel")
@@ -499,5 +557,5 @@ RunService.Heartbeat:Connect(function()
 end)
 
 if DEBUG_MODE then
-    print("[Farmy] UI v"..VERSION.." initialized.")
+    print("[Farmy] UI "..VERSION.." initialized.")
 end
