@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.0.6"
+local VERSION = "v0.0.8"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -349,9 +349,13 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
     delayTime = delayTime or 1.5
     autoOpen = autoOpen or false
 
+    -- disable minimize while animating
+    self.MinimizeButton.Active = false
+    self.MinimizeButton.AutoButtonColor = false
+    self.MinimizeButton.TextTransparency = 0.5 -- gray out visually
+
     task.spawn(function()
         for _,step in ipairs(steps) do
-            -- Use fade animation for each step
             self:animateTitle(step, "fade", delayTime)
             task.wait(delayTime)
         end
@@ -359,6 +363,11 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
         -- restore title
         self:stopTitleAnimation()
         self.TitleLabel.Text = "🦄 Farmy " .. VERSION
+
+        -- re-enable minimize button
+        self.MinimizeButton.Active = true
+        self.MinimizeButton.AutoButtonColor = true
+        self.MinimizeButton.TextTransparency = 0
 
         if autoOpen then
             self.Minimized = false
@@ -368,6 +377,7 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
         end
     end)
 end
+
 
 -- ==========================
 -- Initialize UI
