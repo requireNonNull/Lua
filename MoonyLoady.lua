@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.1.4"
+local VERSION = "v0.1.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
