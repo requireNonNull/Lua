@@ -583,3 +583,56 @@ creditLine4.TextSize = 14
 creditLine4.TextColor3 = Color3.fromRGB(200,200,200)
 creditLine4.TextXAlignment = Enum.TextXAlignment.Center
 creditLine4.Parent = creditsFrame
+
+-- ==========================
+-- Open Source / Educational Info (Developer-focused)
+local eduHeader = Instance.new("TextLabel")
+eduHeader.Text = "Open Source / Educational"
+eduHeader.Size = UDim2.new(1,0,0,28)
+eduHeader.BackgroundTransparency = 1
+eduHeader.Font = Enum.Font.GothamBold
+eduHeader.TextSize = 18
+eduHeader.TextColor3 = Color3.fromRGB(255,255,255)
+eduHeader.TextXAlignment = Enum.TextXAlignment.Center
+eduHeader.Parent = infoTab
+
+local eduFrame = Instance.new("Frame")
+eduFrame.Size = UDim2.new(1,-24,0,260)
+eduFrame.Position = UDim2.new(0,12,0,72)
+eduFrame.BackgroundTransparency = 1
+eduFrame.Parent = infoTab
+
+local eduLayout = Instance.new("UIListLayout", eduFrame)
+eduLayout.FillDirection = Enum.FillDirection.Vertical
+eduLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+eduLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+eduLayout.Padding = UDim.new(0,8)
+
+-- Guide content for developers
+local guideLines = {
+    "⚠️ Disclaimer: For educational purposes only—do not use to exploit games.",
+    "🔧 This loader project is designed to demonstrate how automation works for learning.",
+    "👀 It shows how UI and internal folder/part names can be targeted by exploits.",
+    "💡 Developers can use this to identify vulnerabilities and fix them.",
+    "Best practices to prevent exploits:",
+    "   • Randomize internal Part and Folder names.",
+    "   • Avoid predictable naming for triggers, values, and events.",
+    "   • Validate all actions server-side instead of trusting client input.",
+    "   • Limit remote execution and verify user permissions.",
+    "Repository for reference and educational use:",
+    "   https://github.com/requireNonNull/Lua"
+}
+
+for _, text in ipairs(guideLines) do
+    local lineLabel = Instance.new("TextLabel")
+    lineLabel.Text = text
+    lineLabel.Size = UDim2.new(1,0,0,24)
+    lineLabel.BackgroundTransparency = 1
+    lineLabel.Font = Enum.Font.Gotham
+    lineLabel.TextSize = 14
+    lineLabel.TextColor3 = Color3.fromRGB(200,200,200)
+    lineLabel.TextXAlignment = Enum.TextXAlignment.Left
+    lineLabel.TextYAlignment = Enum.TextYAlignment.Top
+    lineLabel.Parent = eduFrame
+end
+
