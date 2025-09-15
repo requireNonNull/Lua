@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v9.0"
+local VERSION = "v10.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -82,7 +82,7 @@ function FarmUI.new()
     self.CloseButton.Position = UDim2.new(1, -28, 0.5, -10)
     self.CloseButton.BackgroundTransparency = 1
     self.CloseButton.Font = Enum.Font.GothamBold
-    self.CloseButton.Text = "✖" -- UTF-8 cross
+    self.CloseButton.Text = "✕" -- UTF-8 cross
     self.CloseButton.TextSize = 18
     self.CloseButton.TextColor3 = Color3.fromRGB(255,255,255)
     self.CloseButton.Parent = self.TitleBar
