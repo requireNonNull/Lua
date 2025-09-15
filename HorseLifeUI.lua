@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.0.8"
+local VERSION = "v0.0.9"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -16,6 +16,7 @@ local FarmUI = {}
 FarmUI.__index = FarmUI
 
 FarmUI.Status = "Open" -- static variable for minimized/open
+FarmUI.LoadingActive = false
 
 -- Themes
 local Themes = {
@@ -179,6 +180,8 @@ function FarmUI:setupEvents()
     end)
 
     self.MinimizeButton.MouseButton1Click:Connect(function()
+        if self.LoadingActive then return end -- 🚫 block minimize during loading
+
         self.Minimized = not self.Minimized
         FarmUI.Status = self.Minimized and "Minimized" or "Open"
 
@@ -348,26 +351,24 @@ end
 function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
     delayTime = delayTime or 1.5
     autoOpen = autoOpen or false
+    self.LoadingActive = true
 
-    -- disable minimize while animating
-    self.MinimizeButton.Active = false
+    -- visually disable button
     self.MinimizeButton.AutoButtonColor = false
-    self.MinimizeButton.TextTransparency = 0.5 -- gray out visually
+    self.MinimizeButton.TextTransparency = 0.5
 
     task.spawn(function()
-        for _,step in ipairs(steps) do
+        for _, step in ipairs(steps) do
             self:animateTitle(step, "fade", delayTime)
             task.wait(delayTime)
         end
 
-        -- restore title
+        -- restore
         self:stopTitleAnimation()
         self.TitleLabel.Text = "🦄 Farmy " .. VERSION
-
-        -- re-enable minimize button
-        self.MinimizeButton.Active = true
         self.MinimizeButton.AutoButtonColor = true
         self.MinimizeButton.TextTransparency = 0
+        self.LoadingActive = false
 
         if autoOpen then
             self.Minimized = false
@@ -377,7 +378,6 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
         end
     end)
 end
-
 
 -- ==========================
 -- Initialize UI
