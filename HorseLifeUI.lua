@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.7"
+local VERSION = "v0.0.8"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -99,6 +99,19 @@ function FarmUI.new()
     self.MinimizeButton.TextSize = 20
     self.MinimizeButton.TextColor3 = Color3.fromRGB(255,255,255)
     self.MinimizeButton.Parent = self.TitleBar
+
+    -- STOP button (hidden by default, replaces close+minimize when farming)
+    self.StopButton = Instance.new("TextButton")
+    self.StopButton.Size = UDim2.new(0, 60, 0, 30) -- slightly bigger
+    self.StopButton.Position = UDim2.new(1, -70, 0.5, -15)
+    self.StopButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    self.StopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    self.StopButton.Font = Enum.Font.GothamBold
+    self.StopButton.TextSize = 14
+    self.StopButton.Text = "🚫 STOP"
+    self.StopButton.Visible = false
+    Instance.new("UICorner", self.StopButton).CornerRadius = UDim.new(0, 6)
+    self.StopButton.Parent = self.TitleBar
 
     -- Tabs container
     self.TabsContainer = Instance.new("Frame")
@@ -201,6 +214,32 @@ function FarmUI:setupEvents()
             end
         end
     end)
+    
+    self.StopButton.MouseButton1Click:Connect(function()
+    -- force stop farming
+    self.TaskActive = false
+    self:stopTitleAnimation()
+    self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
+
+    -- restore UI
+    self.Minimized = false
+    FarmUI.Status = "Open"
+    TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+    self.TabsContainer.Visible = true
+
+    -- restore only current tab visible
+    for _,tab in ipairs(self.ContentArea:GetChildren()) do
+        if tab:IsA("ScrollingFrame") then
+            tab.Visible = (tab == self.CurrentTab)
+        end
+    end
+            
+    -- hide STOP, restore normal controls
+    self.CloseButton.Visible = true
+    self.MinimizeButton.Visible = true
+    self.StopButton.Visible = false
+end)
+
 end
 
 -- ==========================
@@ -435,6 +474,11 @@ local function attachTestTask(button, label)
     button.MouseButton1Click:Connect(function()
         if ui.TaskActive then return end -- 🚫 already busy, ignore new clicks
         ui.TaskActive = true
+        -- hide normal buttons, show STOP
+        ui.CloseButton.Visible = false
+        ui.MinimizeButton.Visible = false
+        ui.StopButton.Visible = true
+
 
         -- minimize UI when task starts
         if not ui.Minimized then
@@ -467,6 +511,10 @@ local function attachTestTask(button, label)
 
             -- ✅ unlock for next task
             ui.TaskActive = false
+            -- restore buttons
+            ui.CloseButton.Visible = true
+            ui.MinimizeButton.Visible = true
+            ui.StopButton.Visible = false
         end)
     end)
 end
