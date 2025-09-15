@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v11.0"
+local VERSION = "v12.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -342,16 +342,73 @@ ui.ThemeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
 
 -- ==========================
 -- Farming Tab: Placeholder buttons to test scrolling
-for i=1,25 do
+local function createSection(parent, title, yOffset)
+    -- Section header
+    local header = Instance.new("TextLabel")
+    header.Text = title
+    header.Size = UDim2.new(1, 0, 0, 28)
+    header.Position = UDim2.new(0, 0, 0, yOffset)
+    header.BackgroundTransparency = 1
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 18
+    header.TextColor3 = Color3.fromRGB(255,255,255)
+    header.TextXAlignment = Enum.TextXAlignment.Center
+    header.Parent = parent
+    return header
+end
+
+local currentY = 8 -- initial padding
+
+-- Coins Section
+createSection(farmingTab, "Coins", currentY)
+currentY = currentY + 32 -- header height + spacing
+
+local btn = Instance.new("TextButton")
+btn.Text = "Collect Coins"
+btn.Size = UDim2.new(0.9, 0, 0, 36)
+btn.Position = UDim2.new(0.05, 0, 0, currentY)
+btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+btn.TextColor3 = Color3.fromRGB(255,255,255)
+btn.Font = Enum.Font.Gotham
+btn.TextSize = 14
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+btn.Parent = farmingTab
+currentY = currentY + 42 -- button height + spacing
+
+-- XP Section
+createSection(farmingTab, "XP", currentY)
+currentY = currentY + 32
+
+for i=1,2 do
     local btn = Instance.new("TextButton")
-    btn.Text = "Farm Action #" .. i
-    btn.Size = UDim2.new(0.9,0,0,36)
+    btn.Text = "Gain XP #" .. i
+    btn.Size = UDim2.new(0.9, 0, 0, 36)
+    btn.Position = UDim2.new(0.05, 0, 0, currentY)
     btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
     btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 14
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
     btn.Parent = farmingTab
+    currentY = currentY + 42
+end
+
+-- Resources Section
+createSection(farmingTab, "Resources", currentY)
+currentY = currentY + 32
+
+for i=1,20 do
+    local btn = Instance.new("TextButton")
+    btn.Text = "Resource #" .. i
+    btn.Size = UDim2.new(0.9, 0, 0, 36)
+    btn.Position = UDim2.new(0.05, 0, 0, currentY)
+    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+    btn.Parent = farmingTab
+    currentY = currentY + 42
 end
 
 -- ==========================
