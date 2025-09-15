@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.0.3"
+local VERSION = "v0.0.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -524,6 +524,18 @@ RunService.Heartbeat:Connect(function(delta)
         ping
     )
 end)
+
+-- Initialize start time
+local startTime = tick()
+
+-- Update runtime every frame
+RunService.Heartbeat:Connect(function()
+    if statsLabel and statsLabel.Parent then
+        local elapsed = math.floor(tick() - startTime)
+        statsLabel.Text = "Runtime: " .. elapsed .. "s"
+    end
+end)
+
 
 if DEBUG_MODE then
     print("[Farmy] UI "..VERSION.." initialized.")
