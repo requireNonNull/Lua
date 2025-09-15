@@ -533,7 +533,7 @@ header.TextXAlignment = Enum.TextXAlignment.Center
 header.Parent = infoTab
 
 local creditsFrame = Instance.new("Frame")
-creditsFrame.Size = UDim2.new(1,-24,0,120)
+creditsFrame.Size = UDim2.new(1,-24,0,160)  -- Increased size for more lines
 creditsFrame.Position = UDim2.new(0,12,0,36)
 creditsFrame.BackgroundTransparency = 1
 creditsFrame.Parent = infoTab
@@ -555,7 +555,7 @@ creditLine1.TextXAlignment = Enum.TextXAlignment.Center
 creditLine1.Parent = creditsFrame
 
 local creditLine2 = Instance.new("TextLabel")
-creditLine2.Text = "Thanks to Alien17"
+creditLine2.Text = "Thanks to SPDMTeam for their awesome executors!"
 creditLine2.Size = UDim2.new(1,0,0,24)
 creditLine2.BackgroundTransparency = 1
 creditLine2.Font = Enum.Font.Gotham
@@ -563,3 +563,23 @@ creditLine2.TextSize = 14
 creditLine2.TextColor3 = Color3.fromRGB(200,200,200)
 creditLine2.TextXAlignment = Enum.TextXAlignment.Center
 creditLine2.Parent = creditsFrame
+
+local creditLine3 = Instance.new("TextLabel")
+creditLine3.Text = "Dex Explorer by Moon for cracking everything open!"
+creditLine3.Size = UDim2.new(1,0,0,24)
+creditLine3.BackgroundTransparency = 1
+creditLine3.Font = Enum.Font.Gotham
+creditLine3.TextSize = 14
+creditLine3.TextColor3 = Color3.fromRGB(200,200,200)
+creditLine3.TextXAlignment = Enum.TextXAlignment.Center
+creditLine3.Parent = creditsFrame
+
+local creditLine4 = Instance.new("TextLabel")
+creditLine4.Text = "UI design helped by AI assistance!"
+creditLine4.Size = UDim2.new(1,0,0,24)
+creditLine4.BackgroundTransparency = 1
+creditLine4.Font = Enum.Font.Gotham
+creditLine4.TextSize = 14
+creditLine4.TextColor3 = Color3.fromRGB(200,200,200)
+creditLine4.TextXAlignment = Enum.TextXAlignment.Center
+creditLine4.Parent = creditsFrame
