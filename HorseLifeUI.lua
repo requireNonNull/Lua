@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.0.5"
+local VERSION = "v0.0.6"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -127,12 +127,18 @@ function FarmUI.new()
     -- Init
     self.CurrentTab = nil
     self.CurrentTheme = nil
-    self.Minimized = false
-
+    self.Minimized = true -- start minimized
+    FarmUI.Status = "Minimized"
+    
     -- Setup
     self:applyTheme("Rainbow") -- default
     self:makeDraggable(self.TitleBar)
     self:setupEvents()
+    
+    -- Force minimized visuals at start
+    self.Outline.Size = UDim2.new(0,360,0,50)
+    self.TabsContainer.Visible = false
+    self.TitleLabel.Text = "⏳ Starting..."
     return self
 end
 
@@ -288,11 +294,94 @@ function FarmUI:addTab(name)
 end
 
 -- ==========================
+-- Title Animations
+function FarmUI:animateTitle(text, mode, duration)
+    -- mode can be "dots" or "fade"
+    -- duration = how long to keep animating (seconds), nil = infinite until stopped
+    
+    if self.TitleAnimationRunning then
+        self.TitleAnimationRunning = false
+        task.wait() -- yield 1 frame to stop old loop
+    end
+    
+    self.TitleAnimationRunning = true
+    local startTime = tick()
+    
+    task.spawn(function()
+        if mode == "dots" then
+            local base = text
+            local i = 0
+            while self.TitleAnimationRunning do
+                i = (i % 3) + 1
+                self.TitleLabel.Text = base .. string.rep(".", i)
+                task.wait(0.5)
+                if duration and tick() - startTime >= duration then break end
+            end
+            
+        elseif mode == "fade" then
+            self.TitleLabel.Text = text
+            while self.TitleAnimationRunning do
+                -- fade out
+                TweenService:Create(self.TitleLabel, TweenInfo.new(0.5), {TextTransparency = 0.5}):Play()
+                task.wait(0.5)
+                -- fade in
+                TweenService:Create(self.TitleLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+                task.wait(0.5)
+                if duration and tick() - startTime >= duration then break end
+            end
+        else
+            self.TitleLabel.Text = text
+        end
+        
+        -- restore
+        self.TitleAnimationRunning = false
+    end)
+end
+
+function FarmUI:stopTitleAnimation()
+    self.TitleAnimationRunning = false
+    self.TitleLabel.TextTransparency = 0
+end
+
+-- ==========================
+-- Initialization Animation
+function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
+    delayTime = delayTime or 1.5
+    autoOpen = autoOpen or false
+
+    task.spawn(function()
+        for _,step in ipairs(steps) do
+            -- Use fade animation for each step
+            self:animateTitle(step, "fade", delayTime)
+            task.wait(delayTime)
+        end
+
+        -- restore title
+        self:stopTitleAnimation()
+        self.TitleLabel.Text = "🦄 Farmy " .. VERSION
+
+        if autoOpen then
+            self.Minimized = false
+            FarmUI.Status = "Open"
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+            self.TabsContainer.Visible = true
+        end
+    end)
+end
+
+-- ==========================
 -- Initialize UI
 local ui = FarmUI.new()
 local farmingTab = ui:addTab("Farming")
 local settingsTab = ui:addTab("Settings")
 local infoTab = ui:addTab("Info")
+
+-- init loading sequence
+ui:initLoadingAnimation(
+    {"Loading", "Checking", "Configuring", "Almost ready"},
+    1.5, -- delay per step
+    true -- auto open
+)
 
 -- ==========================
 -- Settings Tab: Design Header + Theme Button
