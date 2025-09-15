@@ -1,5 +1,6 @@
--- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.1.0"
+-- 🦄 Farmy (Modern UI Framework)
+local VERSION = "v0.0.2"
+local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -72,7 +73,7 @@ function FarmUI.new()
     self.TitleLabel.Position = UDim2.new(0, 12, 0, 0)
     self.TitleLabel.BackgroundTransparency = 1
     self.TitleLabel.Font = Enum.Font.GothamBold
-    self.TitleLabel.Text = "🦄 Farmy " .. VERSION
+    self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
     self.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     self.TitleLabel.TextSize = 18
     self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
@@ -195,7 +196,7 @@ function FarmUI:setupEvents()
         else
             TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
             self.TabsContainer.Visible = true
-            self.TitleLabel.Text = "🦄 Farmy " .. VERSION
+            self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
             -- restore current tab only
             for _,tab in ipairs(self.ContentArea:GetChildren()) do
                 if tab:IsA("ScrollingFrame") then
@@ -368,7 +369,7 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
 
         -- restore
         self:stopTitleAnimation()
-        self.TitleLabel.Text = "🦄 Farmy " .. VERSION
+        self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
         self.MinimizeButton.AutoButtonColor = true
         self.MinimizeButton.TextTransparency = 0
         self.LoadingActive = false
@@ -566,7 +567,7 @@ padding.Parent = changelogFrame
 
 -- Changelog Label
 local changelogLabel = Instance.new("TextLabel")
-changelogLabel.Text = "- v2.7: Theme buttons, titlebar themed, scrolling test\n- v2.4: Minor fixes\n- v2.3: Theme dropdown fix, titlebar themed fix, scrolling test fix\n- v2.0: Initial rewrite\nAdd more changelog lines here..."
+changelogLabel.Text = "- v0.0.1: Added main farming logic\n- v0.0.2: Added polished ui\n"
 changelogLabel.Size = UDim2.new(1, 0, 0, 0)
 changelogLabel.BackgroundTransparency = 1
 changelogLabel.Font = Enum.Font.Gotham
