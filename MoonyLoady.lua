@@ -520,20 +520,11 @@ end
 
 addGamesSection(gamesTab)
 
--- Info Tab Credits (centered header + multi-line credits area)
-local header = Instance.new("TextLabel")
-header.Text = "Credits"
-header.Size = UDim2.new(1,0,0,28)
-header.BackgroundTransparency = 1
-header.Font = Enum.Font.GothamBold
-header.TextSize = 18
-header.TextColor3 = Color3.fromRGB(255,255,255)
-header.TextXAlignment = Enum.TextXAlignment.Center
-header.Parent = infoTab
-
+-- ==========================
+-- Credits
 local creditsFrame = Instance.new("Frame")
-creditsFrame.Size = UDim2.new(1,-24,0,120)  -- enough height for all lines
-creditsFrame.Position = UDim2.new(0,12,0,36)
+creditsFrame.Size = UDim2.new(1, -24, 0, 160) -- initial height
+creditsFrame.Position = UDim2.new(0, 12, 0, 36)
 creditsFrame.BackgroundTransparency = 1
 creditsFrame.Parent = infoTab
 
@@ -541,7 +532,7 @@ local creditsLayout = Instance.new("UIListLayout", creditsFrame)
 creditsLayout.FillDirection = Enum.FillDirection.Vertical
 creditsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 creditsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-creditsLayout.Padding = UDim.new(0,4)
+creditsLayout.Padding = UDim.new(0, 6)
 
 local creditLines = {
     "Made by Breezingfreeze",
@@ -551,17 +542,22 @@ local creditLines = {
 }
 
 for _, text in ipairs(creditLines) do
-    local lineLabel = Instance.new("TextLabel")
-    lineLabel.Text = text
-    lineLabel.Size = UDim2.new(1,0,0,24)
-    lineLabel.BackgroundTransparency = 1
-    lineLabel.Font = Enum.Font.Gotham
-    lineLabel.TextSize = 14
-    lineLabel.TextColor3 = Color3.fromRGB(200,200,200)
-    lineLabel.TextXAlignment = Enum.TextXAlignment.Center
-    lineLabel.TextWrapped = true  -- ensures text stays inside
-    lineLabel.Parent = creditsFrame
+    local label = Instance.new("TextLabel")
+    label.Text = text
+    label.Size = UDim2.new(1, 0, 0, 24)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.TextWrapped = true           -- wrap text inside the label
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.AutomaticSize = Enum.AutomaticSize.Y  -- label height adjusts automatically
+    label.Parent = creditsFrame
 end
+
+-- Adjust frame height dynamically to fit all children
+creditsFrame.Size = UDim2.new(1, -24, 0, creditsFrame:GetChildren()[1].AbsoluteSize.Y * #creditLines)
+
 
 -- ==========================
 -- Open Source / Educational Info (Developer-focused)
