@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.2.3"
+local VERSION = "v0.2.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -600,14 +600,7 @@ eduLayout.Parent = eduFrame
 -- Content lines
 local guideLines = {
     "⚠️ Disclaimer: For educational purposes only—do not use to exploit games.",
-    "🔧 This loader project is designed to demonstrate how automation works for learning.",
-    "👀 It shows how UI and internal folder/part names can be targeted by exploits.",
     "💡 Developers can use this to identify vulnerabilities and fix them.",
-    "Best practices to prevent exploits:",
-    "   • Randomize internal Part and Folder names.",
-    "   • Avoid predictable naming for triggers, values, and events.",
-    "   • Validate all actions server-side instead of trusting client input.",
-    "   • Limit remote execution and verify user permissions.",
     "Repository for reference and educational use:",
     "   https://github.com/requireNonNull/Lua"
 }
