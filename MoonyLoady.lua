@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.0.4"
+local VERSION = "v0.0.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -322,9 +322,17 @@ local GamesList = {
 local function daysAgo(dateString)
     local y,m,d = dateString:match("(%d+)-(%d+)-(%d+)")
     if not y then return "unknown" end
-    local lastDate = os.time({year=tonumber(y), month=tonumber(m), day=tonumber(d)})
+    
+    local lastDate = os.time({
+        year = tonumber(y),
+        month = tonumber(m),
+        day = tonumber(d),
+        hour = 12 -- middle of day prevents timezone rollover issues
+    })
     local now = os.time()
-    return math.floor((os.time() - lastDate)/(24*60*60))
+    local days = math.floor((now - lastDate) / (24*60*60))
+    if days < 0 then days = 0 end
+    return days
 end
 
 -- Add Games to Tab (Dynamic CanvasSize + Scan Simulation)
