@@ -415,7 +415,7 @@ local function addGamesSection(parent)
         end)
         if ok and statusData then
             local days = daysAgo(statusData.LastCheckedDate)
-            infoLabel.Text = statusData.Status.." \n↳ Last checked "..daysAgo(statusData.LastCheckedDate)
+            infoLabel.Text = statusData.Status.." \n>> Last checked "..daysAgo(statusData.LastCheckedDate)
         else
             infoLabel.Text = "⚠️ Status unavailable"
         end
