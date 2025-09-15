@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v13.0"
+local VERSION = "v0.0.1"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -129,9 +129,9 @@ function FarmUI.new()
     self.Minimized = false
 
     -- Setup
+    self:applyTheme("Rainbow") -- default
     self:makeDraggable(self.TitleBar)
     self:setupEvents()
-    self:applyTheme("Rainbow") -- default
     return self
 end
 
