@@ -520,7 +520,6 @@ end
 
 addGamesSection(gamesTab)
 
--- ==========================
 -- Info Tab Credits (centered header + multi-line credits area)
 local header = Instance.new("TextLabel")
 header.Text = "Credits"
@@ -532,18 +531,17 @@ header.TextColor3 = Color3.fromRGB(255,255,255)
 header.TextXAlignment = Enum.TextXAlignment.Center
 header.Parent = infoTab
 
-local creditsFrame = Instance.new("ScrollingFrame")
-creditsFrame.Size = UDim2.new(1,-24,0,160)  -- scrollable frame
+local creditsFrame = Instance.new("Frame")
+creditsFrame.Size = UDim2.new(1,-24,0,120)  -- enough height for all lines
 creditsFrame.Position = UDim2.new(0,12,0,36)
 creditsFrame.BackgroundTransparency = 1
-creditsFrame.ScrollBarThickness = 6
 creditsFrame.Parent = infoTab
 
 local creditsLayout = Instance.new("UIListLayout", creditsFrame)
 creditsLayout.FillDirection = Enum.FillDirection.Vertical
 creditsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 creditsLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-creditsLayout.Padding = UDim.new(0,6)
+creditsLayout.Padding = UDim.new(0,4)
 
 local creditLines = {
     "Made by Breezingfreeze",
@@ -561,13 +559,9 @@ for _, text in ipairs(creditLines) do
     lineLabel.TextSize = 14
     lineLabel.TextColor3 = Color3.fromRGB(200,200,200)
     lineLabel.TextXAlignment = Enum.TextXAlignment.Center
-    lineLabel.TextWrapped = true  -- <--- wrap text
+    lineLabel.TextWrapped = true  -- ensures text stays inside
     lineLabel.Parent = creditsFrame
 end
-
-creditsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    creditsFrame.CanvasSize = UDim2.new(0,0,0,creditsLayout.AbsoluteContentSize.Y + 8)
-end)
 
 -- ==========================
 -- Open Source / Educational Info (Developer-focused)
@@ -581,18 +575,17 @@ eduHeader.TextColor3 = Color3.fromRGB(255,255,255)
 eduHeader.TextXAlignment = Enum.TextXAlignment.Center
 eduHeader.Parent = infoTab
 
-local eduFrame = Instance.new("ScrollingFrame")
-eduFrame.Size = UDim2.new(1,-24,0,260)
-eduFrame.Position = UDim2.new(0,12,0,200) -- position below credits
+local eduFrame = Instance.new("Frame")
+eduFrame.Size = UDim2.new(1,-24,0,300) -- increased height for all text
+eduFrame.Position = UDim2.new(0,12,0,160) -- below credits
 eduFrame.BackgroundTransparency = 1
-eduFrame.ScrollBarThickness = 6
 eduFrame.Parent = infoTab
 
 local eduLayout = Instance.new("UIListLayout", eduFrame)
 eduLayout.FillDirection = Enum.FillDirection.Vertical
 eduLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 eduLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-eduLayout.Padding = UDim.new(0,8)
+eduLayout.Padding = UDim.new(0,4)
 
 local guideLines = {
     "⚠️ Disclaimer: For educational purposes only—do not use to exploit games.",
@@ -611,17 +604,14 @@ local guideLines = {
 for _, text in ipairs(guideLines) do
     local lineLabel = Instance.new("TextLabel")
     lineLabel.Text = text
-    lineLabel.Size = UDim2.new(1,0,0,24)
+    lineLabel.Size = UDim2.new(1,0,0,22)
     lineLabel.BackgroundTransparency = 1
     lineLabel.Font = Enum.Font.Gotham
     lineLabel.TextSize = 14
     lineLabel.TextColor3 = Color3.fromRGB(200,200,200)
     lineLabel.TextXAlignment = Enum.TextXAlignment.Left
     lineLabel.TextYAlignment = Enum.TextYAlignment.Top
-    lineLabel.TextWrapped = true  -- <--- wrap text
+    lineLabel.TextWrapped = true
     lineLabel.Parent = eduFrame
 end
 
-eduLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    eduFrame.CanvasSize = UDim2.new(0,0,0,eduLayout.AbsoluteContentSize.Y + 8)
-end)
