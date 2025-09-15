@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.1.1"
+local VERSION = "v0.1.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -300,7 +300,7 @@ ui.ThemeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
 -- Games Data
 local GamesList = {
     {
-        Name = "HorseLife",
+        Name = "Horse Life",
         URL_KEYS = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIKeys.lua",
         URL_UI  = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUI.lua",
         URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIVersion.lua",
@@ -308,11 +308,11 @@ local GamesList = {
         StatusFile = "https://raw.githubusercontent.com/requireNonNull/Lua/main/HorseLifeUIStatus.lua"
     },
     {
-        Name = "PetSimulator",
+        Name = "Rainbow Friends Chapter 2",
         URL_KEYS = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimKeys.lua",
         URL_UI  = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimUI.lua",
         URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimVersion.lua",
-        Status  = "⚠️ Limited",
+        Status  = "❌ Not Working",
         StatusFile = "https://raw.githubusercontent.com/requireNonNull/Lua/main/PetSimUIStatus.lua"
     },
 }
