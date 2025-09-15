@@ -1,5 +1,5 @@
--- 🦄 Moony Loady v1.4 (Modern Tab + Minimize on Key Scan)
-local VERSION = "v1.4"
+-- 🦄 Moony Loady v1.5 (Farmy-style modern, minimized titlebar only)
+local VERSION = "v1.5"
 local DEBUG_MODE = true
 
 local GamesList = {
@@ -28,17 +28,23 @@ local function tweenObject(obj, properties, duration, easingStyle, easingDir)
     return tween
 end
 
--- Minimize frame to titlebar only
+-- Minimize frame: hide everything except title bar
 function LoaderUI:minimizeFrame()
+    if self.CurrentTab then
+        self.CurrentTab.Visible = false
+    end
     tweenObject(self.Outline, {Size = UDim2.new(0, 360, 0, 42)}, 0.3)
 end
 
--- Restore frame to full size
+-- Restore frame: show full content area
 function LoaderUI:restoreFrame()
     tweenObject(self.Outline, {Size = UDim2.new(0, 360, 0, 220)}, 0.3)
+    if self.CurrentTab then
+        self.CurrentTab.Visible = true
+    end
 end
 
--- Show game tab (header only, modern layout)
+-- Show game tab
 function LoaderUI:showGameTab(gameInfo)
     if self.CurrentTab then
         self.CurrentTab:Destroy()
@@ -50,7 +56,7 @@ function LoaderUI:showGameTab(gameInfo)
     tab.Parent = self.ContentArea
     self.CurrentTab = tab
 
-    -- Header for the tab (title only)
+    -- Header only
     local header = Instance.new("TextLabel")
     header.Text = gameInfo.Name
     header.Size = UDim2.new(1,-16,0,28)
@@ -62,15 +68,15 @@ function LoaderUI:showGameTab(gameInfo)
     header.TextXAlignment = Enum.TextXAlignment.Left
     header.Parent = tab
 
-    -- Key Input Box
+    -- Key Input Box (empty text, modern spacing)
     local inputBox = Instance.new("TextBox")
     inputBox.Size = UDim2.new(0.8,0,0,36)
-    inputBox.Position = UDim2.new(0.1,0,0,48)
+    inputBox.Position = UDim2.new(0.1,0,0,64) -- more space below header
     inputBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
     inputBox.TextColor3 = Color3.fromRGB(255,255,255)
+    inputBox.Text = "" -- make sure no placeholder text
     inputBox.Font = Enum.Font.Gotham
     inputBox.TextSize = 14
-    inputBox.PlaceholderText = "Enter your key"
     inputBox.ClearTextOnFocus = false
     Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0,6)
     inputBox.Parent = tab
@@ -78,7 +84,7 @@ function LoaderUI:showGameTab(gameInfo)
     -- Check Key Button
     local checkBtn = Instance.new("TextButton")
     checkBtn.Size = UDim2.new(0.5,0,0,36)
-    checkBtn.Position = UDim2.new(0.25,0,0,96)
+    checkBtn.Position = UDim2.new(0.25,0,0,120) -- more spacing below input
     checkBtn.Text = "Check Key"
     checkBtn.Font = Enum.Font.GothamBold
     checkBtn.TextSize = 14
@@ -87,15 +93,15 @@ function LoaderUI:showGameTab(gameInfo)
     Instance.new("UICorner", checkBtn).CornerRadius = UDim.new(0,6)
     checkBtn.Parent = tab
 
-    -- Key Checking Logic with static scan delay
+    -- Key checking logic
     checkBtn.MouseButton1Click:Connect(function()
         checkBtn.Active = false
         inputBox.Active = false
 
-        -- Minimize frame while scanning
+        -- Minimize before scanning
         self:minimizeFrame()
         self.TitleLabel.Text = "🔄 Scanning Key..."
-        task.wait(1) -- static delay for visual effect
+        task.wait(3) -- static delay
 
         task.spawn(function()
             local keySuccess, keysRaw = pcall(function() return game:HttpGet(gameInfo.URL_KEYS) end)
@@ -189,7 +195,7 @@ function LoaderUI.new()
     self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
     self.TitleLabel.Parent = self.TitleBar
 
-    -- Close
+    -- Close Button
     self.CloseButton = Instance.new("TextButton")
     self.CloseButton.Size = UDim2.new(0,20,0,20)
     self.CloseButton.Position = UDim2.new(1,-28,0.5,-10)
@@ -261,7 +267,7 @@ function LoaderUI.new()
         end)
     end
 
-    -- Rainbow gradient
+    -- Rainbow Gradient
     task.spawn(function()
         while self.Screen.Parent do
             local t = tick()
