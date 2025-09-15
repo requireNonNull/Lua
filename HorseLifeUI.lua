@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v0.0.9"
+local VERSION = "v0.1.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -188,7 +188,10 @@ function FarmUI:setupEvents()
         if self.Minimized then
             TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
             self.TabsContainer.Visible = false
-            self.TitleLabel.Text = "⏳ Minimized"
+            -- later you can call anywhere:
+            ui:animateTitle("⏳ Minimized", "dots") -- loops until stopped
+            task.delay(5, function() ui:stopTitleAnimation() end)
+            
         else
             TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
             self.TabsContainer.Visible = true
