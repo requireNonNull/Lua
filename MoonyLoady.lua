@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.1.8"
+local VERSION = "v0.1.9"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -573,7 +573,7 @@ end
 creditsScroll.CanvasSize = UDim2.new(0,0,0,creditsLayout.AbsoluteContentSize.Y)
 
 -- ==========================
--- Open Source / Educational Info (scrollable)
+-- Open Source / Educational Info (Developer-focused)
 local eduHeader = Instance.new("TextLabel")
 eduHeader.Text = "Open Source / Educational"
 eduHeader.Size = UDim2.new(1,0,0,28)
@@ -585,16 +585,13 @@ eduHeader.TextXAlignment = Enum.TextXAlignment.Center
 eduHeader.Position = UDim2.new(0,0,0,72 + 160 + 12) -- below credits
 eduHeader.Parent = infoTab
 
-local eduScroll = Instance.new("ScrollingFrame")
-eduScroll.Size = UDim2.new(1,-24,0,300)
-eduScroll.Position = UDim2.new(0,12,0,72 + 160 + 36)
-eduScroll.BackgroundTransparency = 1
-eduScroll.ScrollBarImageTransparency = 1
-eduScroll.ScrollBarThickness = 0
-eduScroll.CanvasSize = UDim2.new(0,0,0,0)
-eduScroll.Parent = infoTab
+local eduFrame = Instance.new("Frame")
+eduFrame.Size = UDim2.new(1,-24,0,0) -- initial height 0, will grow
+eduFrame.Position = UDim2.new(0,12,0,72 + 160 + 36)
+eduFrame.BackgroundTransparency = 1
+eduFrame.Parent = infoTab
 
-local eduLayout = Instance.new("UIListLayout", eduScroll)
+local eduLayout = Instance.new("UIListLayout", eduFrame)
 eduLayout.FillDirection = Enum.FillDirection.Vertical
 eduLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 eduLayout.VerticalAlignment = Enum.VerticalAlignment.Top
@@ -626,7 +623,8 @@ for _, text in ipairs(guideLines) do
     lineLabel.TextWrapped = true
     lineLabel.AutomaticSize = Enum.AutomaticSize.Y
     lineLabel.Size = UDim2.new(1,0,0,22)
-    lineLabel.Parent = eduScroll
+    lineLabel.Parent = eduFrame
 end
 
-eduScroll.CanvasSize = UDim2.new(0,0,0,eduLayout.AbsoluteContentSize.Y)
+-- Dynamically resize the frame to fit all content
+eduFrame.Size = UDim2.new(1,-24,0,eduLayout.AbsoluteContentSize.Y)
