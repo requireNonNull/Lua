@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v5.2"
+local VERSION = "v0.0.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -317,7 +317,7 @@ local GamesList = {
     },
 }
 
--- Add Games to Tab (Dynamic CanvasSize)
+-- Add Games to Tab (Dynamic CanvasSize + Scan Simulation)
 local function addGamesSection(parent)
     local header = Instance.new("TextLabel")
     header.Text = "Games"
@@ -341,14 +341,14 @@ local function addGamesSection(parent)
     layout.FillDirection = Enum.FillDirection.Vertical
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0,12)
+    layout.Padding = UDim.new(0,24) -- more vertical padding
     layout.Parent = scroll
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0,8)
-    padding.PaddingBottom = UDim.new(0,8)
-    padding.PaddingLeft = UDim.new(0,8)
-    padding.PaddingRight = UDim.new(0,8)
+    padding.PaddingTop = UDim.new(0,12)
+    padding.PaddingBottom = UDim.new(0,12)
+    padding.PaddingLeft = UDim.new(0,12)
+    padding.PaddingRight = UDim.new(0,12)
     padding.Parent = scroll
 
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -357,36 +357,37 @@ local function addGamesSection(parent)
 
     local function addGameBlock(gameInfo)
         local gameFrame = Instance.new("Frame")
-        gameFrame.Size = UDim2.new(1,-16,0,140)
+        gameFrame.Size = UDim2.new(0.9,0,0,160) -- slightly taller
         gameFrame.BackgroundTransparency = 1
         gameFrame.Parent = scroll
 
         local title = Instance.new("TextLabel")
         title.Text = gameInfo.Name
         title.Size = UDim2.new(1,0,0,28)
+        title.Position = UDim2.new(0,0,0,0)
         title.BackgroundTransparency = 1
         title.Font = Enum.Font.GothamBold
         title.TextSize = 16
         title.TextColor3 = Color3.fromRGB(255,255,255)
-        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.TextXAlignment = Enum.TextXAlignment.Center
         title.Parent = gameFrame
 
         local infoLabel = Instance.new("TextLabel")
         infoLabel.Text = gameInfo.Status.."\n"..gameInfo.Notes
-        infoLabel.Size = UDim2.new(1,0,0,36)
+        infoLabel.Size = UDim2.new(1,0,0,40)
         infoLabel.Position = UDim2.new(0,0,0,32)
         infoLabel.BackgroundTransparency = 1
         infoLabel.Font = Enum.Font.Gotham
         infoLabel.TextSize = 14
         infoLabel.TextColor3 = Color3.fromRGB(200,200,200)
-        infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+        infoLabel.TextXAlignment = Enum.TextXAlignment.Center
         infoLabel.TextYAlignment = Enum.TextYAlignment.Top
         infoLabel.TextWrapped = true
         infoLabel.Parent = gameFrame
 
         local keyBox = Instance.new("TextBox")
         keyBox.Size = UDim2.new(0.8,0,0,36)
-        keyBox.Position = UDim2.new(0.1,0,0,70)
+        keyBox.Position = UDim2.new(0.1,0,0,80)
         keyBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
         keyBox.TextColor3 = Color3.fromRGB(255,255,255)
         keyBox.Text = ""
@@ -398,7 +399,7 @@ local function addGamesSection(parent)
 
         local checkBtn = Instance.new("TextButton")
         checkBtn.Size = UDim2.new(0.5,0,0,36)
-        checkBtn.Position = UDim2.new(0.25,0,0,108)
+        checkBtn.Position = UDim2.new(0.25,0,0,124)
         checkBtn.Text = "Check Key"
         checkBtn.Font = Enum.Font.GothamBold
         checkBtn.TextSize = 14
@@ -407,41 +408,51 @@ local function addGamesSection(parent)
         Instance.new("UICorner",checkBtn).CornerRadius = UDim.new(0,6)
         checkBtn.Parent = gameFrame
 
-        -- Key Check Logic (unchanged)
+        -- Key Check Logic with random scan delay & minimize animation
         checkBtn.MouseButton1Click:Connect(function()
             checkBtn.Active = false
             keyBox.Active = false
-            ui.TitleLabel.Text = "🔄 Checking Key..."
-            task.spawn(function()
+
+            -- Random delay between 2 and 10 seconds
+            local scanDelay = math.random(2,10)
+            local originalTitle = ui.TitleLabel.Text
+
+            -- Minimize and show scanning
+            if not ui.Minimized then
+                ui.Minimized = true
+                TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+                ui.TabsContainer.Visible = false
+            end
+            ui.TitleLabel.Text = "🔄 Scanning Key..."
+
+            task.delay(scanDelay, function()
                 local keySuccess, keysRaw = pcall(function() return game:HttpGet(gameInfo.URL_KEYS) end)
-                local verSuccess, latestVer = pcall(function() return game:HttpGet(gameInfo.URL_VER) end)
                 local key = keyBox.Text
+                local accessGranted = false
+
                 if keySuccess and keysRaw then
                     keysRaw = keysRaw:gsub("return",""):gsub("{",""):gsub("}",""):gsub("\"","")
                     local keysList = {}
                     for k in keysRaw:gmatch("[^,]+") do table.insert(keysList,k:match("^%s*(.-)%s*$")) end
-                    if table.find(keysList,key) then
-                        if verSuccess and latestVer then
-                            latestVer = latestVer:match("%d+%.%d+%.%d+")
-                            if latestVer ~= VERSION then
-                                ui.TitleLabel.Text = "⚠️ Update available ("..latestVer..")"
-                                wait(1)
-                            end
-                        end
-                        ui.TitleLabel.Text = "✅ Access Granted"
-                        wait(0.5)
-                        ui.Screen:Destroy()
-                        local uiCode = game:HttpGet(gameInfo.URL_UI)
-                        loadstring(uiCode)()
-                    else
-                        ui.TitleLabel.Text = "❌ Access Denied"
-                        keyBox.Active = true
-                        checkBtn.Active = true
-                    end
+                    accessGranted = table.find(keysList,key) ~= nil
+                end
+
+                if accessGranted then
+                    ui.TitleLabel.Text = "✅ Access Granted"
+                    task.wait(0.5)
+                    ui.Screen:Destroy()
+                    local uiCode = game:HttpGet(gameInfo.URL_UI)
+                    loadstring(uiCode)()
                 else
-                    ui.TitleLabel.Text = "⚠️ Failed to fetch keys"
-                    keyBox.Active = true
+                    ui.TitleLabel.Text = "❌ Access Denied"
+                    task.wait(3) -- show denied for 3 seconds
+                    ui.TitleLabel.Text = originalTitle
+                    -- Restore window
+                    ui.Minimized = false
+                    TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+                    ui.TabsContainer.Visible = true
                     checkBtn.Active = true
+                    keyBox.Active = true
                 end
             end)
         end)
