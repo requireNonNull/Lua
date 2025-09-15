@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.0.5"
+local VERSION = "v0.0.6"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -327,12 +327,19 @@ local function daysAgo(dateString)
         year = tonumber(y),
         month = tonumber(m),
         day = tonumber(d),
-        hour = 12 -- middle of day prevents timezone rollover issues
+        hour = 12 -- Mitte des Tages, vermeidet Zeitzonen-/DST-Bugs
     })
     local now = os.time()
     local days = math.floor((now - lastDate) / (24*60*60))
     if days < 0 then days = 0 end
-    return days
+    
+    if days == 0 then
+        return "today"
+    elseif days == 1 then
+        return "1 day ago"
+    else
+        return days.." days ago"
+    end
 end
 
 -- Add Games to Tab (Dynamic CanvasSize + Scan Simulation)
@@ -398,7 +405,8 @@ local function addGamesSection(parent)
     infoLabel.Font = Enum.Font.Gotham
     infoLabel.TextSize = 14
     infoLabel.TextColor3 = Color3.fromRGB(200,200,200)
-    infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+    infoLabel.TextXAlignment = Enum.TextXAlignment.Center
+    infoLabel.TextYAlignment = Enum.TextYAlignment.Center
     infoLabel.TextWrapped = true
     infoLabel.Parent = gameFrame
 
@@ -409,7 +417,7 @@ local function addGamesSection(parent)
         end)
         if ok and statusData then
             local days = daysAgo(statusData.LastCheckedDate)
-            infoLabel.Text = statusData.Status.." – Last checked "..days.." day"..(days~=1 and "s" or "").." ago"
+            infoLabel.Text = statusData.Status.." – Last checked "..daysAgo(statusData.LastCheckedDate)
         else
             infoLabel.Text = "⚠️ Status unavailable"
         end
