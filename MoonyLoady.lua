@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.1.0"
+local VERSION = "v0.1.1"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -69,7 +69,7 @@ function FarmUI.new()
     self.TitleLabel.Position = UDim2.new(0,12,0,0)
     self.TitleLabel.BackgroundTransparency = 1
     self.TitleLabel.Font = Enum.Font.GothamBold
-    self.TitleLabel.Text = "🦄 Farmy "..VERSION
+    self.TitleLabel.Text = "🌑 Moony Loady "..VERSION
     self.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     self.TitleLabel.TextSize = 18
     self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
