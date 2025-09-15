@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.2.1"
+local VERSION = "v0.2.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -569,7 +569,7 @@ for _, text in ipairs(creditLines) do
 end
 
 -- ==========================
--- Open Source / Educational Info (dynamically below Credits)
+-- Open Source / Educational Info (Developer-focused)
 local eduHeader = Instance.new("TextLabel")
 eduHeader.Text = "Open Source / Educational"
 eduHeader.Size = UDim2.new(1,0,0,28)
@@ -578,12 +578,13 @@ eduHeader.Font = Enum.Font.GothamBold
 eduHeader.TextSize = 18
 eduHeader.TextColor3 = Color3.fromRGB(255,255,255)
 eduHeader.TextXAlignment = Enum.TextXAlignment.Center
-eduHeader.Position = UDim2.new(0,0,0,0) -- will update dynamically
+eduHeader.Position = UDim2.new(0,0,0,72 + 160 + 12) -- below credits
 eduHeader.Parent = infoTab
 
+-- Edu Frame (auto-resizing, no scrollbars)
 local eduFrame = Instance.new("Frame")
-eduFrame.Size = UDim2.new(1,-24,0,0)
-eduFrame.Position = UDim2.new(0,12,0,0) -- will update dynamically
+eduFrame.Size = UDim2.new(1,-24,0,0) -- height grows automatically
+eduFrame.Position = UDim2.new(0,12,0,72 + 160 + 36) -- below header
 eduFrame.BackgroundTransparency = 1
 eduFrame.AutomaticSize = Enum.AutomaticSize.Y
 eduFrame.Parent = infoTab
@@ -622,14 +623,3 @@ for _, text in ipairs(guideLines) do
     lineLabel.Size = UDim2.new(1,0,0,0)
     lineLabel.Parent = eduFrame
 end
-
--- ==========================
--- Dynamic positioning
-local function updateEduPosition()
-    local creditsBottom = creditsFrame.Position.Y.Offset + creditsFrame.AbsoluteSize.Y
-    eduHeader.Position = UDim2.new(0,0,0,creditsBottom + 8)
-    eduFrame.Position = UDim2.new(0,12,0,creditsBottom + 36)
-end
-
-creditsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateEduPosition)
-updateEduPosition()
