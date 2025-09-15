@@ -1,4 +1,3 @@
--- 🦄 Farmy Exploit Info
 local VERSION = "v6.7 alien17"
 local NAME = "🦄 Farmy"
 
