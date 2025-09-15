@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.0 (Modern UI Framework)
-local VERSION = "v5.0"
+local VERSION = "v6.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -326,7 +326,8 @@ local settingsTab = ui:addTab("Settings")
 local infoTab = ui:addTab("Info")
 
 -- ==========================
--- Settings Tab: Design Header + Theme Dropdown
+-- Settings Tab: Design Header + Theme Button
+-- ==========================
 local headerDesign = Instance.new("TextLabel")
 headerDesign.Text = "Design"
 headerDesign.Size = UDim2.new(1,0,0,28)
@@ -336,56 +337,36 @@ headerDesign.TextSize = 18
 headerDesign.TextColor3 = Color3.fromRGB(255,255,255)
 headerDesign.Parent = settingsTab
 
--- Theme dropdown button
-local themeDropdown = Instance.new("TextButton")
-themeDropdown.Text = "Select Theme"
-themeDropdown.Size = UDim2.new(0,160,0,30)
-themeDropdown.Position = UDim2.new(0,0,0,36)
-themeDropdown.Font = Enum.Font.Gotham
-themeDropdown.TextSize = 14
-themeDropdown.TextColor3 = Color3.fromRGB(255,255,255)
-themeDropdown.BackgroundColor3 = Color3.fromRGB(50,50,50)
-Instance.new("UICorner", themeDropdown).CornerRadius = UDim.new(0,6)
-themeDropdown.Parent = settingsTab
+local themeButtons = {}
+local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
+for i,themeName in ipairs(themesList) do
+    local btn = Instance.new("TextButton")
+    btn.Text = themeName
+    btn.Size = UDim2.new(1, -16, 0, 36)
+    btn.Position = UDim2.new(0, 8, 0, 28 + (i-1)*42)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+    btn.Parent = settingsTab
+    themeButtons[themeName] = btn
 
--- Dropdown container
-local dropdownFrame = Instance.new("Frame")
-dropdownFrame.Size = UDim2.new(1,0,0,0)
-dropdownFrame.Position = UDim2.new(0,0,0,66)
-dropdownFrame.BackgroundColor3 = Color3.fromRGB(45,45,45)
-Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0,6)
-dropdownFrame.ClipsDescendants = true
-dropdownFrame.Parent = settingsTab
-
-local dropdownLayout = Instance.new("UIListLayout")
-dropdownLayout.Padding = UDim.new(0,2)
-dropdownLayout.FillDirection = Enum.FillDirection.Vertical
-dropdownLayout.Parent = dropdownFrame
-
-themeDropdown.MouseButton1Click:Connect(function()
-    if dropdownFrame.Size.Y.Offset == 0 then
-        dropdownFrame:TweenSize(UDim2.new(1,0,0,#dropdownLayout:GetChildren()*28), "Out", "Quad", 0.2, true)
-    else
-        dropdownFrame:TweenSize(UDim2.new(1,0,0,0), "Out", "Quad", 0.2, true)
-    end
-end)
-
-for _,themeName in ipairs({"Dark","White","PitchBlack","DarkPurple","Rainbow"}) do
-    local tBtn = Instance.new("TextButton")
-    tBtn.Text = themeName
-    tBtn.Size = UDim2.new(1,0,0,28)
-    tBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    tBtn.TextColor3 = Color3.fromRGB(255,255,255)
-    tBtn.Font = Enum.Font.Gotham
-    tBtn.TextSize = 14
-    Instance.new("UICorner", tBtn).CornerRadius = UDim.new(0,6)
-    tBtn.Parent = dropdownFrame
-    tBtn.MouseButton1Click:Connect(function()
+    btn.MouseButton1Click:Connect(function()
         ui:applyTheme(themeName)
-        themeDropdown.Text = themeName
-        dropdownFrame:TweenSize(UDim2.new(1,0,0,0), "Out", "Quad", 0.2, true)
+        -- update all buttons transparency
+        for tName,button in pairs(themeButtons) do
+            if tName == themeName then
+                button.BackgroundTransparency = 0.6 -- grayed out for active
+            else
+                button.BackgroundTransparency = 0
+            end
+        end
     end)
 end
+
+-- Set initial active theme transparency
+themeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
 
 -- ==========================
 -- Farming Tab: Placeholder buttons to test scrolling
