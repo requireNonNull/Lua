@@ -189,7 +189,7 @@ function LoaderUI.new()
     self.TitleLabel.Position = UDim2.new(0,12,0,0)
     self.TitleLabel.BackgroundTransparency = 1
     self.TitleLabel.Font = Enum.Font.GothamBold
-    self.TitleLabel.Text = "🦄 Moony Loady"
+    self.TitleLabel.Text = "🦄 Moony Loady "..VERSION..""
     self.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     self.TitleLabel.TextSize = 18
     self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
