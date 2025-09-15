@@ -1,5 +1,5 @@
 -- 🦄 Farmy (Modern UI Framework)
-local VERSION = "v0.0.3"
+local VERSION = "v0.0.4"
 local EXPLOIT_NAME = "🦄 Farmy"
 local DEBUG_MODE = true
 
@@ -109,8 +109,8 @@ function FarmUI.new()
     self.StopButton.Text = "⏹️" -- UTF-8 cross
     self.StopButton.TextSize = 18
     self.StopButton.TextColor3 = Color3.fromRGB(255,255,255)
-    self.StopButton.Parent = self.TitleBar
     self.StopButton.Visible = false
+    self.StopButton.Parent = self.TitleBar
     
     self.taskToggleButton = Instance.new("TextButton")
     self.taskToggleButton.Size = UDim2.new(0, 20, 0, 20)
@@ -120,8 +120,8 @@ function FarmUI.new()
     self.taskToggleButton.Text = "⏸️"
     self.taskToggleButton.TextSize = 20
     self.taskToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
+    self.taskToggleButton.Visible = false
     self.taskToggleButton.Parent = self.TitleBar
-    self.TaskToggleButton.Visible = false
 
     -- Tabs container
     self.TabsContainer = Instance.new("Frame")
