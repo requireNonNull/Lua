@@ -1,0 +1,273 @@
+-- 🦄 Moony Loady v1.1 (Multi-game support)
+local VERSION = "v1.1"
+local DEBUG_MODE = true
+
+-- ==========================
+local GamesList = {
+    {
+        Name = "HorseLife",
+        URL_UI = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUI.lua",
+        URL_KEYS = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIKeys.lua",
+        URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIVersion.lua",
+        Version = "0.0.6" -- current version your loader expects
+    },
+    -- Add more games similarly
+}
+
+-- Roblox services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local player = Players.LocalPlayer
+
+-- ==========================
+local LoaderUI = {}
+LoaderUI.__index = LoaderUI
+
+function LoaderUI.new()
+    local self = setmetatable({}, LoaderUI)
+
+    -- Root ScreenGui
+    self.Screen = Instance.new("ScreenGui")
+    self.Screen.Name = "MoonyLoadyUI"
+    self.Screen.ResetOnSpawn = false
+    self.Screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    self.Screen.Parent = game:GetService("CoreGui")
+
+    -- Outline
+    self.Outline = Instance.new("Frame")
+    self.Outline.Size = UDim2.new(0, 360, 0, 220)
+    self.Outline.Position = UDim2.new(0.5, -180, 0.5, -110)
+    self.Outline.BorderSizePixel = 0
+    self.Outline.Parent = self.Screen
+    Instance.new("UICorner", self.Outline).CornerRadius = UDim.new(0, 18)
+
+    self.OutlineGradient = Instance.new("UIGradient")
+    self.OutlineGradient.Rotation = 45
+    self.OutlineGradient.Parent = self.Outline
+
+    -- Main frame
+    self.Main = Instance.new("Frame")
+    self.Main.Size = UDim2.new(1, -8, 1, -8)
+    self.Main.Position = UDim2.new(0, 4, 0, 4)
+    self.Main.BorderSizePixel = 0
+    self.Main.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    self.Main.Parent = self.Outline
+    Instance.new("UICorner", self.Main).CornerRadius = UDim.new(0, 14)
+
+    -- Title Bar
+    self.TitleBar = Instance.new("Frame")
+    self.TitleBar.Size = UDim2.new(1, 0, 0, 42)
+    self.TitleBar.BorderSizePixel = 0
+    self.TitleBar.Parent = self.Main
+    Instance.new("UICorner", self.TitleBar).CornerRadius = UDim.new(0,14)
+
+    self.TitleLabel = Instance.new("TextLabel")
+    self.TitleLabel.Size = UDim2.new(1, -28, 1, 0)
+    self.TitleLabel.Position = UDim2.new(0,12,0,0)
+    self.TitleLabel.BackgroundTransparency = 1
+    self.TitleLabel.Font = Enum.Font.GothamBold
+    self.TitleLabel.Text = "🦄 Moony Loady"
+    self.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    self.TitleLabel.TextSize = 18
+    self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    self.TitleLabel.Parent = self.TitleBar
+
+    -- Close button
+    self.CloseButton = Instance.new("TextButton")
+    self.CloseButton.Size = UDim2.new(0,20,0,20)
+    self.CloseButton.Position = UDim2.new(1,-28,0.5,-10)
+    self.CloseButton.BackgroundTransparency = 1
+    self.CloseButton.Font = Enum.Font.GothamBold
+    self.CloseButton.Text = "X"
+    self.CloseButton.TextSize = 18
+    self.CloseButton.TextColor3 = Color3.fromRGB(255,255,255)
+    self.CloseButton.Parent = self.TitleBar
+
+    -- Tabs container
+    self.TabsContainer = Instance.new("Frame")
+    self.TabsContainer.Size = UDim2.new(1,0,1,-50)
+    self.TabsContainer.Position = UDim2.new(0,0,0,50)
+    self.TabsContainer.BackgroundTransparency = 1
+    self.TabsContainer.Parent = self.Main
+
+    -- Tab buttons row
+    self.TabButtons = Instance.new("Frame")
+    self.TabButtons.Size = UDim2.new(1,0,0,36)
+    self.TabButtons.BackgroundTransparency = 1
+    self.TabButtons.Parent = self.TabsContainer
+    local layout = Instance.new("UIListLayout", self.TabButtons)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.Padding = UDim.new(0,8)
+    Instance.new("UIPadding", self.TabButtons).PaddingLeft = UDim.new(0,8)
+
+    -- Content Area
+    self.ContentArea = Instance.new("Frame")
+    self.ContentArea.Size = UDim2.new(1,-16,1,-40)
+    self.ContentArea.Position = UDim2.new(0,8,0,40)
+    self.ContentArea.BackgroundTransparency = 1
+    self.ContentArea.Parent = self.TabsContainer
+
+    -- ==========================
+    -- Games Tab (shows available games)
+    local gamesBtn = Instance.new("TextButton")
+    gamesBtn.Size = UDim2.new(0,100,1,0)
+    gamesBtn.Text = "Games"
+    gamesBtn.Font = Enum.Font.GothamBold
+    gamesBtn.TextSize = 14
+    gamesBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    gamesBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", gamesBtn).CornerRadius = UDim.new(0,8)
+    gamesBtn.Parent = self.TabButtons
+
+    -- Initial content: list of games
+    local gamesContent = Instance.new("Frame")
+    gamesContent.Size = UDim2.new(1,0,1,0)
+    gamesContent.BackgroundTransparency = 1
+    gamesContent.Visible = true
+    gamesContent.Parent = self.ContentArea
+    self.CurrentTab = gamesContent
+
+    -- Display buttons for each game
+    for _, gameInfo in ipairs(GamesList) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0.6,0,0,36)
+        btn.Position = UDim2.new(0.2,0,0,(_-1)*42)
+        btn.Text = gameInfo.Name
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 14
+        btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        btn.TextColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+        btn.Parent = gamesContent
+
+        btn.MouseButton1Click:Connect(function()
+            -- Switch tab to game name
+            self.CurrentTab.Visible = false
+            self.TitleLabel.Text = gameInfo.Name
+            self.TabButtons:ClearAllChildren()  -- remove Games tab
+
+            -- Create new tab with key input
+            local keyContent = Instance.new("Frame")
+            keyContent.Size = UDim2.new(1,0,1,0)
+            keyContent.BackgroundTransparency = 1
+            keyContent.Parent = self.ContentArea
+            self.CurrentTab = keyContent
+
+            -- Key Header
+            local header = Instance.new("TextLabel")
+            header.Text = "Key ("..gameInfo.Name..")"
+            header.Size = UDim2.new(1,0,0,28)
+            header.Position = UDim2.new(0,0,0,8)
+            header.BackgroundTransparency = 1
+            header.Font = Enum.Font.GothamBold
+            header.TextSize = 18
+            header.TextColor3 = Color3.fromRGB(255,255,255)
+            header.TextXAlignment = Enum.TextXAlignment.Center
+            header.Parent = keyContent
+
+            -- Input Box
+            local inputBox = Instance.new("TextBox")
+            inputBox.Size = UDim2.new(0.8,0,0,36)
+            inputBox.Position = UDim2.new(0.1,0,0,48)
+            inputBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            inputBox.TextColor3 = Color3.fromRGB(255,255,255)
+            inputBox.Font = Enum.Font.Gotham
+            inputBox.TextSize = 14
+            inputBox.PlaceholderText = "Enter your key"
+            inputBox.ClearTextOnFocus = false
+            Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0,6)
+            inputBox.Parent = keyContent
+
+            -- Check Key Button
+            local checkBtn = Instance.new("TextButton")
+            checkBtn.Size = UDim2.new(0.5,0,0,36)
+            checkBtn.Position = UDim2.new(0.25,0,0,96)
+            checkBtn.Text = "Check Key"
+            checkBtn.Font = Enum.Font.GothamBold
+            checkBtn.TextSize = 14
+            checkBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            checkBtn.TextColor3 = Color3.fromRGB(255,255,255)
+            Instance.new("UICorner", checkBtn).CornerRadius = UDim.new(0,6)
+            checkBtn.Parent = keyContent
+
+            -- Key checking logic
+            -- Inside the game button click handler, replace the checkBtn.MouseButton1Click function with:
+
+            checkBtn.MouseButton1Click:Connect(function()
+                checkBtn.Active = false
+                inputBox.Active = false
+            
+                self.TitleLabel.Text = "🔄 Scanning Key..."
+                task.spawn(function()
+                    -- Fetch keys
+                    local keySuccess, keysRaw = pcall(function()
+                        return game:HttpGet(gameInfo.URL_KEYS)
+                    end)
+                    -- Fetch version
+                    local verSuccess, latestVer = pcall(function()
+                        return game:HttpGet(gameInfo.URL_VER)
+                    end)
+            
+                    local key = inputBox.Text
+                    if keySuccess and keysRaw then
+                        keysRaw = keysRaw:gsub("return",""):gsub("{",""):gsub("}",""):gsub("\"","")
+                        local keysList = {}
+                        for k in keysRaw:gmatch("[^,]+") do table.insert(keysList,k:match("^%s*(.-)%s*$")) end
+            
+                        if table.find(keysList,key) then
+                            -- Check version
+                            if verSuccess and latestVer then
+                                latestVer = latestVer:match("%d+%.%d+%.%d+")
+                                if latestVer ~= VERSION then
+                                    self.TitleLabel.Text = "⚠️ Update available ("..latestVer..")"
+                                    wait(1)
+                                end
+                            end
+            
+                            self.TitleLabel.Text = "✅ Access Granted"
+                            wait(1)
+                            self.Screen:Destroy()
+                            local uiCode = game:HttpGet(gameInfo.URL_UI)
+                            loadstring(uiCode)()
+                        else
+                            self.TitleLabel.Text = "❌ Access Denied"
+                            checkBtn.Active = true
+                            inputBox.Active = true
+                        end
+                    else
+                        self.TitleLabel.Text = "⚠️ Failed to fetch keys"
+                        checkBtn.Active = true
+                        inputBox.Active = true
+                    end
+                end)
+            end)
+        end)
+    end
+
+    -- Close button
+    self.CloseButton.MouseButton1Click:Connect(function()
+        self.Screen:Destroy()
+    end)
+
+    -- Rainbow gradient
+    task.spawn(function()
+        while self.Screen.Parent do
+            local t = tick()
+            local r = 0.5 + 0.5 * math.sin(t)
+            local g = 0.5 + 0.5 * math.sin(t + 2)
+            local b = 0.5 + 0.5 * math.sin(t + 4)
+            self.OutlineGradient.Color = ColorSequence.new(Color3.new(r,g,b), Color3.new(b,r,g))
+            task.wait(0.05)
+        end
+    end)
+
+    return self
+end
+
+-- ==========================
+local loader = LoaderUI.new()
+if DEBUG_MODE then
+    print("[MoonyLoady] Loader initialized with "..#GamesList.." game(s)")
+end
