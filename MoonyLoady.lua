@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.1.3"
+local VERSION = "v0.1.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -483,7 +483,7 @@ local function addGamesSection(parent)
 
                 -- PlaceId OK -> show game status + version info in title and info label
                 ui.TitleLabel.Text = (gameInfo.Name or "Game") .. " - " .. (gameInfo.Status or "")
-                infoLabel.Text = (gameInfo.ExploitName or "") .. " " .. (gameInfo.ExploitVersion or "") .. " | " .. (gameInfo.LastCheckedDate or "")
+                --infoLabel.Text = (gameInfo.ExploitName or "") .. " " .. (gameInfo.ExploitVersion or "") .. " | " .. (gameInfo.LastCheckedDate or "")
 
                 -- VERSION CHECK: compare local version vs provided exploit version (displayed but no remote fetch)
                 -- if different, show outdated message in title while still allowing continuation
