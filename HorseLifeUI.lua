@@ -1,32 +1,11 @@
--- 🦄 Farmy v3.1 (Modern Themed UI) - Full script
--- Features:
---  - Themes: Dark, White, Pitch Black, Dark Purple, Rainbow (applies to all accents)
---  - Dropdown theme selector (Settings → Design)
---  - Tabs: Farming, Settings, Info (only one visible at a time)
---  - Headers in tabs (Design, Farm, Stats, Changelog)
---  - Scrolling frames with hidden scrollbars (auto-resize CanvasSize)
---  - Runtime statistics auto-updating every second
---  - Hardcoded changelog at top
---  - Minimize toggles UI and sets FarmUI.Status ("Open" / "Minimized")
---  - Rounded corners and modern spacing/hover feedback
--- Drop into a LocalScript (StarterGui) or appropriate environment.
-
-local VERSION = "v3.2"
+-- 🦄 Farmy v2.6 (Modern UI Framework)
+local VERSION = "v4.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
-local startTime = tick()
-
--- Hardcoded changelog (edit here)
-local CHANGELOG = {
-    "v3.1 - Consistent theming, dropdown selector, uptime stats, minimized status variable",
-    "v3.0 - Added Info tab, Stats, Changelog, and new themes",
-    "v2.4 - Improved rounded layout, tab system, hidden scrollbar"
-}
 
 -- ==========================
 -- UI Class
@@ -34,6 +13,9 @@ local CHANGELOG = {
 local FarmUI = {}
 FarmUI.__index = FarmUI
 
+FarmUI.Status = "Open" -- static variable for minimized/open
+
+-- Themes
 local Themes = {
     Dark = {
         Background = Color3.fromRGB(25,25,25),
@@ -45,52 +27,47 @@ local Themes = {
     },
     White = {
         Background = Color3.fromRGB(245,245,245),
-        Accent1 = Color3.fromRGB(0,170,255),
-        Accent2 = Color3.fromRGB(0,120,200),
-        Button = Color3.fromRGB(225,225,225),
-        ButtonHover = Color3.fromRGB(210,210,210),
-        Text = Color3.fromRGB(30,30,30),
+        Accent1 = Color3.fromRGB(0,120,255),
+        Accent2 = Color3.fromRGB(0,200,255),
+        Button = Color3.fromRGB(220,220,220),
+        ButtonHover = Color3.fromRGB(200,200,200),
+        Text = Color3.fromRGB(25,25,25),
     },
     PitchBlack = {
         Background = Color3.fromRGB(10,10,10),
-        Accent1 = Color3.fromRGB(80,80,80),
-        Accent2 = Color3.fromRGB(150,150,150),
+        Accent1 = Color3.fromRGB(0,255,255),
+        Accent2 = Color3.fromRGB(0,150,255),
         Button = Color3.fromRGB(20,20,20),
         ButtonHover = Color3.fromRGB(35,35,35),
         Text = Color3.fromRGB(255,255,255),
     },
     DarkPurple = {
-        Background = Color3.fromRGB(20,15,30),
-        Accent1 = Color3.fromRGB(120,0,200),
-        Accent2 = Color3.fromRGB(200,0,255),
-        Button = Color3.fromRGB(40,25,60),
-        ButtonHover = Color3.fromRGB(60,40,80),
-        Text = Color3.fromRGB(240,240,240),
+        Background = Color3.fromRGB(30,0,50),
+        Accent1 = Color3.fromRGB(150,0,255),
+        Accent2 = Color3.fromRGB(255,0,200),
+        Button = Color3.fromRGB(40,10,60),
+        ButtonHover = Color3.fromRGB(60,20,80),
+        Text = Color3.fromRGB(255,255,255),
     },
     Rainbow = "Rainbow"
 }
 
+-- ==========================
 -- Constructor
 function FarmUI.new()
     local self = setmetatable({}, FarmUI)
 
-    -- state
-    self.CurrentTheme = "Dark"
-    self.RainbowTask = nil
-    self.CurrentTab = nil
-    self.Status = "Open" -- static status variable for later use ("Open" / "Minimized")
-
-    -- ScreenGui
+    -- Root ScreenGui
     self.Screen = Instance.new("ScreenGui")
     self.Screen.Name = "FarmUI"
     self.Screen.ResetOnSpawn = false
     self.Screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.Screen.Parent = game:GetService("CoreGui")
 
-    -- Outline (gradient border)
+    -- Outline frame
     self.Outline = Instance.new("Frame")
-    self.Outline.Size = UDim2.new(0, 380, 0, 520)
-    self.Outline.Position = UDim2.new(0.5, -190, 0.5, -260)
+    self.Outline.Size = UDim2.new(0, 360, 0, 500)
+    self.Outline.Position = UDim2.new(0.5, -180, 0.5, -250)
     self.Outline.BorderSizePixel = 0
     self.Outline.Parent = self.Screen
     Instance.new("UICorner", self.Outline).CornerRadius = UDim.new(0, 18)
@@ -99,7 +76,7 @@ function FarmUI.new()
     self.OutlineGradient.Rotation = 45
     self.OutlineGradient.Parent = self.Outline
 
-    -- Main (inset)
+    -- Main frame
     self.Main = Instance.new("Frame")
     self.Main.Size = UDim2.new(1, -8, 1, -8)
     self.Main.Position = UDim2.new(0, 4, 0, 4)
@@ -107,15 +84,15 @@ function FarmUI.new()
     self.Main.Parent = self.Outline
     Instance.new("UICorner", self.Main).CornerRadius = UDim.new(0, 14)
 
-    -- Title bar (rounded top)
+    -- Title bar
     self.TitleBar = Instance.new("Frame")
-    self.TitleBar.Size = UDim2.new(1, 0, 0, 44)
+    self.TitleBar.Size = UDim2.new(1, 0, 0, 42)
     self.TitleBar.BorderSizePixel = 0
     self.TitleBar.Parent = self.Main
     Instance.new("UICorner", self.TitleBar).CornerRadius = UDim.new(0, 14)
 
     self.TitleLabel = Instance.new("TextLabel")
-    self.TitleLabel.Size = UDim2.new(1, -96, 1, 0)
+    self.TitleLabel.Size = UDim2.new(1, -80, 1, 0)
     self.TitleLabel.Position = UDim2.new(0, 12, 0, 0)
     self.TitleLabel.BackgroundTransparency = 1
     self.TitleLabel.Font = Enum.Font.GothamBold
@@ -124,7 +101,7 @@ function FarmUI.new()
     self.TitleLabel.TextSize = 18
     self.TitleLabel.Parent = self.TitleBar
 
-    -- Control buttons
+    -- Close & Minimize buttons
     self.CloseButton = Instance.new("ImageButton")
     self.CloseButton.Size = UDim2.new(0, 20, 0, 20)
     self.CloseButton.Position = UDim2.new(1, -28, 0.5, -10)
@@ -134,7 +111,7 @@ function FarmUI.new()
 
     self.MinimizeButton = Instance.new("TextButton")
     self.MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
-    self.MinimizeButton.Position = UDim2.new(1, -56, 0.5, -10)
+    self.MinimizeButton.Position = UDim2.new(1, -52, 0.5, -10)
     self.MinimizeButton.BackgroundTransparency = 1
     self.MinimizeButton.Font = Enum.Font.GothamBold
     self.MinimizeButton.Text = "—"
@@ -143,8 +120,8 @@ function FarmUI.new()
 
     -- Tabs container
     self.TabsContainer = Instance.new("Frame")
-    self.TabsContainer.Size = UDim2.new(1, 0, 1, -56)
-    self.TabsContainer.Position = UDim2.new(0, 0, 0, 56)
+    self.TabsContainer.Size = UDim2.new(1, 0, 1, -50)
+    self.TabsContainer.Position = UDim2.new(0, 0, 0, 50)
     self.TabsContainer.BackgroundTransparency = 1
     self.TabsContainer.Parent = self.Main
 
@@ -153,9 +130,9 @@ function FarmUI.new()
     self.TabButtons.Size = UDim2.new(1, 0, 0, 36)
     self.TabButtons.BackgroundTransparency = 1
     self.TabButtons.Parent = self.TabsContainer
-    local listLayout = Instance.new("UIListLayout", self.TabButtons)
-    listLayout.FillDirection = Enum.FillDirection.Horizontal
-    listLayout.Padding = UDim.new(0, 8)
+    local layout = Instance.new("UIListLayout", self.TabButtons)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.Padding = UDim.new(0, 8)
     Instance.new("UIPadding", self.TabButtons).PaddingLeft = UDim.new(0, 8)
 
     -- Content area
@@ -165,28 +142,38 @@ function FarmUI.new()
     self.ContentArea.BackgroundTransparency = 1
     self.ContentArea.Parent = self.TabsContainer
 
-    -- finalize
+    -- Init
+    self.CurrentTab = nil
+    self.CurrentTheme = nil
+    self.Minimized = false
+
+    -- Setup
     self:makeDraggable(self.TitleBar)
     self:setupEvents()
-    self:applyTheme(self.CurrentTheme)
+    self:applyTheme("Dark") -- default
     return self
 end
 
+-- ==========================
 -- Dragging
-function FarmUI:makeDraggable(handle)
+function FarmUI:makeDraggable(dragHandle)
     local dragging, dragInput, startPos, startInputPos
-    handle.InputBegan:Connect(function(input)
+    dragHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             startPos = self.Outline.Position
             startInputPos = input.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
             end)
         end
     end)
-    handle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+    dragHandle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
     end)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
@@ -196,7 +183,8 @@ function FarmUI:makeDraggable(handle)
     end)
 end
 
--- Event wiring (close/minimize)
+-- ==========================
+-- Events
 function FarmUI:setupEvents()
     self.CloseButton.MouseButton1Click:Connect(function()
         self.Screen:Destroy()
@@ -204,423 +192,238 @@ function FarmUI:setupEvents()
 
     self.MinimizeButton.MouseButton1Click:Connect(function()
         self.Minimized = not self.Minimized
+        FarmUI.Status = self.Minimized and "Minimized" or "Open"
+
         if self.Minimized then
-            TweenService:Create(self.Outline, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.new(0,380,0,56)}):Play()
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
             self.TabsContainer.Visible = false
             self.TitleLabel.Text = "⏳ Minimized"
-            self.Status = "Minimized"
         else
-            TweenService:Create(self.Outline, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = UDim2.new(0,380,0,520)}):Play()
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
             self.TabsContainer.Visible = true
             self.TitleLabel.Text = "🦄 Farmy " .. VERSION
-            self.Status = "Open"
-            -- ensure only current tab visible
-            for _,child in ipairs(self.ContentArea:GetChildren()) do
-                if child:IsA("ScrollingFrame") then child.Visible = (child == self.CurrentTab) end
+            -- restore current tab only
+            for _,tab in ipairs(self.ContentArea:GetChildren()) do
+                if tab:IsA("ScrollingFrame") then
+                    tab.Visible = (tab == self.CurrentTab)
+                end
             end
         end
     end)
 end
 
--- Apply theme (full recolor)
+-- ==========================
+-- Theme Application
 function FarmUI:applyTheme(name)
-    -- stop previous rainbow
     self.CurrentTheme = name
-    if self.RainbowTask then
-        self.RainbowTask.Running = false
-        self.RainbowTask = nil
-    end
-
     if name == "Rainbow" then
-        -- set base dark background for readability
-        self.Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
-        self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
-        -- start rainbow loop as a task object we can control
-        local tflag = { Running = true }
-        self.RainbowTask = tflag
         task.spawn(function()
-            while tflag.Running and self.CurrentTheme == "Rainbow" do
+            while self.CurrentTheme == "Rainbow" do
                 local t = tick()
-                local r = 0.5 + 0.5 * math.sin(t * 1.2)
-                local g = 0.5 + 0.5 * math.sin(t * 1.2 + 2)
-                local b = 0.5 + 0.5 * math.sin(t * 1.2 + 4)
+                local r = 0.5 + 0.5 * math.sin(t)
+                local g = 0.5 + 0.5 * math.sin(t + 2)
+                local b = 0.5 + 0.5 * math.sin(t + 4)
                 self.OutlineGradient.Color = ColorSequence.new(Color3.new(r,g,b), Color3.new(b,r,g))
-                -- recolor tab buttons if any (keep readable)
-                for _,btn in ipairs(self.TabButtons:GetChildren()) do
-                    if btn:IsA("TextButton") then
-                        btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-                        btn.TextColor3 = Color3.fromRGB(255,255,255)
-                    end
-                end
-                task.wait(0.045)
+                self.Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+                self.TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+                task.wait(0.05)
             end
         end)
-        return
-    end
-
-    local th = Themes[name]
-    if not th then return end
-
-    -- Outline gradient & main background
-    self.OutlineGradient.Color = ColorSequence.new(th.Accent1, th.Accent2)
-    self.Main.BackgroundColor3 = th.Background
-    self.TitleLabel.TextColor3 = th.Text
-
-    -- Tab buttons recolor
-    for _,btn in ipairs(self.TabButtons:GetChildren()) do
-        if btn:IsA("TextButton") then
-            btn.BackgroundColor3 = th.Button
-            btn.TextColor3 = th.Text
-        end
-    end
-
-    -- Content area children recolor (simple pass)
-    for _,child in ipairs(self.ContentArea:GetChildren()) do
-        -- headers & labels we'll keep default text color; created elements should use theme.Text on creation
-        if child:IsA("ScrollingFrame") then
-            for _,g in ipairs(child:GetChildren()) do
-                if g:IsA("TextLabel") or g:IsA("TextButton") then
-                    if g:IsA("TextButton") then
-                        g.BackgroundColor3 = th.Button
-                        g.TextColor3 = th.Text
-                    else
-                        g.TextColor3 = th.Text
-                    end
-                end
+    else
+        local th = Themes[name]
+        self.Main.BackgroundColor3 = th.Background
+        self.OutlineGradient.Color = ColorSequence.new(th.Accent1, th.Accent2)
+        self.TitleLabel.TextColor3 = th.Text
+        for _,btn in ipairs(self.TabButtons:GetChildren()) do
+            if btn:IsA("TextButton") then
+                btn.BackgroundColor3 = th.Button
+                btn.TextColor3 = th.Text
             end
         end
     end
 end
 
--- Add tab (with automatic layout + hidden scrollbar)
+-- ==========================
+-- Add Tabs
 function FarmUI:addTab(name)
-    -- create button
-    local th = Themes[self.CurrentTheme]
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 110, 1, 0)
-    btn.Text = name
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 14
-    btn.AutoButtonColor = false
-    btn.Name = "TabButton_"..name
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-    btn.Parent = self.TabButtons
+    local th = Themes[self.CurrentTheme] or Themes.Dark
 
-    -- apply theme colors
-    local curTh = Themes[self.CurrentTheme]
-    if self.CurrentTheme == "Rainbow" then
-        btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-        btn.TextColor3 = Color3.fromRGB(255,255,255)
-    else
-        btn.BackgroundColor3 = curTh.Button
-        btn.TextColor3 = curTh.Text
-    end
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 100, 1, 0)
+    button.Text = name
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 14
+    button.BackgroundColor3 = th.Button
+    button.TextColor3 = th.Text
+    button.AutoButtonColor = false
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
+    button.Parent = self.TabButtons
 
-    btn.MouseEnter:Connect(function()
-        local theme = Themes[self.CurrentTheme]
-        if theme ~= "Rainbow" then btn.BackgroundColor3 = theme.ButtonHover end
+    -- hover effect
+    button.MouseEnter:Connect(function()
+        if self.CurrentTheme ~= "Rainbow" then
+            button.BackgroundColor3 = th.ButtonHover
+        end
     end)
-    btn.MouseLeave:Connect(function()
-        local theme = Themes[self.CurrentTheme]
-        if theme ~= "Rainbow" then btn.BackgroundColor3 = theme.Button end
+    button.MouseLeave:Connect(function()
+        if self.CurrentTheme ~= "Rainbow" then
+            button.BackgroundColor3 = th.Button
+        end
     end)
 
     -- content scrolling frame
     local content = Instance.new("ScrollingFrame")
-    content.Name = name .. "Content"
-    content.Size = UDim2.new(1, 0, 1, 0)
+    content.Name = name.."Content"
+    content.Size = UDim2.new(1,0,1,0)
     content.CanvasSize = UDim2.new(0,0,0,0)
     content.ScrollBarThickness = 0
     content.BackgroundTransparency = 1
     content.Visible = false
     content.Parent = self.ContentArea
 
-    -- internal layout + padding
     local layout = Instance.new("UIListLayout")
     layout.FillDirection = Enum.FillDirection.Vertical
-    layout.Padding = UDim.new(0,8)
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0,6)
     layout.Parent = content
 
-    local pad = Instance.new("UIPadding")
-    pad.PaddingTop = UDim.new(0,8)
-    pad.PaddingLeft = UDim.new(0,12)
-    pad.PaddingRight = UDim.new(0,12)
-    pad.PaddingBottom = UDim.new(0,8)
-    pad.Parent = content
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0,8)
+    padding.PaddingBottom = UDim.new(0,8)
+    padding.PaddingLeft = UDim.new(0,8)
+    padding.PaddingRight = UDim.new(0,8)
+    padding.Parent = content
 
-    -- auto-update CanvasSize
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        content.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 12)
+        content.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 16)
     end)
 
-    btn.MouseButton1Click:Connect(function()
+    button.MouseButton1Click:Connect(function()
         if self.CurrentTab then self.CurrentTab.Visible = false end
         self.CurrentTab = content
         content.Visible = true
-        -- ensure selection highlight (simple)
-        for _,b in ipairs(self.TabButtons:GetChildren()) do
-            if b:IsA("TextButton") then
-                b.TextTransparency = (b == btn) and 0 or 0.35
-            end
-        end
     end)
 
     if not self.CurrentTab then
         self.CurrentTab = content
         content.Visible = true
-        btn.TextTransparency = 0
     end
 
     return content
 end
 
--- Small helpers for building UI elements inside tabs
-function FarmUI:MakeHeader(text, parent)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -12, 0, 28)
-    lbl.BackgroundTransparency = 1
-    lbl.Font = Enum.Font.GothamBold
-    lbl.TextSize = 18
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Text = text
-    lbl.TextColor3 = (Themes[self.CurrentTheme] ~= "Rainbow") and Themes[self.CurrentTheme].Text or Color3.fromRGB(255,255,255)
-    lbl.Parent = parent
-    return lbl
-end
-
-function FarmUI:MakeLabel(text, parent)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1, -12, 0, 24)
-    lbl.BackgroundTransparency = 1
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 15
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Text = text
-    lbl.TextColor3 = (Themes[self.CurrentTheme] ~= "Rainbow") and Themes[self.CurrentTheme].Text or Color3.fromRGB(255,255,255)
-    lbl.Parent = parent
-    return lbl
-end
-
-function FarmUI:MakeButton(text, parent, onClick)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -12, 0, 36)
-    btn.BackgroundTransparency = 0
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 15
-    btn.Text = text
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-    btn.Parent = parent
-    -- apply theme colors
-    if Themes[self.CurrentTheme] ~= "Rainbow" then
-        btn.BackgroundColor3 = Themes[self.CurrentTheme].Button
-        btn.TextColor3 = Themes[self.CurrentTheme].Text
-    else
-        btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-        btn.TextColor3 = Color3.fromRGB(255,255,255)
-    end
-    btn.MouseEnter:Connect(function()
-        if Themes[self.CurrentTheme] ~= "Rainbow" then btn.BackgroundColor3 = Themes[self.CurrentTheme].ButtonHover end
-    end)
-    btn.MouseLeave:Connect(function()
-        if Themes[self.CurrentTheme] ~= "Rainbow" then btn.BackgroundColor3 = Themes[self.CurrentTheme].Button end
-    end)
-    if onClick then btn.MouseButton1Click:Connect(onClick) end
-    return btn
-end
-
--- Dropdown builder (renders options under the dropdown button inside the parent)
-function FarmUI:MakeDropdown(options, default, parent, onSelect)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -12, 0, 36)
-    container.BackgroundTransparency = 1
-    container.Parent = parent
-
-    local base = Instance.new("TextButton")
-    base.Size = UDim2.new(1, 0, 1, 0)
-    base.Text = "Theme: " .. default
-    base.Font = Enum.Font.GothamBold
-    base.TextSize = 15
-    base.Parent = container
-    Instance.new("UICorner", base).CornerRadius = UDim.new(0,8)
-
-    -- style per theme
-    local applyBaseStyle = function()
-        if Themes[self.CurrentTheme] ~= "Rainbow" then
-            base.BackgroundColor3 = Themes[self.CurrentTheme].Button
-            base.TextColor3 = Themes[self.CurrentTheme].Text
-        else
-            base.BackgroundColor3 = Color3.fromRGB(40,40,40)
-            base.TextColor3 = Color3.fromRGB(255,255,255)
-        end
-    end
-    applyBaseStyle()
-
-    local open = false
-    local opts = {} -- store option buttons
-
-    local function closeOptions()
-        for _,o in ipairs(opts) do
-            if o and o.Parent then o:Destroy() end
-        end
-        opts = {}
-        open = false
-    end
-
-    base.MouseButton1Click:Connect(function()
-        if open then
-            closeOptions()
-            return
-        end
-        -- open options (inserted below base)
-        open = true
-        for i,opt in ipairs(options) do
-            local ob = Instance.new("TextButton")
-            ob.Name = "DropdownOption"
-            ob.Size = UDim2.new(1, -12, 0, 34)
-            ob.Position = UDim2.new(0, 0, 0, 36 * i)
-            ob.Text = opt
-            ob.Font = Enum.Font.Gotham
-            ob.TextSize = 14
-            ob.Parent = parent
-            Instance.new("UICorner", ob).CornerRadius = UDim.new(0,8)
-            -- style
-            if Themes[self.CurrentTheme] ~= "Rainbow" then
-                ob.BackgroundColor3 = Themes[self.CurrentTheme].Button
-                ob.TextColor3 = Themes[self.CurrentTheme].Text
-            else
-                ob.BackgroundColor3 = Color3.fromRGB(40,40,40)
-                ob.TextColor3 = Color3.fromRGB(255,255,255)
-            end
-            ob.ZIndex = base.ZIndex + 1
-            table.insert(opts, ob)
-            ob.MouseButton1Click:Connect(function()
-                base.Text = "Theme: " .. opt
-                if onSelect then onSelect(opt) end
-                closeOptions()
-            end)
-        end
-    end)
-
-    -- ensure dropdown recolors when theme changes
-    self.ApplyDropdownStyle = function()
-        applyBaseStyle()
-        for _,o in ipairs(opts) do
-            if o and o.Parent then
-                if Themes[self.CurrentTheme] ~= "Rainbow" then
-                    o.BackgroundColor3 = Themes[self.CurrentTheme].Button
-                    o.TextColor3 = Themes[self.CurrentTheme].Text
-                else
-                    o.BackgroundColor3 = Color3.fromRGB(40,40,40)
-                    o.TextColor3 = Color3.fromRGB(255,255,255)
-                end
-            end
-        end
-    end
-
-    return base
-end
-
 -- ==========================
--- Example UI Initialization
--- ==========================
+-- Initialize UI
 local ui = FarmUI.new()
-
--- Create tabs
 local farmingTab = ui:addTab("Farming")
 local settingsTab = ui:addTab("Settings")
 local infoTab = ui:addTab("Info")
 
--- Farming tab content
-ui:MakeHeader("Farm", farmingTab)
-local farmLbl = ui:MakeLabel("Farming features will be added here.", farmingTab)
-farmLbl.Parent = farmingTab
-ui:MakeButton("Start Farming (placeholder)", farmingTab, function()
-    -- placeholder click
-    if DEBUG_MODE then print("Start Farming clicked") end
-end).Parent = farmingTab
+-- Example headers and theme selector in Settings
+local headerDesign = Instance.new("TextLabel")
+headerDesign.Text = "Design"
+headerDesign.Size = UDim2.new(1,0,0,28)
+headerDesign.BackgroundTransparency = 1
+headerDesign.Font = Enum.Font.GothamBold
+headerDesign.TextSize = 18
+headerDesign.TextColor3 = Color3.fromRGB(255,255,255)
+headerDesign.Parent = settingsTab
 
--- Settings tab content (Design header + dropdown)
-ui:MakeHeader("Design", settingsTab)
-local themeDropdown = ui:MakeDropdown({"Dark","White","PitchBlack","DarkPurple","Rainbow"}, ui.CurrentTheme, settingsTab, function(opt)
-    -- suffix mismatch with names (PitchBlack vs "PitchBlack"): keep consistent
-    local mapping = {
-        PitchBlack = "PitchBlack",
-        DarkPurple = "DarkPurple",
-        White = "White",
-        Dark = "Dark",
-        Rainbow = "Rainbow"
-    }
-    local key = mapping[opt] or opt
-    ui:applyTheme(key)
-    -- also recolor dropdown options if any
-    if ui.ApplyDropdownStyle then ui.ApplyDropdownStyle() end
-end)
+-- Theme dropdown (compact)
+local themeDropdown = Instance.new("TextButton")
+themeDropdown.Text = "Select Theme"
+themeDropdown.Size = UDim2.new(0,160,0,30)
+themeDropdown.Position = UDim2.new(0,0,0,36)
+themeDropdown.Font = Enum.Font.Gotham
+themeDropdown.TextSize = 14
+themeDropdown.TextColor3 = Color3.fromRGB(255,255,255)
+themeDropdown.BackgroundColor3 = Color3.fromRGB(50,50,50)
+Instance.new("UICorner", themeDropdown).CornerRadius = UDim.new(0,6)
 themeDropdown.Parent = settingsTab
 
--- More settings sections
-ui:MakeHeader("Farm Settings", settingsTab)
-local tpLabel = ui:MakeLabel("TP Speed (placeholder slider below)", settingsTab)
-tpLabel.Parent = settingsTab
--- Example slider placeholder (you can replace with real slider later)
-local sliderPlaceholder = Instance.new("Frame")
-sliderPlaceholder.Size = UDim2.new(1, -12, 0, 10)
-sliderPlaceholder.BackgroundColor3 = Color3.fromRGB(80,80,80)
-Instance.new("UICorner", sliderPlaceholder).CornerRadius = UDim.new(0,6)
-sliderPlaceholder.Parent = settingsTab
+local dropdownFrame = Instance.new("Frame")
+dropdownFrame.Size = UDim2.new(1,0,0,0)
+dropdownFrame.Position = UDim2.new(0,0,0,66)
+dropdownFrame.BackgroundTransparency = 0
+dropdownFrame.BackgroundColor3 = Color3.fromRGB(45,45,45)
+Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0,6)
+dropdownFrame.ClipsDescendants = true
+dropdownFrame.Parent = settingsTab
 
--- Info tab content (Stats & Changelog)
-ui:MakeHeader("Stats", infoTab)
-local runtimeLabel = ui:MakeLabel("Runtime: 0s", infoTab)
-runtimeLabel.Parent = infoTab
-local startedAtLabel = ui:MakeLabel("Started at: --:--:--", infoTab)
-startedAtLabel.Parent = infoTab
+local dropdownLayout = Instance.new("UIListLayout")
+dropdownLayout.Padding = UDim.new(0,2)
+dropdownLayout.FillDirection = Enum.FillDirection.Vertical
+dropdownLayout.Parent = dropdownFrame
 
-ui:MakeHeader("Changelog", infoTab)
-local changelogLabel = Instance.new("TextLabel")
-changelogLabel.Size = UDim2.new(1, -12, 0, 120)
-changelogLabel.BackgroundTransparency = 1
-changelogLabel.Font = Enum.Font.Gotham
-changelogLabel.TextSize = 14
-changelogLabel.TextColor3 = (Themes[ui.CurrentTheme] ~= "Rainbow") and Themes[ui.CurrentTheme].Text or Color3.fromRGB(255,255,255)
-changelogLabel.TextWrapped = true
-changelogLabel.TextXAlignment = Enum.TextXAlignment.Left
-changelogLabel.TextYAlignment = Enum.TextYAlignment.Top
-changelogLabel.Parent = infoTab
-
--- fill changelog text
-local changetext = table.concat(CHANGELOG, "\n\n")
-changelogLabel.Text = changetext
-
--- Format helpers
-local function formatTime(sec)
-    local h = math.floor(sec / 3600)
-    local m = math.floor((sec % 3600) / 60)
-    local s = math.floor(sec % 60)
-    return string.format("%02d:%02d:%02d", h, m, s)
-end
-
--- Update runtime each second
-spawn(function()
-    while true do
-        local elapsed = tick() - startTime
-        runtimeLabel.Text = "Runtime: " .. formatTime(elapsed)
-        local stTime = os.date("!%H:%M:%S", math.floor(startTime)) -- UTC time; you can change to os.date() for local
-        startedAtLabel.Text = "Started at (UTC): " .. stTime
-        RunService.Heartbeat:Wait() -- update frequently but we'll throttle
-        task.wait(1)
+themeDropdown.MouseButton1Click:Connect(function()
+    if dropdownFrame.Size.Y.Offset == 0 then
+        dropdownFrame:TweenSize(UDim2.new(1,0,0,#dropdownLayout:GetChildren()*32), "Out", "Quad", 0.2, true)
+    else
+        dropdownFrame:TweenSize(UDim2.new(1,0,0,0), "Out", "Quad", 0.2, true)
     end
 end)
 
--- Ensure newly created elements get themed: we will hook the applyTheme to recolor dynamic dropdown options
--- Recolor existing elements to match initial theme
-ui:applyTheme(ui.CurrentTheme)
-if ui.ApplyDropdownStyle then ui.ApplyDropdownStyle() end
-
-if DEBUG_MODE then
-    print("[Farmy] UI v"..VERSION.." initialized. Status:", ui.Status)
+for _,themeName in ipairs({"Dark","White","PitchBlack","DarkPurple","Rainbow"}) do
+    local tBtn = Instance.new("TextButton")
+    tBtn.Text = themeName
+    tBtn.Size = UDim2.new(1,0,0,28)
+    tBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    tBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    tBtn.Font = Enum.Font.Gotham
+    tBtn.TextSize = 14
+    Instance.new("UICorner", tBtn).CornerRadius = UDim.new(0,6)
+    tBtn.Parent = dropdownFrame
+    tBtn.MouseButton1Click:Connect(function()
+        ui:applyTheme(themeName)
+        themeDropdown.Text = themeName
+        dropdownFrame:TweenSize(UDim2.new(1,0,0,0), "Out", "Quad", 0.2, true)
+    end)
 end
 
--- Expose ui globally for later access (optional)
-_G.FarmyUI = ui
+-- Info Tab example
+local statsHeader = Instance.new("TextLabel")
+statsHeader.Text = "Stats"
+statsHeader.Size = UDim2.new(1,0,0,28)
+statsHeader.Position = UDim2.new(0,0,0,0)
+statsHeader.BackgroundTransparency = 1
+statsHeader.Font = Enum.Font.GothamBold
+statsHeader.TextSize = 18
+statsHeader.TextColor3 = Color3.fromRGB(255,255,255)
+statsHeader.Parent = infoTab
+
+local statsLabel = Instance.new("TextLabel")
+statsLabel.Text = "Runtime info: ..."
+statsLabel.Size = UDim2.new(1,0,0,24)
+statsLabel.Position = UDim2.new(0,0,0,32)
+statsLabel.BackgroundTransparency = 1
+statsLabel.Font = Enum.Font.Gotham
+statsLabel.TextSize = 14
+statsLabel.TextColor3 = Color3.fromRGB(255,255,255)
+statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+statsLabel.Parent = infoTab
+
+local changelogHeader = Instance.new("TextLabel")
+changelogHeader.Text = "Changelog"
+changelogHeader.Size = UDim2.new(1,0,0,28)
+changelogHeader.Position = UDim2.new(0,0,0,64)
+changelogHeader.BackgroundTransparency = 1
+changelogHeader.Font = Enum.Font.GothamBold
+changelogHeader.TextSize = 18
+changelogHeader.TextColor3 = Color3.fromRGB(255,255,255)
+changelogHeader.Parent = infoTab
+
+local changelogLabel = Instance.new("TextLabel")
+changelogLabel.Text = "- v2.6: Modernized UI, theme dropdown, minimize fix"
+changelogLabel.Size = UDim2.new(1,0,0,24)
+changelogLabel.Position = UDim2.new(0,0,0,96)
+changelogLabel.BackgroundTransparency = 1
+changelogLabel.Font = Enum.Font.Gotham
+changelogLabel.TextSize = 14
+changelogLabel.TextColor3 = Color3.fromRGB(255,255,255)
+changelogLabel.TextXAlignment = Enum.TextXAlignment.Left
+changelogLabel.Parent = infoTab
+
+if DEBUG_MODE then
+    print("[Farmy] UI v"..VERSION.." initialized.")
+end
