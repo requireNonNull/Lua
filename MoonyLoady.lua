@@ -1,5 +1,5 @@
 -- SAFE: Farmy v5.1 (Games Tab Integration) - sanitized (no exploit loading)
-local VERSION = "v0.2.4"
+local VERSION = "v0.2.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -286,7 +286,7 @@ end
 -- Add your raw file URLs here
 local statusFiles = {
     "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIStatus.lua",
-    "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/RainbowFriendsUIStatus.lua",
+    "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/RainbowFriendsChapter2Status.lua",
 }
 
 -- Build list
