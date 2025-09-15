@@ -173,11 +173,11 @@ function FarmUI:setupEvents()
         if self.Minimized then
             TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
             self.TabsContainer.Visible = false
-            self.TitleLabel.Text = "⏳ Minimized"
+            self.TitleLabel.Text = "🌑 Moony Loady "..VERSION
         else
             TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
             self.TabsContainer.Visible = true
-            self.TitleLabel.Text = "🦄 Farmy "..VERSION
+            self.TitleLabel.Text = "🌑 Moony Loady "..VERSION
             for _,tab in ipairs(self.ContentArea:GetChildren()) do
                 if tab:IsA("ScrollingFrame") then
                     tab.Visible = (tab == self.CurrentTab)
