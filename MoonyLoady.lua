@@ -1,5 +1,5 @@
--- 🦄 Moony Loady v1.5 (Farmy-style modern, minimized titlebar only)
-local VERSION = "v1.6"
+-- 🦄 Moony Loady v1.8 (Farmy-style modern, proper minimization)
+local VERSION = "v1.8"
 local DEBUG_MODE = true
 
 local GamesList = {
@@ -28,23 +28,23 @@ local function tweenObject(obj, properties, duration, easingStyle, easingDir)
     return tween
 end
 
--- Minimize frame: hide everything except title bar
-function LoaderUI:minimizeFrame()
+-- Minimize content only (keep tabs + titlebar visible)
+function LoaderUI:minimizeContent()
     if self.CurrentTab then
+        tweenObject(self.CurrentTab, {BackgroundTransparency = 1}, 0.3).Completed:Wait()
         self.CurrentTab.Visible = false
     end
-    tweenObject(self.Outline, {Size = UDim2.new(0, 360, 0, 42)}, 0.3)
 end
 
--- Restore frame: show full content area
-function LoaderUI:restoreFrame()
-    tweenObject(self.Outline, {Size = UDim2.new(0, 360, 0, 220)}, 0.3)
+-- Restore content
+function LoaderUI:restoreContent()
     if self.CurrentTab then
         self.CurrentTab.Visible = true
+        tweenObject(self.CurrentTab, {BackgroundTransparency = 0}, 0.3)
     end
 end
 
--- Show game tab
+-- Show game tab (Farmy-style)
 function LoaderUI:showGameTab(gameInfo)
     if self.CurrentTab then
         self.CurrentTab:Destroy()
@@ -68,13 +68,13 @@ function LoaderUI:showGameTab(gameInfo)
     header.TextXAlignment = Enum.TextXAlignment.Left
     header.Parent = tab
 
-    -- Key Input Box (empty text, modern spacing)
+    -- Key Input Box (empty)
     local inputBox = Instance.new("TextBox")
     inputBox.Size = UDim2.new(0.8,0,0,36)
-    inputBox.Position = UDim2.new(0.1,0,0,64) -- more space below header
+    inputBox.Position = UDim2.new(0.1,0,0,64)
     inputBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
     inputBox.TextColor3 = Color3.fromRGB(255,255,255)
-    inputBox.Text = "" -- make sure no placeholder text
+    inputBox.Text = "" -- no placeholder
     inputBox.Font = Enum.Font.Gotham
     inputBox.TextSize = 14
     inputBox.ClearTextOnFocus = false
@@ -84,7 +84,7 @@ function LoaderUI:showGameTab(gameInfo)
     -- Check Key Button
     local checkBtn = Instance.new("TextButton")
     checkBtn.Size = UDim2.new(0.5,0,0,36)
-    checkBtn.Position = UDim2.new(0.25,0,0,120) -- more spacing below input
+    checkBtn.Position = UDim2.new(0.25,0,0,120)
     checkBtn.Text = "Check Key"
     checkBtn.Font = Enum.Font.GothamBold
     checkBtn.TextSize = 14
@@ -98,10 +98,10 @@ function LoaderUI:showGameTab(gameInfo)
         checkBtn.Active = false
         inputBox.Active = false
 
-        -- Minimize before scanning
-        self:minimizeFrame()
+        -- Minimize content only
+        self:minimizeContent()
         self.TitleLabel.Text = "🔄 Scanning Key..."
-        task.wait(3) -- static delay
+        task.wait(3) -- static delay before scanning
 
         task.spawn(function()
             local keySuccess, keysRaw = pcall(function() return game:HttpGet(gameInfo.URL_KEYS) end)
@@ -129,13 +129,13 @@ function LoaderUI:showGameTab(gameInfo)
                     loadstring(uiCode)()
                 else
                     self.TitleLabel.Text = "❌ Access Denied"
-                    self:restoreFrame()
+                    self:restoreContent()
                     checkBtn.Active = true
                     inputBox.Active = true
                 end
             else
                 self.TitleLabel.Text = "⚠️ Failed to fetch keys"
-                self:restoreFrame()
+                self:restoreContent()
                 checkBtn.Active = true
                 inputBox.Active = true
             end
@@ -154,7 +154,7 @@ function LoaderUI.new()
     self.Screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.Screen.Parent = game:GetService("CoreGui")
 
-    -- Outline
+    -- Outline (always full size)
     self.Outline = Instance.new("Frame")
     self.Outline.Size = UDim2.new(0, 360, 0, 220)
     self.Outline.Position = UDim2.new(0.5,-180,0.5,-110)
@@ -207,7 +207,7 @@ function LoaderUI.new()
     self.CloseButton.Parent = self.TitleBar
     self.CloseButton.MouseButton1Click:Connect(function() self.Screen:Destroy() end)
 
-    -- Tabs
+    -- Tabs container
     self.TabsContainer = Instance.new("Frame")
     self.TabsContainer.Size = UDim2.new(1,0,1,-42)
     self.TabsContainer.Position = UDim2.new(0,0,0,42)
@@ -231,7 +231,7 @@ function LoaderUI.new()
     self.ContentArea.BackgroundTransparency = 1
     self.ContentArea.Parent = self.TabsContainer
 
-    -- Games Tab
+    -- Games tab
     local gamesBtn = Instance.new("TextButton")
     gamesBtn.Size = UDim2.new(0,100,1,0)
     gamesBtn.Text = "Games"
@@ -267,7 +267,7 @@ function LoaderUI.new()
         end)
     end
 
-    -- Rainbow Gradient
+    -- Rainbow gradient
     task.spawn(function()
         while self.Screen.Parent do
             local t = tick()
