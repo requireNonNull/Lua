@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.0.8"
+local VERSION = "v0.0.9"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -384,6 +384,15 @@ local function addGamesSection(parent)
     gameFrame.BackgroundTransparency = 1
     gameFrame.Parent = scroll
 
+    -- Layout für automatische Anordnung
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0,8) -- Abstand zwischen Elementen
+    layout.Parent = gameFrame
+
+    -- Titel
     local title = Instance.new("TextLabel")
     title.Text = gameInfo.Name
     title.Size = UDim2.new(1,0,0,28)
@@ -394,11 +403,10 @@ local function addGamesSection(parent)
     title.TextXAlignment = Enum.TextXAlignment.Center
     title.Parent = gameFrame
 
-    -- Info label (status + last checked)
+    -- Info Label
     local infoLabel = Instance.new("TextLabel")
     infoLabel.Text = "Fetching status..."
     infoLabel.Size = UDim2.new(1,0,0,36)
-    infoLabel.Position = UDim2.new(0,0,0,32)
     infoLabel.BackgroundTransparency = 1
     infoLabel.Font = Enum.Font.Gotham
     infoLabel.TextSize = 14
@@ -408,13 +416,36 @@ local function addGamesSection(parent)
     infoLabel.TextWrapped = true
     infoLabel.Parent = gameFrame
 
-    -- Fetch status from GitHub
+    -- Key Box
+    local keyBox = Instance.new("TextBox")
+    keyBox.Size = UDim2.new(0.8,0,0,36)
+    keyBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    keyBox.TextColor3 = Color3.fromRGB(255,255,255)
+    keyBox.Text = ""
+    keyBox.PlaceholderText = "Enter key here..."
+    keyBox.Font = Enum.Font.Gotham
+    keyBox.TextSize = 14
+    keyBox.ClearTextOnFocus = false
+    Instance.new("UICorner",keyBox).CornerRadius = UDim.new(0,6)
+    keyBox.Parent = gameFrame
+
+    -- Check Button
+    local checkBtn = Instance.new("TextButton")
+    checkBtn.Size = UDim2.new(0.5,0,0,36)
+    checkBtn.Text = "Check Key"
+    checkBtn.Font = Enum.Font.GothamBold
+    checkBtn.TextSize = 14
+    checkBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    checkBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner",checkBtn).CornerRadius = UDim.new(0,6)
+    checkBtn.Parent = gameFrame
+
+    -- Fetch status von GitHub
     task.spawn(function()
         local ok, statusData = pcall(function()
             return loadstring(game:HttpGet(gameInfo.StatusFile))()
         end)
         if ok and statusData then
-            local days = daysAgo(statusData.LastCheckedDate)
             infoLabel.Text = statusData.Status.." \n>> Last checked "..daysAgo(statusData.LastCheckedDate)
         else
             infoLabel.Text = "<-> Status unavailable <->"
@@ -428,6 +459,7 @@ local function addGamesSection(parent)
     keyBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
     keyBox.TextColor3 = Color3.fromRGB(255,255,255)
     keyBox.Text = ""
+    keyBox.PlaceholderText = "Enter key here..."
     keyBox.Font = Enum.Font.Gotham
     keyBox.TextSize = 14
     keyBox.ClearTextOnFocus = false
