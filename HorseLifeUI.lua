@@ -1,4 +1,4 @@
-local VERSION = "v0.0.8"
+local VERSION = "v0.0.9"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -329,15 +329,16 @@ function FarmUI:applyTheme(name)
 end
 
 -- ==========================
--- Add Tabs
+-- Add Tabs (with transparent highlight)
 function FarmUI:addTab(name)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 100, 1, 0)
     button.Text = name
     button.Font = Enum.Font.GothamBold
     button.TextSize = 14
-    button.BackgroundColor3 = Color3.fromRGB(30,30,30) -- fixed background
-    button.TextColor3 = Color3.fromRGB(255,255,255) -- fixed text color
+    button.BackgroundColor3 = Color3.fromRGB(30,30,30) -- default background
+    button.BackgroundTransparency = 0 -- fully visible
+    button.TextColor3 = Color3.fromRGB(255,255,255)
     button.AutoButtonColor = false
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 8)
     button.Parent = self.TabButtons
@@ -370,15 +371,32 @@ function FarmUI:addTab(name)
         content.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 16)
     end)
 
+    local function updateTabHighlight(selectedButton)
+        for _,tabButton in ipairs(self.TabButtons:GetChildren()) do
+            if tabButton:IsA("TextButton") then
+                if tabButton == selectedButton then
+                    tabButton.BackgroundTransparency = 0.6 -- semi-transparent highlight
+                else
+                    tabButton.BackgroundTransparency = 0 -- normal
+                end
+            end
+        end
+    end
+
     button.MouseButton1Click:Connect(function()
         if self.CurrentTab then self.CurrentTab.Visible = false end
         self.CurrentTab = content
         content.Visible = true
+
+        -- highlight current tab
+        updateTabHighlight(button)
     end)
 
+    -- if no current tab, make this one default
     if not self.CurrentTab then
         self.CurrentTab = content
         content.Visible = true
+        updateTabHighlight(button)
     end
 
     return content
