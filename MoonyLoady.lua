@@ -1,5 +1,5 @@
 -- 🦄 Farmy v5.1 (Games Tab Integration)
-local VERSION = "v0.0.6"
+local VERSION = "v0.0.7"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -305,7 +305,6 @@ local GamesList = {
         URL_UI  = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUI.lua",
         URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeUIVersion.lua",
         Status  = "✅ Exploit Working",
-        Notes   = "Alpha Testing",
         StatusFile = "https://raw.githubusercontent.com/requireNonNull/Lua/main/HorseLifeUIStatus.lua"
     },
     {
@@ -314,7 +313,6 @@ local GamesList = {
         URL_UI  = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimUI.lua",
         URL_VER = "https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/PetSimVersion.lua",
         Status  = "⚠️ Limited",
-        Notes   = "Partial exploit, some features disabled",
         StatusFile = "https://raw.githubusercontent.com/requireNonNull/Lua/main/PetSimUIStatus.lua"
     },
 }
@@ -417,23 +415,11 @@ local function addGamesSection(parent)
         end)
         if ok and statusData then
             local days = daysAgo(statusData.LastCheckedDate)
-            infoLabel.Text = statusData.Status.." – Last checked "..daysAgo(statusData.LastCheckedDate)
+            infoLabel.Text = statusData.Status.." \n↳ Last checked "..daysAgo(statusData.LastCheckedDate)
         else
             infoLabel.Text = "⚠️ Status unavailable"
         end
     end)
-
-    -- Notes label
-    local notesLabel = Instance.new("TextLabel")
-    notesLabel.Text = gameInfo.Notes
-    notesLabel.Size = UDim2.new(1,0,0,28)
-    notesLabel.Position = UDim2.new(0,0,0,70)
-    notesLabel.BackgroundTransparency = 1
-    notesLabel.Font = Enum.Font.Gotham
-    notesLabel.TextSize = 14
-    notesLabel.TextColor3 = Color3.fromRGB(180,180,180)
-    notesLabel.TextXAlignment = Enum.TextXAlignment.Center
-    notesLabel.Parent = gameFrame
 
     -- Key Box
     local keyBox = Instance.new("TextBox")
