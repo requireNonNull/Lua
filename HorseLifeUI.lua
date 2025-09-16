@@ -1,4 +1,4 @@
-local VERSION = "v0.2.4"
+local VERSION = "v0.2.5"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -558,7 +558,8 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
         self.MinimizeButton.AutoButtonColor = true
         self.MinimizeButton.TextTransparency = 0
         self.LoadingActive = false
-        ShowToast("Menu " .. VERSION .. " initialized.")
+        ShowToast("Menu " .. VERSION .. " init.")
+        ShowToast("Logic " .. Logic.VERSION .. " init.")
 
         if autoOpen then
             self.Minimized = false
@@ -578,8 +579,8 @@ local infoTab = ui:addTab("Info")
 
 -- init loading sequence
 ui:initLoadingAnimation(
-    {"Loading", "Checking", "Configuring", "Almost ready"},
-    1.0, -- delay per step
+    {"Loading", "Checking", "Injecting Logic", "Almost ready"},
+    0.5, -- delay per step
     true -- auto open
 )
 
