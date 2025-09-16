@@ -1,4 +1,4 @@
-local VERSION = "v0.1.1"
+local VERSION = "v0.1.2"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -609,35 +609,43 @@ local function createSection(parent, title, yOffset)
 end
 
 local function createFarmingButton(text, parent)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -10, 0, 32)
-    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    button.Text = text
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 14
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Parent = parent
+    -- wrapper
+    local holder = Instance.new("Frame")
+    holder.Size = UDim2.new(1, -10, 0, 32)
+    holder.BackgroundTransparency = 1
+    holder.Parent = parent
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = button
+    -- background frame with gradient
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    bg.Parent = holder
+
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0,6)
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(80, 80, 80)
+    stroke.Color = Color3.fromRGB(80,80,80)
     stroke.Thickness = 1
     stroke.Transparency = 0.3
-    stroke.Parent = button
+    stroke.Parent = bg
 
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(55, 55, 55)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 30))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(55,55,55)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))
     }
-    gradient.Rotation = math.random(0, 359) -- 🎲 random rotation
-    gradient.Parent = button
+    gradient.Rotation = math.random(0,359)
+    gradient.Parent = bg
 
-    -- 💡 re-apply white text after gradient
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    -- actual button (transparent background, just for text + click)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 1, 0)
+    button.BackgroundTransparency = 1
+    button.Text = text
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 14
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.Parent = holder
 
     return button
 end
