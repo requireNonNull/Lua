@@ -1,4 +1,4 @@
-local VERSION = "v0.1.3"
+local VERSION = "v0.1.4"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -823,4 +823,5 @@ end)
 
 if DEBUG_MODE then
     print("Horse Life 🐎 Menu "..VERSION.." initialized.")
+    arceus.show_toast("Horse Life 🐎 Menu "..VERSION.." initialized."")
 end
