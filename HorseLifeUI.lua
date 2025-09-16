@@ -1,4 +1,4 @@
-local VERSION = "v0.1.6"
+local VERSION = "v0.1.7"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -336,6 +336,61 @@ function FarmUI:applyTheme(name)
     end
 end
 
+local function createFarmingButton(text, parent)
+    -- root clickable control (so existing code like btn.Position, btn.MouseButton1Click works)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -10, 0, 36)   -- same sizing you used before
+    btn.BackgroundTransparency = 1         -- bg handled by inner frame
+    btn.Text = ""                          -- we'll use a child TextLabel for the visible text
+    btn.AutoButtonColor = false            -- no default hover brightness (you asked)
+    btn.Parent = parent
+
+    -- background frame that actually shows color/gradient/stroke/corners
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.Position = UDim2.new(0, 0, 0, 0)
+    bg.AnchorPoint = Vector2.new(0,0)
+    bg.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    bg.BorderSizePixel = 0
+    bg.Parent = btn
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = bg
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(80,80,80)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.3
+    stroke.Parent = bg
+
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(55,55,55)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))
+    }
+    gradient.Rotation = math.random(0,359)
+    gradient.Parent = bg
+
+    -- visible text label (separate from the gradient)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.Font = Enum.Font.GothamBold -- bold text
+    label.TextSize = 14
+    label.TextColor3 = Color3.fromRGB(255,255,255) -- force bright white
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.TextYAlignment = Enum.TextYAlignment.Center
+    label.Parent = btn
+    -- ensure it doesn't accidentally capture input
+    label.Active = false
+
+    return btn
+end
+
+
 -- ==========================
 -- Add Tabs (with transparent highlight)
 function FarmUI:addTab(name)
@@ -608,60 +663,6 @@ local function createSection(parent, title, yOffset)
     header.TextXAlignment = Enum.TextXAlignment.Center
     header.Parent = parent
     return header
-end
-
-local function createFarmingButton(text, parent)
-    -- root clickable control (so existing code like btn.Position, btn.MouseButton1Click works)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -10, 0, 36)   -- same sizing you used before
-    btn.BackgroundTransparency = 1         -- bg handled by inner frame
-    btn.Text = ""                          -- we'll use a child TextLabel for the visible text
-    btn.AutoButtonColor = false            -- no default hover brightness (you asked)
-    btn.Parent = parent
-
-    -- background frame that actually shows color/gradient/stroke/corners
-    local bg = Instance.new("Frame")
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.Position = UDim2.new(0, 0, 0, 0)
-    bg.AnchorPoint = Vector2.new(0,0)
-    bg.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    bg.BorderSizePixel = 0
-    bg.Parent = btn
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = bg
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(80,80,80)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.3
-    stroke.Parent = bg
-
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(55,55,55)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))
-    }
-    gradient.Rotation = math.random(0,359)
-    gradient.Parent = bg
-
-    -- visible text label (separate from the gradient)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.Position = UDim2.new(0, 0, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.Font = Enum.Font.GothamBold -- bold text
-    label.TextSize = 14
-    label.TextColor3 = Color3.fromRGB(255,255,255) -- force bright white
-    label.TextXAlignment = Enum.TextXAlignment.Center
-    label.TextYAlignment = Enum.TextYAlignment.Center
-    label.Parent = btn
-    -- ensure it doesn't accidentally capture input
-    label.Active = false
-
-    return btn
 end
 
 local currentY = 8 -- initial padding
