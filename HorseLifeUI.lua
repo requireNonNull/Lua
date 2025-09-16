@@ -1,4 +1,4 @@
-local VERSION = "v0.0.9"
+local VERSION = "v0.1.0"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -608,22 +608,45 @@ local function createSection(parent, title, yOffset)
     return header
 end
 
+local function createFarmingButton(text, parent)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -10, 0, 32)
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    button.Text = text
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 14
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = button
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(80, 80, 80)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.3
+    stroke.Parent = button
+
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(55, 55, 55)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 30))
+    }
+    gradient.Rotation = math.random(0, 359) -- 🎲 random rotation
+    gradient.Parent = button
+
+    return button
+end
+
 local currentY = 8 -- initial padding
 
 -- Coins Section
 createSection(farmingTab, "Coins", currentY)
 currentY = currentY + 32 -- header height + spacing
 
-local btn = Instance.new("TextButton")
-btn.Text = "Collect Coins"
-btn.Size = UDim2.new(0.9, 0, 0, 36)
+local btn = createFarmingButton("Collect Coins", farmingTab)
 btn.Position = UDim2.new(0.05, 0, 0, currentY)
-btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-btn.TextColor3 = Color3.fromRGB(255,255,255)
-btn.Font = Enum.Font.Gotham
-btn.TextSize = 14
-Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-btn.Parent = farmingTab
 attachTestTask(btn, "Collecting Coins") -- 🟢 test task
 currentY = currentY + 42 -- button height + spacing
 
@@ -631,17 +654,9 @@ currentY = currentY + 42 -- button height + spacing
 createSection(farmingTab, "XP", currentY)
 currentY = currentY + 32
 
-for i=1,2 do
-    local btn = Instance.new("TextButton")
-    btn.Text = "Gain XP #" .. i
-    btn.Size = UDim2.new(0.9, 0, 0, 36)
+for i = 1, 2 do
+    local btn = createFarmingButton("Gain XP #" .. i, farmingTab)
     btn.Position = UDim2.new(0.05, 0, 0, currentY)
-    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-    btn.Parent = farmingTab
     attachTestTask(btn, "Collecting XP") -- 🟢 test task
     currentY = currentY + 42
 end
@@ -650,17 +665,9 @@ end
 createSection(farmingTab, "Resources", currentY)
 currentY = currentY + 32
 
-for i=1,20 do
-    local btn = Instance.new("TextButton")
-    btn.Text = "Resource #" .. i
-    btn.Size = UDim2.new(0.9, 0, 0, 36)
+for i = 1, 20 do
+    local btn = createFarmingButton("Resource #" .. i, farmingTab)
     btn.Position = UDim2.new(0.05, 0, 0, currentY)
-    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-    btn.Parent = farmingTab
     attachTestTask(btn, "Collecting Resource " .. i .. " of 20") -- 🟢 test task
     currentY = currentY + 42
 end
