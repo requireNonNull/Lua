@@ -1,4 +1,4 @@
-local VERSION = "v0.3.1"
+local VERSION = "v0.3.2"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -707,16 +707,23 @@ end
 -- ==========================
 -- Info Tab
 
-local currentY = 8 -- initial padding
+local infoContainer = Instance.new("Frame")
+infoContainer.Size = UDim2.new(1, -16, 1, -16)
+infoContainer.Position = UDim2.new(0, 8, 0, 8)
+infoContainer.BackgroundTransparency = 1
+infoContainer.Parent = infoTab
 
--- Stats Header (centered)
-local statsHeader = createSection(infoTab, "Stats", currentY)
-currentY = currentY + statsHeader.Size.Y.Offset + 8 -- add header height + margin
+local infoLayout = Instance.new("UIListLayout")
+infoLayout.Padding = UDim.new(0, 12)
+infoLayout.SortOrder = Enum.SortOrder.LayoutOrder
+infoLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+infoLayout.Parent = infoContainer
 
--- Stats Label (below header)
+-- === Stats Section ===
+local statsHeader = createSection(infoContainer, "Stats", 0)
+
 local statsLabel = Instance.new("TextLabel")
 statsLabel.Size = UDim2.new(1, -16, 0, 80)
-statsLabel.Position = UDim2.new(0, 8, 0, currentY)
 statsLabel.BackgroundTransparency = 1
 statsLabel.Font = Enum.Font.Gotham
 statsLabel.TextSize = 14
@@ -724,48 +731,36 @@ statsLabel.TextColor3 = Color3.fromRGB(255,255,255)
 statsLabel.TextXAlignment = Enum.TextXAlignment.Center
 statsLabel.TextYAlignment = Enum.TextYAlignment.Center
 statsLabel.TextWrapped = true
-statsLabel.Parent = infoTab
-currentY = currentY + statsLabel.Size.Y.Offset + 12 -- move down after stats
+statsLabel.Parent = infoContainer
 
--- Changelog Header (centered)
-local changelogHeader = createSection(infoTab, "Changelog", currentY)
-currentY = currentY + changelogHeader.Size.Y.Offset + 8
+-- === Changelog Section ===
+local changelogHeader = createSection(infoContainer, "Changelog", 0)
 
--- Changelog Scrollable Frame
 local changelogFrame = Instance.new("ScrollingFrame")
-changelogFrame.Size = UDim2.new(1, -16, 1, -(currentY + 20)) -- fill remaining space
-changelogFrame.Position = UDim2.new(0, 8, 0, currentY)
+changelogFrame.Size = UDim2.new(1, -16, 0, 200)
 changelogFrame.BackgroundTransparency = 1
 changelogFrame.ScrollBarThickness = 0
-changelogFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-changelogFrame.Parent = infoTab
+changelogFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+changelogFrame.CanvasSize = UDim2.new(0,0,0,0)
+changelogFrame.Parent = infoContainer
 
--- Layout
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0,4)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Parent = changelogFrame
+local changelogLayout = Instance.new("UIListLayout")
+changelogLayout.Padding = UDim.new(0, 4)
+changelogLayout.SortOrder = Enum.SortOrder.LayoutOrder
+changelogLayout.Parent = changelogFrame
 
-local padding = Instance.new("UIPadding")
-padding.PaddingTop = UDim.new(0,4)
-padding.PaddingBottom = UDim.new(0,4)
-padding.PaddingLeft = UDim.new(0,8)
-padding.PaddingRight = UDim.new(0,8)
-padding.Parent = changelogFrame
-
--- Changelog Label
 local changelogLabel = Instance.new("TextLabel")
-changelogLabel.Text = "- v0.0.1: WIP\n- v0.0.2: WIP\n"
-changelogLabel.Size = UDim2.new(1, 0, 0, 0)
+changelogLabel.Size = UDim2.new(1, -16, 0, 0)
+changelogLabel.AutomaticSize = Enum.AutomaticSize.Y
 changelogLabel.BackgroundTransparency = 1
 changelogLabel.Font = Enum.Font.Gotham
 changelogLabel.TextSize = 14
 changelogLabel.TextColor3 = Color3.fromRGB(255,255,255)
 changelogLabel.TextXAlignment = Enum.TextXAlignment.Center
-changelogLabel.TextYAlignment = Enum.TextYAlignment.Center
+changelogLabel.TextYAlignment = Enum.TextYAlignment.Top
 changelogLabel.TextWrapped = true
 changelogLabel.RichText = true
-changelogLabel.AutomaticSize = Enum.AutomaticSize.Y
+changelogLabel.Text = "- v0.0.1: WIP\n- v0.0.2: WIP\n"
 changelogLabel.Parent = changelogFrame
 
 -- Auto-update canvas size
