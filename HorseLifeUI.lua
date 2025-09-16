@@ -1,4 +1,4 @@
-local VERSION = "v0.1.0"
+local VERSION = "v0.1.1"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -635,6 +635,9 @@ local function createFarmingButton(text, parent)
     }
     gradient.Rotation = math.random(0, 359) -- 🎲 random rotation
     gradient.Parent = button
+
+    -- 💡 re-apply white text after gradient
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
 
     return button
 end
