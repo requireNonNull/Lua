@@ -1,4 +1,4 @@
-local VERSION = "v0.2.6"
+local VERSION = "v0.2.7"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -174,7 +174,7 @@ function FarmUI.new()
     -- Force minimized visuals at start
     self.Outline.Size = UDim2.new(0,360,0,50)
     self.TabsContainer.Visible = false
-    self.TitleLabel.Text = "⏳ Starting..."
+    self.TitleLabel.Text = "Starting..."
     return self
 end
 
@@ -277,6 +277,7 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         -- Resume farming
         self.TaskActive = true
         self.taskToggleButton.Text = "⏸️"
+        self:stopTitleAnimation()
         self:animateTitle(self.CurrentResource, "dots")
 
         Logic.toggle(self.CurrentResource) -- 🔗 resume
@@ -298,7 +299,7 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         self.TaskActive = false
         self.taskToggleButton.Text = "▶️"
         self:stopTitleAnimation()
-        self.TitleLabel.Text = "⏸️ Paused: " .. self.CurrentResource
+        self:animateTitle("Paused: " .. self.CurrentResource, "fade")
 
         Logic.toggle(self.CurrentResource) -- 🔗 pause
 
