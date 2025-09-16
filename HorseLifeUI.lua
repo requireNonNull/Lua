@@ -651,7 +651,7 @@ local function attachFarmButton(button, resourceName)
             ui.TabsContainer.Visible = false
         end
 
-        ui:animateTitle(resourceName, "dots")
+        ui:animateTitle("Collecting " .. resourceName, "dots")
         Logic.start(resourceName)
     end)
 end
