@@ -1,4 +1,4 @@
-local VERSION = "v0.2.0"
+local VERSION = "v0.2.1"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -381,9 +381,13 @@ local function createFarmingButton(text, parent)
     label.Parent = btn
     label.Active = false
 
-    -- After creating btn
-    btn.SetActive = function(self, active)
-        local stroke = self:FindFirstChildWhichIsA("Frame"):FindFirstChildWhichIsA("UIStroke")
+    return btn
+end
+
+local function setButtonActive(btn, active)
+    local bg = btn:FindFirstChildWhichIsA("Frame")
+    if bg then
+        local stroke = bg:FindFirstChildWhichIsA("UIStroke")
         if stroke then
             if active then
                 stroke.Color = Color3.fromRGB(255,200,0)
@@ -392,11 +396,7 @@ local function createFarmingButton(text, parent)
             end
         end
     end
-
-    return btn
 end
-
-
 
 -- ==========================
 -- Add Tabs (with transparent highlight)
@@ -595,26 +595,22 @@ for i, themeName in ipairs(themesList) do
     btn.Position = UDim2.new(0, 8, 0, 28 + (i-1)*42)
     ui.ThemeButtons[themeName] = btn
 
-    -- Button click event
-    btn.MouseButton1Click:Connect(function()
-        -- Unhighlight previous
-        if currentActiveBtn then
-            currentActiveBtn:setActive(false)
-        end
+btn.MouseButton1Click:Connect(function()
+    if currentActiveBtn then
+        setButtonActive(currentActiveBtn, false)
+    end
 
-        -- Highlight current
-        btn:SetActive(true)
-        currentActiveBtn = btn
-
-        -- Apply theme
-        ui:applyTheme(themeName)
+    setButtonActive(btn, true)
+    currentActiveBtn = btn
+    ui:applyTheme(themeName)
+            
     end)
 end
 
 -- Initially select the current theme button
 if ui.CurrentTheme and ui.ThemeButtons[ui.CurrentTheme] then
     currentActiveBtn = ui.ThemeButtons[ui.CurrentTheme]
-    currentActiveBtn:setActive(true)
+    setButtonActive(currentActiveBtn, true)
 end
 
 -- ==========================
