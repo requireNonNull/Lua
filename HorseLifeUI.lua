@@ -1,4 +1,4 @@
-local VERSION = "v0.3.2"
+local VERSION = "v0.3.3"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -575,38 +575,38 @@ ui:initLoadingAnimation(
 
 -- ==========================
 -- Settings Tab: Design Header + Theme Buttons
-local headerDesign = Instance.new("TextLabel")
-headerDesign.Text = "Design"
-headerDesign.Size = UDim2.new(1,0,0,28)
-headerDesign.BackgroundTransparency = 1
-headerDesign.Font = Enum.Font.GothamBold
-headerDesign.TextSize = 18
-headerDesign.TextColor3 = Color3.fromRGB(255,255,255)
-headerDesign.TextXAlignment = Enum.TextXAlignment.Center
-headerDesign.TextYAlignment = Enum.TextYAlignment.Center
-headerDesign.Parent = settingsTab
+-- Settings container
+local settingsContainer = Instance.new("Frame")
+settingsContainer.Size = UDim2.new(1, -16, 1, -16)
+settingsContainer.Position = UDim2.new(0, 8, 0, 8)
+settingsContainer.BackgroundTransparency = 1
+settingsContainer.Parent = settingsTab
 
--- Table to store buttons
+local settingsLayout = Instance.new("UIListLayout")
+settingsLayout.Padding = UDim.new(0, 12)
+settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+settingsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+settingsLayout.Parent = settingsContainer
+
+-- Header
+local headerDesign = createSection(settingsContainer, "Design")
+
+-- Theme buttons
 ui.ThemeButtons = {}
 local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
-
--- Keep track of currently selected button
 local currentActiveBtn = nil
 
-for i, themeName in ipairs(themesList) do
-    local btn = createFarmingButton(themeName, settingsTab)
-    btn.Position = UDim2.new(0, 8, 0, 28 + (i-1)*42)
+for _, themeName in ipairs(themesList) do
+    local btn = createFarmingButton(themeName, settingsContainer)
     ui.ThemeButtons[themeName] = btn
 
-btn.MouseButton1Click:Connect(function()
-    if currentActiveBtn then
-        setButtonActive(currentActiveBtn, false)
-    end
-
-    setButtonActive(btn, true)
-    currentActiveBtn = btn
-    ui:applyTheme(themeName)
-            
+    btn.MouseButton1Click:Connect(function()
+        if currentActiveBtn then
+            setButtonActive(currentActiveBtn, false)
+        end
+        setButtonActive(btn, true)
+        currentActiveBtn = btn
+        ui:applyTheme(themeName)
     end)
 end
 
