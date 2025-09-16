@@ -1,6 +1,7 @@
--- // 🦄 Farmy Modular Logic - v6.9 UI Ready (Ordered Resources)
+-- // Logic
 local Logic = {}
 
+local VERSION = "v0.0.1"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -12,7 +13,7 @@ local player = Players.LocalPlayer
 local Farmer = { Running = false, Mode = nil }
 
 local safeModeEnabled = true
-local TeleportDelay = 0.8 -- Default delay
+local TeleportDelay = 0.5 -- Default delay
 
 -- ==========================
 -- Helpers
@@ -222,6 +223,17 @@ end
 
 function Logic.getState()
 	return { running = Farmer.Running, mode = Farmer.Mode }
+end
+
+function Logic.SetTpDelay(delay)
+	if type(delay) ~= "number" or delay <= 0 then
+		warn("[Logic] Invalid teleport delay:", delay)
+		return
+	end
+	TeleportDelay = delay
+	if DEBUG_MODE then
+		print("[DEBUG] Teleport delay set to", TeleportDelay)
+	end
 end
 
 -- ==========================
