@@ -1,4 +1,4 @@
-local VERSION = "v0.3.3"
+local VERSION = "v0.3.4"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -589,7 +589,7 @@ settingsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 settingsLayout.Parent = settingsContainer
 
 -- Header
-local headerDesign = createSection(settingsContainer, "Design")
+local headerDesign = createSection(settingsContainer, "Design", 0)
 
 -- Theme buttons
 ui.ThemeButtons = {}
