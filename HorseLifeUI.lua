@@ -1,4 +1,4 @@
-local VERSION = "v0.1.4"
+local VERSION = "v0.1.5"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -822,6 +822,11 @@ RunService.Heartbeat:Connect(function(delta)
 end)
 
 if DEBUG_MODE then
-    print("Horse Life 🐎 Menu "..VERSION.." initialized.")
-    arceus.show_toast("Horse Life 🐎 Menu "..VERSION.." initialized."")
+    print("Horse Life 🐎 Menu " .. VERSION .. " initialized.")
+
+    pcall(function()
+        if arceus and arceus.show_toast then
+            arceus.show_toast("Horse Life 🐎 Menu " .. VERSION .. " initialized.")
+        end
+    end)
 end
