@@ -1,16 +1,16 @@
--- // 🦄 Farmy Logic Only - v6.7 stripped
+-- // 🦄 Farmy Modular Logic - v6.9 UI Ready (Ordered Resources)
+local Logic = {}
+
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
-local RunService = game:GetService("RunService")
 
 -- ==========================
 -- Config
 -- ==========================
-local Farmer = {Running = false, Mode = nil}
+local Farmer = { Running = false, Mode = nil }
 
--- Set manually
 local safeModeEnabled = true
 local TeleportDelay = 0.8 -- Default delay
 
@@ -75,7 +75,7 @@ local function randomTeleport(char)
 end
 
 -- ==========================
--- Resource Settings
+-- Resource Definitions
 -- ==========================
 local resourceTimeouts = {
 	Coins = 5,
@@ -120,7 +120,7 @@ local resourcePaths = {
 -- ==========================
 -- Farming Loop
 -- ==========================
-local function startFarming()
+local function farmingLoop()
 	while true do
 		if not Farmer.Running or not Farmer.Mode then
 			task.wait(0.1)
@@ -195,15 +195,68 @@ local function startFarming()
 	end
 end
 
+task.spawn(farmingLoop)
+
 -- ==========================
--- Start Script
+-- Logic API
 -- ==========================
+function Logic.start(resourceName)
+	Farmer.Mode = resourceName
+	Farmer.Running = true
+	print("[INFO] Farming started for:", resourceName)
+end
 
--- Example: Start farming coins
-Farmer.Running = true
-Farmer.Mode = "Coins" -- Change to "XPAgility", "FallenTree", etc
+function Logic.stop()
+	Farmer.Running = false
+	Farmer.Mode = nil
+	print("[INFO] Farming stopped.")
+end
 
--- Background farming loop
-task.spawn(startFarming)
+function Logic.toggle(resourceName)
+	if Farmer.Running and Farmer.Mode == resourceName then
+		Logic.stop()
+	else
+		Logic.start(resourceName)
+	end
+end
 
-print("[INFO] Stripped farming script is running.")
+function Logic.getState()
+	return { running = Farmer.Running, mode = Farmer.Mode }
+end
+
+-- ==========================
+-- Resource API (Ordered)
+-- ==========================
+Logic.ResourceList = {
+	"Coins",
+	"XPAgility",
+	"XPJump",
+	"AppleBarrel",
+	"BerryBush",
+	"FallenTree",
+	"FoodPallet",
+	"LargeBerryBush",
+	"SilkBush",
+	"StoneDeposit",
+	"Stump",
+	"CactusFruit",
+	"Treasure",
+	"DailyChest",
+	"DiggingNodes",
+	"Infection",
+	"InfectionEgg"
+}
+
+Logic.Resources = {}
+for _, resourceName in ipairs(Logic.ResourceList) do
+	Logic.Resources[resourceName] = {
+		start = function() Logic.start(resourceName) end,
+		stop = Logic.stop,
+		toggle = function() Logic.toggle(resourceName) end
+	}
+end
+
+-- ==========================
+-- Export
+-- ==========================
+return Logic
