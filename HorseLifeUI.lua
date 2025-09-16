@@ -1,4 +1,4 @@
-local VERSION = "v0.1.5"
+local VERSION = "v0.1.6"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -8,6 +8,14 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local StatsService = game:GetService("Stats")
 local player = Players.LocalPlayer
+
+function ShowToast(message)
+    pcall(function()
+        if arceus and arceus.show_toast then
+            arceus.show_toast(message)
+        end
+    end)
+end
 
 -- ==========================
 -- UI Class
@@ -475,6 +483,7 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
         self.MinimizeButton.AutoButtonColor = true
         self.MinimizeButton.TextTransparency = 0
         self.LoadingActive = false
+        ShowToast(EXPLOIT_NAME .. VERSION .. " initialized.")
 
         if autoOpen then
             self.Minimized = false
@@ -500,8 +509,7 @@ ui:initLoadingAnimation(
 )
 
 -- ==========================
--- Settings Tab: Design Header + Theme Button
--- ==========================
+-- Settings Tab: Design Header + Theme Buttons
 local headerDesign = Instance.new("TextLabel")
 headerDesign.Text = "Design"
 headerDesign.Size = UDim2.new(1,0,0,28)
@@ -509,21 +517,15 @@ headerDesign.BackgroundTransparency = 1
 headerDesign.Font = Enum.Font.GothamBold
 headerDesign.TextSize = 18
 headerDesign.TextColor3 = Color3.fromRGB(255,255,255)
+headerDesign.TextXAlignment = Enum.TextXAlignment.Center -- center
+headerDesign.TextYAlignment = Enum.TextYAlignment.Center
 headerDesign.Parent = settingsTab
 
 ui.ThemeButtons = {}
 local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
 for i,themeName in ipairs(themesList) do
-    local btn = Instance.new("TextButton")
-    btn.Text = themeName
-    btn.Size = UDim2.new(1, -16, 0, 36)
+    local btn = createFarmingButton(themeName, settingsTab)
     btn.Position = UDim2.new(0, 8, 0, 28 + (i-1)*42)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 16
-    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-    btn.Parent = settingsTab
     ui.ThemeButtons[themeName] = btn
 
     btn.MouseButton1Click:Connect(function()
@@ -718,8 +720,8 @@ statsLabel.BackgroundTransparency = 1
 statsLabel.Font = Enum.Font.Gotham
 statsLabel.TextSize = 14
 statsLabel.TextColor3 = Color3.fromRGB(255,255,255)
-statsLabel.TextXAlignment = Enum.TextXAlignment.Left
-statsLabel.TextYAlignment = Enum.TextYAlignment.Top
+statsLabel.TextXAlignment = Enum.TextXAlignment.Center
+statsLabel.TextYAlignment = Enum.TextYAlignment.Center
 statsLabel.TextWrapped = true
 statsLabel.Parent = infoTab
 
@@ -759,7 +761,7 @@ padding.Parent = changelogFrame
 
 -- Changelog Label
 local changelogLabel = Instance.new("TextLabel")
-changelogLabel.Text = "- v0.0.1: Added main farming logic\n- v0.0.2: Added polished ui\n"
+changelogLabel.Text = "- v0.0.1: WIP\n- v0.0.2: WIP\n"
 changelogLabel.Size = UDim2.new(1, 0, 0, 0)
 changelogLabel.BackgroundTransparency = 1
 changelogLabel.Font = Enum.Font.Gotham
@@ -823,10 +825,4 @@ end)
 
 if DEBUG_MODE then
     print("Horse Life 🐎 Menu " .. VERSION .. " initialized.")
-
-    pcall(function()
-        if arceus and arceus.show_toast then
-            arceus.show_toast("Horse Life 🐎 Menu " .. VERSION .. " initialized.")
-        end
-    end)
 end
