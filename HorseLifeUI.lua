@@ -1,4 +1,4 @@
-local VERSION = "v0.2.8"
+local VERSION = "v0.2.9"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -150,7 +150,7 @@ function FarmUI.new()
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.Padding = UDim.new(0, 8)
 
-    Instance.new("UIPadding", self.TabButtons).PaddingLeft = UDim.new(0, 8)
+    --Instance.new("UIPadding", self.TabButtons).PaddingLeft = UDim.new(0, 8)
 
     -- Content area
     self.ContentArea = Instance.new("Frame")
@@ -280,7 +280,7 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         self:stopTitleAnimation()
         self:animateTitle(self.CurrentResource, "dots")
 
-        Logic.toggle(self.CurrentResource) -- 🔗 resume
+        Logic.toggle("Collecting " .. self.CurrentResource) -- 🔗 resume
 
         -- keep UI minimized while running
         self.Minimized = true
