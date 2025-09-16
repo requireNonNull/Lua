@@ -1,4 +1,4 @@
-local VERSION = "v0.2.5"
+local VERSION = "v0.2.6"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
