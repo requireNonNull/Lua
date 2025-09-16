@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.0.1"
+local VERSION = "v0.0.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -234,6 +234,10 @@ function Logic.SetTpDelay(delay)
 	if DEBUG_MODE then
 		print("[DEBUG] Teleport delay set to", TeleportDelay)
 	end
+end
+
+function Logic.GetVersion()
+    return VERSION
 end
 
 -- ==========================
