@@ -1,4 +1,4 @@
-local VERSION = "v0.1.8"
+local VERSION = "v0.1.9"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -337,38 +337,28 @@ function FarmUI:applyTheme(name)
 end
 
 local function createFarmingButton(text, parent)
-    -- root clickable control (so existing code like btn.Position, btn.MouseButton1Click works)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -10, 0, 36)   -- same sizing you used before
-    btn.BackgroundTransparency = 1         -- bg handled by inner frame
-    btn.Text = ""                          -- we'll use a child TextLabel for the visible text
-    btn.AutoButtonColor = false            -- no default hover brightness (you asked)
+    btn.Size = UDim2.new(1, -10, 0, 36)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+    btn.AutoButtonColor = false
     btn.Parent = parent
 
-    -- background frame that actually shows color/gradient/stroke/corners
+    -- inner frame with corner + stroke + gradient
     local bg = Instance.new("Frame")
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.Position = UDim2.new(0, 0, 0, 0)
+    bg.Size = UDim2.new(1,0,1,0)
     bg.BackgroundColor3 = Color3.fromRGB(40,40,40)
     bg.BorderSizePixel = 0
     bg.Parent = btn
-    
-    -- add padding inside bg to avoid corner clipping
-    local bgPadding = Instance.new("UIPadding")
-    bgPadding.PaddingTop = UDim.new(0,1)
-    bgPadding.PaddingBottom = UDim.new(0,1)
-    bgPadding.PaddingLeft = UDim.new(0,1)
-    bgPadding.PaddingRight = UDim.new(0,1)
-    bgPadding.Parent = bg
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
+    corner.CornerRadius = UDim.new(0,6)
     corner.Parent = bg
 
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(80,80,80)
     stroke.Thickness = 1
-    stroke.Transparency = 0.3
+    stroke.Transparency = 0 -- opaque
     stroke.Parent = bg
 
     local gradient = Instance.new("UIGradient")
@@ -379,23 +369,30 @@ local function createFarmingButton(text, parent)
     gradient.Rotation = math.random(0,359)
     gradient.Parent = bg
 
-    -- visible text label (separate from the gradient)
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.Position = UDim2.new(0, 0, 0, 0)
+    label.Size = UDim2.new(1,0,1,0)
     label.BackgroundTransparency = 1
     label.Text = text
-    label.Font = Enum.Font.GothamBold -- bold text
+    label.Font = Enum.Font.GothamBold
     label.TextSize = 14
-    label.TextColor3 = Color3.fromRGB(255,255,255) -- force bright white
+    label.TextColor3 = Color3.fromRGB(255,255,255)
     label.TextXAlignment = Enum.TextXAlignment.Center
     label.TextYAlignment = Enum.TextYAlignment.Center
     label.Parent = btn
-    -- ensure it doesn't accidentally capture input
     label.Active = false
+
+    -- method to highlight button (instead of changing transparency)
+    function btn:setActive(active)
+        if active then
+            stroke.Color = Color3.fromRGB(255,200,0) -- active color
+        else
+            stroke.Color = Color3.fromRGB(80,80,80) -- normal
+        end
+    end
 
     return btn
 end
+
 
 
 -- ==========================
@@ -579,24 +576,43 @@ headerDesign.BackgroundTransparency = 1
 headerDesign.Font = Enum.Font.GothamBold
 headerDesign.TextSize = 18
 headerDesign.TextColor3 = Color3.fromRGB(255,255,255)
-headerDesign.TextXAlignment = Enum.TextXAlignment.Center -- center
+headerDesign.TextXAlignment = Enum.TextXAlignment.Center
 headerDesign.TextYAlignment = Enum.TextYAlignment.Center
 headerDesign.Parent = settingsTab
 
+-- Table to store buttons
 ui.ThemeButtons = {}
 local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
-for i,themeName in ipairs(themesList) do
+
+-- Keep track of currently selected button
+local currentActiveBtn = nil
+
+for i, themeName in ipairs(themesList) do
     local btn = createFarmingButton(themeName, settingsTab)
     btn.Position = UDim2.new(0, 8, 0, 28 + (i-1)*42)
     ui.ThemeButtons[themeName] = btn
 
+    -- Button click event
     btn.MouseButton1Click:Connect(function()
+        -- Unhighlight previous
+        if currentActiveBtn then
+            currentActiveBtn:setActive(false)
+        end
+
+        -- Highlight current
+        btn:setActive(true)
+        currentActiveBtn = btn
+
+        -- Apply theme
         ui:applyTheme(themeName)
     end)
 end
 
--- mark initial theme button as active
-ui.ThemeButtons[ui.CurrentTheme].BackgroundTransparency = 0.6
+-- Initially select the current theme button
+if ui.CurrentTheme and ui.ThemeButtons[ui.CurrentTheme] then
+    currentActiveBtn = ui.ThemeButtons[ui.CurrentTheme]
+    currentActiveBtn:setActive(true)
+end
 
 -- ==========================
 -- Farming Tab: Placeholder buttons to test
