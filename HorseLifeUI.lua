@@ -1,4 +1,4 @@
-local VERSION = "v0.3.0"
+local VERSION = "v0.3.1"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -276,7 +276,7 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         self.TaskActive = true
         self.taskToggleButton.Text = "⏸️"
         self:stopTitleAnimation()
-        self:animateTitle("Collecting" .. self.CurrentResource, "dots")
+        self:animateTitle("Collecting " .. self.CurrentResource, "dots")
 
         Logic.toggle(self.CurrentResource) -- 🔗 resume
 
@@ -707,22 +707,16 @@ end
 -- ==========================
 -- Info Tab
 
+local currentY = 8 -- initial padding
+
 -- Stats Header (centered)
-local statsHeader = Instance.new("TextLabel")
-statsHeader.Text = "Stats"
-statsHeader.Size = UDim2.new(1, 0, 0, 28) -- full width
-statsHeader.Position = UDim2.new(0, 0, 0, 8) -- top margin
-statsHeader.BackgroundTransparency = 1
-statsHeader.Font = Enum.Font.GothamBold
-statsHeader.TextSize = 18
-statsHeader.TextColor3 = Color3.fromRGB(255,255,255)
-statsHeader.TextXAlignment = Enum.TextXAlignment.Center
-statsHeader.Parent = infoTab
+local statsHeader = createSection(infoTab, "Stats", currentY)
+currentY = currentY + statsHeader.Size.Y.Offset + 8 -- add header height + margin
 
 -- Stats Label (below header)
 local statsLabel = Instance.new("TextLabel")
 statsLabel.Size = UDim2.new(1, -16, 0, 80)
-statsLabel.Position = UDim2.new(0, 8, 0, 44)
+statsLabel.Position = UDim2.new(0, 8, 0, currentY)
 statsLabel.BackgroundTransparency = 1
 statsLabel.Font = Enum.Font.Gotham
 statsLabel.TextSize = 14
@@ -731,23 +725,16 @@ statsLabel.TextXAlignment = Enum.TextXAlignment.Center
 statsLabel.TextYAlignment = Enum.TextYAlignment.Center
 statsLabel.TextWrapped = true
 statsLabel.Parent = infoTab
+currentY = currentY + statsLabel.Size.Y.Offset + 12 -- move down after stats
 
 -- Changelog Header (centered)
-local changelogHeader = Instance.new("TextLabel")
-changelogHeader.Text = "Changelog"
-changelogHeader.Size = UDim2.new(1, 0, 0, 28)
-changelogHeader.Position = UDim2.new(0, 0, 0, 140)
-changelogHeader.BackgroundTransparency = 1
-changelogHeader.Font = Enum.Font.GothamBold
-changelogHeader.TextSize = 18
-changelogHeader.TextColor3 = Color3.fromRGB(255,255,255)
-changelogHeader.TextXAlignment = Enum.TextXAlignment.Center
-changelogHeader.Parent = infoTab
+local changelogHeader = createSection(infoTab, "Changelog", currentY)
+currentY = currentY + changelogHeader.Size.Y.Offset + 8
 
 -- Changelog Scrollable Frame
 local changelogFrame = Instance.new("ScrollingFrame")
-changelogFrame.Size = UDim2.new(1, -16, 1, -200) -- leave space for headers
-changelogFrame.Position = UDim2.new(0, 8, 0, 180)
+changelogFrame.Size = UDim2.new(1, -16, 1, -(currentY + 20)) -- fill remaining space
+changelogFrame.Position = UDim2.new(0, 8, 0, currentY)
 changelogFrame.BackgroundTransparency = 1
 changelogFrame.ScrollBarThickness = 0
 changelogFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
