@@ -1,4 +1,4 @@
-local VERSION = "v0.2.2"
+local VERSION = "v0.2.3"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -298,7 +298,7 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         self.TaskActive = false
         self.taskToggleButton.Text = "▶️"
         self:stopTitleAnimation()
-        self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
+        self.TitleLabel.Text = "⏸️ Paused: " .. self.CurrentResource
 
         Logic.toggle(self.CurrentResource) -- 🔗 pause
 
@@ -632,31 +632,27 @@ end
 -- Attach a farming resource button
 local function attachFarmButton(button, resourceName)
     button.MouseButton1Click:Connect(function()
-        if self.TaskActive then return end -- ignore if already farming
-        self.TaskActive = true
-        self.CurrentResource = resourceName
+        if ui.TaskActive then return end -- use ui instead of self
+        ui.TaskActive = true
+        ui.CurrentResource = resourceName
 
-        -- Hide normal, show Stop + Toggle
-        self.CloseButton.Visible = false
-        self.MinimizeButton.Visible = false
-        self.StopButton.Visible = true
-        self.taskToggleButton.Visible = true
-        self.taskToggleButton.Text = "⏸️"
+        ui.CloseButton.Visible = false
+        ui.MinimizeButton.Visible = false
+        ui.StopButton.Visible = true
+        ui.taskToggleButton.Visible = true
+        ui.taskToggleButton.Text = "⏸️"
 
-        -- Minimize while farming
-        if not self.Minimized then
-            self.Minimized = true
+        if not ui.Minimized then
+            ui.Minimized = true
             FarmUI.Status = "Minimized"
-            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
-            self.TabsContainer.Visible = false
+            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+            ui.TabsContainer.Visible = false
         end
 
-        -- Animate title + start farming logic
-        self:animateTitle(resourceName, "dots")
+        ui:animateTitle(resourceName, "dots")
         Logic.start(resourceName)
-        end)
- end
-
+    end)
+end
 
 local function createSection(parent, title, yOffset)
     -- Section header
