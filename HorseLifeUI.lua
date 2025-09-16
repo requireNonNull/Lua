@@ -1,4 +1,4 @@
-local VERSION = "v0.1.7"
+local VERSION = "v0.1.8"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -349,10 +349,17 @@ local function createFarmingButton(text, parent)
     local bg = Instance.new("Frame")
     bg.Size = UDim2.new(1, 0, 1, 0)
     bg.Position = UDim2.new(0, 0, 0, 0)
-    bg.AnchorPoint = Vector2.new(0,0)
     bg.BackgroundColor3 = Color3.fromRGB(40,40,40)
     bg.BorderSizePixel = 0
     bg.Parent = btn
+    
+    -- add padding inside bg to avoid corner clipping
+    local bgPadding = Instance.new("UIPadding")
+    bgPadding.PaddingTop = UDim.new(0,1)
+    bgPadding.PaddingBottom = UDim.new(0,1)
+    bgPadding.PaddingLeft = UDim.new(0,1)
+    bgPadding.PaddingRight = UDim.new(0,1)
+    bgPadding.Parent = bg
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
@@ -768,8 +775,8 @@ changelogLabel.BackgroundTransparency = 1
 changelogLabel.Font = Enum.Font.Gotham
 changelogLabel.TextSize = 14
 changelogLabel.TextColor3 = Color3.fromRGB(255,255,255)
-changelogLabel.TextXAlignment = Enum.TextXAlignment.Left
-changelogLabel.TextYAlignment = Enum.TextYAlignment.Top
+changelogLabel.TextXAlignment = Enum.TextXAlignment.Center
+changelogLabel.TextYAlignment = Enum.TextYAlignment.Center
 changelogLabel.TextWrapped = true
 changelogLabel.RichText = true
 changelogLabel.AutomaticSize = Enum.AutomaticSize.Y
