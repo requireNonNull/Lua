@@ -559,7 +559,7 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
         self.MinimizeButton.TextTransparency = 0
         self.LoadingActive = false
         ShowToast("Menu " .. VERSION .. " init.")
-        ShowToast("Logic " .. Logic.VERSION .. " init.")
+        ShowToast("Logic " .. Logic.GetVersion() .. " init.")
 
         if autoOpen then
             self.Minimized = false
