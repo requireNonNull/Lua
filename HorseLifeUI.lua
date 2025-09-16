@@ -1,4 +1,4 @@
-local VERSION = "v0.1.9"
+local VERSION = "v0.2.0"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -381,12 +381,15 @@ local function createFarmingButton(text, parent)
     label.Parent = btn
     label.Active = false
 
-    -- method to highlight button (instead of changing transparency)
-    function btn:setActive(active)
-        if active then
-            stroke.Color = Color3.fromRGB(255,200,0) -- active color
-        else
-            stroke.Color = Color3.fromRGB(80,80,80) -- normal
+    -- After creating btn
+    btn.SetActive = function(self, active)
+        local stroke = self:FindFirstChildWhichIsA("Frame"):FindFirstChildWhichIsA("UIStroke")
+        if stroke then
+            if active then
+                stroke.Color = Color3.fromRGB(255,200,0)
+            else
+                stroke.Color = Color3.fromRGB(80,80,80)
+            end
         end
     end
 
@@ -600,7 +603,7 @@ for i, themeName in ipairs(themesList) do
         end
 
         -- Highlight current
-        btn:setActive(true)
+        btn:SetActive(true)
         currentActiveBtn = btn
 
         -- Apply theme
