@@ -1,4 +1,4 @@
-local VERSION = "v0.2.1"
+local VERSION = "v0.2.2"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -8,6 +8,9 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local StatsService = game:GetService("Stats")
 local player = Players.LocalPlayer
+
+-- Load Logic
+local Logic = loadstring(game:HttpGet("https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeLogic.lua"))()
 
 function ShowToast(message)
     pcall(function()
@@ -232,9 +235,16 @@ function FarmUI:setupEvents()
         end
     end)
     
-    self.StopButton.MouseButton1Click:Connect(function()
+-- ==========================
+-- Stop button functionality
+self.StopButton.MouseButton1Click:Connect(function()
+    if self.CurrentResource then
+        Logic.stop(self.CurrentResource) -- 🔗 stop farming logic
+    end
+
     -- force stop farming
     self.TaskActive = false
+    self.CurrentResource = nil
     self:stopTitleAnimation()
     self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
 
@@ -250,7 +260,7 @@ function FarmUI:setupEvents()
             tab.Visible = (tab == self.CurrentTab)
         end
     end
-            
+
     -- hide STOP, restore normal controls
     self.CloseButton.Visible = true
     self.MinimizeButton.Visible = true
@@ -258,16 +268,20 @@ function FarmUI:setupEvents()
     self.taskToggleButton.Visible = false
 end)
 
-    -- ==========================
+-- ==========================
 -- Toggle button functionality
 self.taskToggleButton.MouseButton1Click:Connect(function()
-    if not self.TaskActive then
-        -- Start/resume the task
-        self.TaskActive = true
-        self.taskToggleButton.Text = "⏸️" -- show pause icon
-        self:animateTitle("Task running", "dots") -- optional animation
+    if not self.CurrentResource then return end -- 🚫 no active task
 
-        -- minimize UI while task is active
+    if not self.TaskActive then
+        -- Resume farming
+        self.TaskActive = true
+        self.taskToggleButton.Text = "⏸️"
+        self:animateTitle(self.CurrentResource, "dots")
+
+        Logic.toggle(self.CurrentResource) -- 🔗 resume
+
+        -- keep UI minimized while running
         self.Minimized = true
         FarmUI.Status = "Minimized"
         TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
@@ -280,16 +294,15 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         self.MinimizeButton.Visible = false
 
     else
-        -- Pause the task
+        -- Pause farming
         self.TaskActive = false
-        self.taskToggleButton.Text = "▶️" -- show play icon
+        self.taskToggleButton.Text = "▶️"
         self:stopTitleAnimation()
         self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
 
-        -- keep Stop button visible
-        self.StopButton.Visible = true
-        self.taskToggleButton.Visible = true
-        -- menu still minimized while paused
+        Logic.toggle(self.CurrentResource) -- 🔗 pause
+
+        -- keep minimized while paused
         self.Minimized = true
         FarmUI.Status = "Minimized"
         TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
@@ -545,7 +558,7 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
         self.MinimizeButton.AutoButtonColor = true
         self.MinimizeButton.TextTransparency = 0
         self.LoadingActive = false
-        ShowToast(EXPLOIT_NAME .. VERSION .. " initialized.")
+        ShowToast("Menu " .. VERSION .. " initialized.")
 
         if autoOpen then
             self.Minimized = false
@@ -616,61 +629,34 @@ end
 -- ==========================
 -- Farming Tab: Placeholder buttons to test
 
-local function attachTestTask(button, label)
+-- Attach a farming resource button
+local function attachFarmButton(button, resourceName)
     button.MouseButton1Click:Connect(function()
-        if ui.TaskActive then return end -- 🚫 already busy, ignore new clicks
-        ui.TaskActive = true
+        if self.TaskActive then return end -- ignore if already farming
+        self.TaskActive = true
+        self.CurrentResource = resourceName
 
-        -- hide normal buttons, show STOP and toggle
-        ui.CloseButton.Visible = false
-        ui.MinimizeButton.Visible = false
-        ui.StopButton.Visible = true
-        ui.taskToggleButton.Visible = true
-        ui.taskToggleButton.Text = "⏸️" -- start as pause icon
+        -- Hide normal, show Stop + Toggle
+        self.CloseButton.Visible = false
+        self.MinimizeButton.Visible = false
+        self.StopButton.Visible = true
+        self.taskToggleButton.Visible = true
+        self.taskToggleButton.Text = "⏸️"
 
-        -- minimize UI when task starts
-        if not ui.Minimized then
-            ui.Minimized = true
+        -- Minimize while farming
+        if not self.Minimized then
+            self.Minimized = true
             FarmUI.Status = "Minimized"
-            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
-            ui.TabsContainer.Visible = false
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+            self.TabsContainer.Visible = false
         end
 
-        -- Start looping animation
-        ui:animateTitle(label, "dots")
-
-        -- Stop after 20s and restore
-        task.delay(20, function()
-            if ui.TaskActive then
-                -- Stop task automatically
-                ui:stopTitleAnimation()
-                ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
-
-                -- unminimize back
-                ui.Minimized = false
-                FarmUI.Status = "Open"
-                TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
-                ui.TabsContainer.Visible = true
-
-                -- restore only current tab visible
-                for _,tab in ipairs(ui.ContentArea:GetChildren()) do
-                    if tab:IsA("ScrollingFrame") then
-                        tab.Visible = (tab == ui.CurrentTab)
-                    end
-                end
-
-                -- ✅ unlock for next task
-                ui.TaskActive = false
-
-                -- restore normal buttons
-                ui.CloseButton.Visible = true
-                ui.MinimizeButton.Visible = true
-                ui.StopButton.Visible = false
-                ui.taskToggleButton.Visible = false
-            end
+        -- Animate title + start farming logic
+        self:animateTitle(resourceName, "dots")
+        Logic.start(resourceName)
         end)
-    end)
-end
+ end
+
 
 local function createSection(parent, title, yOffset)
     -- Section header
@@ -691,21 +677,34 @@ local currentY = 8 -- initial padding
 
 -- Coins Section
 createSection(farmingTab, "Coins", currentY)
-currentY = currentY + 32 -- header height + spacing
-
-local btn = createFarmingButton("Collect Coins", farmingTab)
-btn.Position = UDim2.new(0.05, 0, 0, currentY)
-attachTestTask(btn, "Collecting Coins") -- 🟢 test task
-currentY = currentY + 42 -- button height + spacing
-
--- XP Section
-createSection(farmingTab, "XP", currentY)
 currentY = currentY + 32
 
-for i = 1, 2 do
-    local btn = createFarmingButton("Gain XP #" .. i, farmingTab)
+do
+    local btn = createFarmingButton("Collect Coins", farmingTab)
     btn.Position = UDim2.new(0.05, 0, 0, currentY)
-    attachTestTask(btn, "Collecting XP") -- 🟢 test task
+    attachFarmButton(btn, "Coins") -- 🔗 bind to Logic.Coins
+    currentY = currentY + 42
+end
+
+-- XPJump Section
+createSection(farmingTab, "XP Jump", currentY)
+currentY = currentY + 32
+
+do
+    local btn = createFarmingButton("Gain XP Jump", farmingTab)
+    btn.Position = UDim2.new(0.05, 0, 0, currentY)
+    attachFarmButton(btn, "XPJump") -- 🔗 bind to Logic.XPJump
+    currentY = currentY + 42
+end
+
+-- XPAgility Section
+createSection(farmingTab, "XP Agility", currentY)
+currentY = currentY + 32
+
+do
+    local btn = createFarmingButton("Gain XP Agility", farmingTab)
+    btn.Position = UDim2.new(0.05, 0, 0, currentY)
+    attachFarmButton(btn, "XPAgility") -- 🔗 bind to Logic.XPAgility
     currentY = currentY + 42
 end
 
@@ -713,11 +712,14 @@ end
 createSection(farmingTab, "Resources", currentY)
 currentY = currentY + 32
 
-for i = 1, 20 do
-    local btn = createFarmingButton("Resource #" .. i, farmingTab)
-    btn.Position = UDim2.new(0.05, 0, 0, currentY)
-    attachTestTask(btn, "Collecting Resource " .. i .. " of 20") -- 🟢 test task
-    currentY = currentY + 42
+for _, resourceName in ipairs(Logic.ResourceList) do
+    -- skip coins/xp since we already added them above
+    if resourceName ~= "Coins" and resourceName ~= "XPJump" and resourceName ~= "XPAgility" then
+        local btn = createFarmingButton(resourceName, farmingTab)
+        btn.Position = UDim2.new(0.05, 0, 0, currentY)
+        attachFarmButton(btn, resourceName)
+        currentY = currentY + 42
+    end
 end
 
 -- ==========================
