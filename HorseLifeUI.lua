@@ -1,4 +1,4 @@
-local VERSION = "v0.2.3"
+local VERSION = "v0.2.4"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -683,7 +683,7 @@ do
 end
 
 -- XPJump Section
-createSection(farmingTab, "XP Jump", currentY)
+createSection(farmingTab, "XP", currentY)
 currentY = currentY + 32
 
 do
@@ -692,10 +692,6 @@ do
     attachFarmButton(btn, "XPJump") -- 🔗 bind to Logic.XPJump
     currentY = currentY + 42
 end
-
--- XPAgility Section
-createSection(farmingTab, "XP Agility", currentY)
-currentY = currentY + 32
 
 do
     local btn = createFarmingButton("Gain XP Agility", farmingTab)
@@ -711,7 +707,7 @@ currentY = currentY + 32
 for _, resourceName in ipairs(Logic.ResourceList) do
     -- skip coins/xp since we already added them above
     if resourceName ~= "Coins" and resourceName ~= "XPJump" and resourceName ~= "XPAgility" then
-        local btn = createFarmingButton(resourceName, farmingTab)
+        local btn = createFarmingButton("Collect " .. resourceName, farmingTab)
         btn.Position = UDim2.new(0.05, 0, 0, currentY)
         attachFarmButton(btn, resourceName)
         currentY = currentY + 42
@@ -763,7 +759,7 @@ local changelogFrame = Instance.new("ScrollingFrame")
 changelogFrame.Size = UDim2.new(1, -16, 1, -200) -- leave space for headers
 changelogFrame.Position = UDim2.new(0, 8, 0, 180)
 changelogFrame.BackgroundTransparency = 1
-changelogFrame.ScrollBarThickness = 4
+changelogFrame.ScrollBarThickness = 0
 changelogFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 changelogFrame.Parent = infoTab
 
