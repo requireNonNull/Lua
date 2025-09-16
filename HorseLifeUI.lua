@@ -1,4 +1,4 @@
-local VERSION = "v0.2.7"
+local VERSION = "v0.2.8"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -489,22 +489,15 @@ end
 -- ==========================
 -- Title Animations
 function FarmUI:animateTitle(text, mode, duration)
-    -- mode can be "dots" or "fade"
-    -- duration = how long to keep animating (seconds), nil = infinite until stopped
-    
-    if self.TitleAnimationRunning then
-        self.TitleAnimationRunning = false
-        task.wait() -- yield 1 frame to stop old loop
-    end
-    
-    self.TitleAnimationRunning = true
+    self.AnimationId = (self.AnimationId or 0) + 1
+    local thisId = self.AnimationId
     local startTime = tick()
     
     task.spawn(function()
         if mode == "dots" then
             local base = text
             local i = 0
-            while self.TitleAnimationRunning do
+            while self.AnimationId == thisId do
                 i = (i % 3) + 1
                 self.TitleLabel.Text = base .. string.rep(".", i)
                 task.wait(0.5)
@@ -513,7 +506,7 @@ function FarmUI:animateTitle(text, mode, duration)
             
         elseif mode == "fade" then
             self.TitleLabel.Text = text
-            while self.TitleAnimationRunning do
+            while self.AnimationId == thisId do
                 -- fade out
                 TweenService:Create(self.TitleLabel, TweenInfo.new(0.5), {TextTransparency = 0.5}):Play()
                 task.wait(0.5)
@@ -525,14 +518,11 @@ function FarmUI:animateTitle(text, mode, duration)
         else
             self.TitleLabel.Text = text
         end
-        
-        -- restore
-        self.TitleAnimationRunning = false
     end)
 end
 
 function FarmUI:stopTitleAnimation()
-    self.TitleAnimationRunning = false
+    self.AnimationId = (self.AnimationId or 0) + 1 -- invalidate current loop
     self.TitleLabel.TextTransparency = 0
 end
 
