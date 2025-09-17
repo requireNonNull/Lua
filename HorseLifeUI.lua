@@ -1,4 +1,4 @@
-local VERSION = "v0.0.7"
+local VERSION = "v0.0.8"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -47,6 +47,10 @@ function FarmUI.new()
     self.BasePadding = 8      -- padding between tabs
     self.MinWidth = 464       -- minimum menu width
 
+    local initialWidth = self.MinWidth
+    local initialOpenHeight = 500
+    local topPercent = 0.2 -- 20% from top
+    
     -- Root ScreenGui
     self.Screen = Instance.new("ScreenGui")
     self.Screen.Name = "FarmUI"
@@ -54,12 +58,10 @@ function FarmUI.new()
     self.Screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.Screen.Parent = game:GetService("CoreGui")
 
-    -- Outline frame (use MinWidth so it matches updateWidth logic)
-    local initialWidth = self.MinWidth
-    local initialOpenHeight = 500
+    -- Outline frame
     self.Outline = Instance.new("Frame")
     self.Outline.Size = UDim2.new(0, initialWidth, 0, initialOpenHeight)
-    self.Outline.Position = UDim2.new(0.5, -initialWidth/2, 0.2, 0) -- 0.5, -initialWidth/2 → centers horizontally. 0.2, 0 → 20% down from the top of the screen.
+    self.Outline.Position = UDim2.new(0.5, -initialWidth/2, topPercent, 0)
     self.Outline.BorderSizePixel = 0
     self.Outline.Parent = self.Screen
     Instance.new("UICorner", self.Outline).CornerRadius = UDim.new(0, 18)
@@ -177,7 +179,7 @@ function FarmUI.new()
     
     -- Force minimized visuals at start (use MinWidth)
     self.Outline.Size = UDim2.new(0, self.MinWidth, 0, 50)
-    self.Outline.Position = UDim2.new(0.5, -self.MinWidth/2, 0.5, -25)
+    self.Outline.Position = UDim2.new(0.5, -self.MinWidth/2, topPercent, 0)
     self.TabsContainer.Visible = false
     self.TitleLabel.Text = "Starting..."
     return self
