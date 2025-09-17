@@ -1,4 +1,4 @@
-local VERSION = "v0.3.4"
+local VERSION = "v0.3.5"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -524,6 +524,21 @@ function FarmUI:stopTitleAnimation()
     self.TitleLabel.TextTransparency = 0
 end
 
+local function createSection(parent, title, yOffset)
+    -- Section header
+    local header = Instance.new("TextLabel")
+    header.Text = title
+    header.Size = UDim2.new(1, 0, 0, 28)
+    header.Position = UDim2.new(0, 0, 0, yOffset)
+    header.BackgroundTransparency = 1
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 18
+    header.TextColor3 = Color3.fromRGB(255,255,255)
+    header.TextXAlignment = Enum.TextXAlignment.Center
+    header.Parent = parent
+    return header
+end
+
 -- ==========================
 -- Initialization Animation
 function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
@@ -642,21 +657,6 @@ local function attachFarmButton(button, resourceName)
         ui:animateTitle("Collecting " .. resourceName, "dots")
         Logic.start(resourceName)
     end)
-end
-
-local function createSection(parent, title, yOffset)
-    -- Section header
-    local header = Instance.new("TextLabel")
-    header.Text = title
-    header.Size = UDim2.new(1, 0, 0, 28)
-    header.Position = UDim2.new(0, 0, 0, yOffset)
-    header.BackgroundTransparency = 1
-    header.Font = Enum.Font.GothamBold
-    header.TextSize = 18
-    header.TextColor3 = Color3.fromRGB(255,255,255)
-    header.TextXAlignment = Enum.TextXAlignment.Center
-    header.Parent = parent
-    return header
 end
 
 local currentY = 8 -- initial padding
