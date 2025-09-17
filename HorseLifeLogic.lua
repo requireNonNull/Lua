@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.0"
+local VERSION = "v0.1.1"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -274,28 +274,40 @@ Logic.TeleportCategories = {
 }
 -- ==========================
 -- Dynamic position resolver
-local function getPositionFromPath(path)
-    if typeof(path) == "Vector3" then
-        return path
-    elseif typeof(path) == "string" then
-        local current = game
-        for segment in string.gmatch(path, "[^%.]+") do
-            current = current:FindFirstChild(segment)
-            if not current then return nil end
+local function getPositionFromPath(target)
+    if typeof(target) == "Vector3" then
+        return target
+    elseif typeof(target) == "Instance" then
+        if target:IsA("BasePart") then
+            return target.Position
+        elseif target:IsA("Model") then
+            if target.PrimaryPart then
+                return target.PrimaryPart.Position
+            else
+                return target:GetPivot().Position
+            end
         end
-        -- Try to get position from BasePart inside model
-        if current:IsA("BasePart") then
-            return current.Position
-        elseif current:FindFirstChildWhichIsA("BasePart") then
-            return current:FindFirstChildWhichIsA("BasePart").Position
-        else
-            warn("[Logic] Could not find a BasePart in model:", path)
-            return nil
+    elseif typeof(target) == "table" then
+        if target.type == "npc" then
+            local npcFolder = workspace:FindFirstChild("DynamicNPCs")
+            if not npcFolder then return nil end
+
+            local npcParent = npcFolder:FindFirstChild(target.name)
+            if not npcParent then return nil end
+
+            local npcModel = npcParent:FindFirstChild("NPC")
+            if not npcModel or not npcModel:IsA("Model") then return nil end
+
+            if npcModel.PrimaryPart then
+                return npcModel.PrimaryPart.Position
+            else
+                return npcModel:GetPivot().Position
+            end
         end
     end
+
     return nil
 end
-
 -- Add a Status field inside Logic
 Logic.Status = "Idle"  -- default: Idle, Farming, Waiting, Error, etc.
 
