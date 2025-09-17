@@ -1,4 +1,4 @@
-local VERSION = "v0.0.3"
+local VERSION = "v0.0.4"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -10,7 +10,7 @@ local StatsService = game:GetService("Stats")
 local player = Players.LocalPlayer
 
 -- Load Logic
-local Logic = loadstring(game:HttpGet("https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeLogic.lua"))()
+local Logic = loadstring(game:HttpGet("https://raw.githubusercontent.com/requireNonNull/Lua/refs/heads/main/HorseLifeLogicObfuscated.lua"))()
 
 function ShowToast(message)
     pcall(function()
