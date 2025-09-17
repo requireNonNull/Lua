@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.0.2"
+local VERSION = "v0.0.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -201,6 +201,102 @@ task.spawn(farmingLoop)
 -- ==========================
 -- Logic API
 -- ==========================
+
+Logic.Teleports = {
+    -- Main Locations
+    ["Spawn"] = Vector3.new(6, 11, -30),
+    ["Shop"] = Vector3.new(-80, 14, 110),
+    ["Equipment"] = Vector3.new(-59, 14, 119),
+    ["Market Realm"] = Vector3.new(65, 11, -28),
+    ["Board Storage"] = Vector3.new(-231, 13, -148),
+    ["Garden Plot"] = Vector3.new(-250, 15, -258),
+    ["Horse Shrine"] = Vector3.new(460, 21, 245),
+
+    -- Farming / Resource Spots
+    ["Dig Site"] = Vector3.new(-172, 13, -1485),
+    ["Fishing Spot"] = Vector3.new(221, 13, 172),
+    ["Plush Machine"] = Vector3.new(1885, 14, -310),
+
+    -- Contests / Minigames
+    ["Training Course"] = Vector3.new(175, 13, -220),
+    ["Taming Contest"] = Vector3.new(162, 15, 32),
+    ["Cosmetic Contest"] = Vector3.new(82, 15, 129),
+
+    -- Events
+    ["Alien Event"] = Vector3.new(-1805, 41, -227),
+
+    -- NPCs
+    ["Orion"] = "workspace.DynamicNPCs.Orion",
+    ["Alex"] = "workspace.DynamicNPCs.Alex",
+    ["Aurelia"] = "workspace.DynamicNPCs.Aurelia",
+    ["Lyric"] = "workspace.DynamicNPCs.Lyric"
+}
+
+-- ==========================
+-- Teleport Categories (ordered for UI)
+-- ==========================
+Logic.TeleportCategories = {
+    {
+        Header = "Main Locations",
+        Items = { "Spawn", "Shop", "Equipment", "Market Realm", "Board Storage", "Garden Plot", "Horse Shrine" }
+    },
+    {
+        Header = "Farming Spots",
+        Items = { "Dig Site", "Fishing Spot", "Plush Machine" }
+    },
+    {
+        Header = "Contests",
+        Items = { "Training Course", "Taming Contest", "Cosmetic Contest" }
+    },
+    {
+        Header = "Events",
+        Items = { "Alien Event" }
+    },
+    {
+        Header = "NPCs",
+        Items = { "Orion", "Alex", "Aurelia", "Lyric" }
+    }
+}
+-- ==========================
+-- Dynamic position resolver
+local function getPositionFromPath(path)
+    if typeof(path) == "Vector3" then
+        return path
+    elseif typeof(path) == "string" then
+        local current = game
+        for segment in string.gmatch(path, "[^%.]+") do
+            current = current:FindFirstChild(segment)
+            if not current then return nil end
+        end
+        -- Try to get position from BasePart inside model
+        if current:IsA("BasePart") then
+            return current.Position
+        elseif current:FindFirstChildWhichIsA("BasePart") then
+            return current:FindFirstChildWhichIsA("BasePart").Position
+        else
+            warn("[Logic] Could not find a BasePart in model:", path)
+            return nil
+        end
+    end
+    return nil
+end
+
+-- ==========================
+-- Teleport function
+function Logic.TeleportTo(name)
+    local target = Logic.Teleports[name]
+    if not target then
+        warn("[Logic] Teleport location not found:", name)
+        return
+    end
+
+    local pos = getPositionFromPath(target)
+    if pos then
+        local char = player.Character or player.CharacterAdded:Wait()
+        tpTo(char, pos)
+    end
+end
+
 function Logic.start(resourceName)
 	Farmer.Mode = resourceName
 	Farmer.Running = true
