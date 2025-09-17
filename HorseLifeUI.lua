@@ -1,4 +1,4 @@
-local VERSION = "v0.1.3"
+local VERSION = "v0.1.4"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -747,10 +747,12 @@ end
 -- ==========================
 -- Info Tab
 
-local infoContainer = Instance.new("Frame")
+local infoContainer = Instance.new("ScrollingFrame")
 infoContainer.Size = UDim2.new(1, -16, 1, -16)
 infoContainer.Position = UDim2.new(0, 8, 0, 8)
 infoContainer.BackgroundTransparency = 1
+infoContainer.ScrollBarThickness = 0
+infoContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 infoContainer.Parent = infoTab
 
 local infoLayout = Instance.new("UIListLayout")
@@ -758,6 +760,11 @@ infoLayout.Padding = UDim.new(0, 12)
 infoLayout.SortOrder = Enum.SortOrder.LayoutOrder
 infoLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 infoLayout.Parent = infoContainer
+
+local infoPadding = Instance.new("UIPadding")
+infoPadding.PaddingTop = UDim.new(0, 12)
+infoPadding.PaddingBottom = UDim.new(0, 12)
+infoPadding.Parent = infoContainer
 
 -- === Stats Section ===
 local statsHeader = createSection(infoContainer, "Stats", 0)
