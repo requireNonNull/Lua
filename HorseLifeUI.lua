@@ -1,4 +1,4 @@
-local VERSION = "v0.0.1"
+local VERSION = "v0.0.2"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -348,7 +348,7 @@ function FarmUI:applyTheme(name)
     end
 end
 
-local function createFarmingButton(text, parent)
+local function createButton(text, parent)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -10, 0, 36)
     btn.BackgroundTransparency = 1
@@ -614,7 +614,7 @@ local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
 local currentActiveBtn = nil
 
 for _, themeName in ipairs(themesList) do
-    local btn = createFarmingButton(themeName, settingsContainer)
+    local btn = createButton(themeName, settingsContainer)
     ui.ThemeButtons[themeName] = btn
 
     btn.MouseButton1Click:Connect(function()
@@ -694,7 +694,7 @@ end
 -- === Coins Section ===
 addSection("Coins")
 do
-    local btn = createFarmingButton("Collect Coins", farmingFrame)
+    local btn = createButton("Collect Coins", farmingFrame)
     attachFarmButton(btn, "Coins")
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
@@ -702,12 +702,12 @@ end
 -- === XP Section ===
 addSection("XP")
 do
-    local btn = createFarmingButton("Gain XP Jump", farmingFrame)
+    local btn = createButton("Gain XP Jump", farmingFrame)
     attachFarmButton(btn, "XPJump")
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
 do
-    local btn = createFarmingButton("Gain XP Agility", farmingFrame)
+    local btn = createButton("Gain XP Agility", farmingFrame)
     attachFarmButton(btn, "XPAgility")
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
@@ -716,7 +716,7 @@ end
 addSection("Resources")
 for _, resourceName in ipairs(Logic.ResourceList) do
     if resourceName ~= "Coins" and resourceName ~= "XPJump" and resourceName ~= "XPAgility" then
-        local btn = createFarmingButton("Collect " .. resourceName, farmingFrame)
+        local btn = createButton("Collect " .. resourceName, farmingFrame)
         attachFarmButton(btn, resourceName)
         btn.LayoutOrder = #farmingFrame:GetChildren() + 1
     end
