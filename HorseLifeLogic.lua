@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.0.9"
+local VERSION = "v0.1.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -334,8 +334,26 @@ function Logic.toggle(resourceName)
 	end
 end
 
+-- Table to track UI toggles
+local UIToggles = {}
+
+-- Set a resource as toggled on/off in the UI
+function Logic.setUIToggled(resourceName, value)
+    UIToggles[resourceName] = value and true or false
+end
+
+-- Check if a resource is toggled in the UI
+function Logic.isUIToggled(resourceName)
+    return UIToggles[resourceName] or false
+end
+
+-- Extend getState to include UI toggle info
 function Logic.getState()
-	return { running = Farmer.Running, mode = Farmer.Mode }
+    return {
+        running = Farmer.Running,
+        mode = Farmer.Mode,
+        uiToggled = UIToggles
+    }
 end
 
 function Logic.GetStatus()
