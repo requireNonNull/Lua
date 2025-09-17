@@ -1,4 +1,4 @@
-local VERSION = "v0.1.7"
+local VERSION = "v0.1.8"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -857,8 +857,13 @@ RunService.Heartbeat:Connect(function(delta)
     )
 end)
 
+local lastStatus = nil
+
 local function updateTitleFromStatus(status)
     if not status or status == "" then return end
+    if status == lastStatus then return end  -- skip if nothing changed
+
+    lastStatus = status  -- update last seen status
 
     if string.find(status, "Collecting") then
         ui:animateTitle(status, "dots")  -- dots animation
@@ -871,11 +876,15 @@ end
 
 task.spawn(function()
     while true do
-        if not FarmUI.LoadingActive then
+        if not ui.LoadingActive then
             if Logic.getState().running then
                 updateTitleFromStatus(Logic.GetStatus())
             else
-                ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
+                local defaultText = EXPLOIT_NAME .. " " .. VERSION
+                if defaultText ~= lastStatus then
+                    lastStatus = defaultText
+                    ui.TitleLabel.Text = defaultText
+                end
             end
         end
         task.wait(0.05)
