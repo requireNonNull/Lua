@@ -1,4 +1,4 @@
-local VERSION = "v0.0.9"
+local VERSION = "v0.0.1"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -49,7 +49,7 @@ function FarmUI.new()
 
     local initialWidth = self.MinWidth
     local initialOpenHeight = 500
-    local topPercent = 0.2 -- 20% from top
+    local topPercent = 0.1 -- 10% from top
     
     -- Root ScreenGui
     self.Screen = Instance.new("ScreenGui")
