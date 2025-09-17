@@ -1,4 +1,4 @@
-local VERSION = "v0.0.9"
+local VERSION = "v0.1.1"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -560,6 +560,36 @@ function FarmUI:stopTitleAnimation()
     self.TitleLabel.TextTransparency = 0
 end
 
+-- Reusable button click animation
+-- Pass any button, and it will rotate slightly left-down and then back
+local function addClickAnimation(button)
+    button.MouseButton1Click:Connect(function()
+        local moveAmount = UDim2.new(0, 4, 0, 4)  -- move down-right
+        local rotateAmount = 8                     -- rotate degrees
+        local duration = 0.1
+
+        -- Store original position
+        local origPos = button.Position
+        local origRot = button.Rotation
+
+        -- Tween down-left (move + rotate)
+        local tweenDown = TweenService:Create(button, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+            Position = origPos + moveAmount,
+            Rotation = origRot + rotateAmount
+        })
+
+        -- Tween back up (reverse)
+        local tweenUp = TweenService:Create(button, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
+            Position = origPos,
+            Rotation = origRot
+        })
+
+        tweenDown:Play()
+        tweenDown.Completed:Wait()
+        tweenUp:Play()
+    end)
+end
+
 local function createSection(parent, title, yOffset)
     -- Section header
     local header = Instance.new("TextLabel")
@@ -627,16 +657,6 @@ ui:initLoadingAnimation(
     true -- auto open
 )
 
-local function updateThemeHighlight(selectedButton)
-    for _, btn in pairs(ui.ThemeButtons) do
-        if btn == selectedButton then
-            btn.BackgroundTransparency = 0.6 -- semi-transparent like active tab
-        else
-            btn.BackgroundTransparency = 0 -- normal
-        end
-    end
-end
-
 -- ==========================
 -- Settings Tab Scrollable Container
 local settingsContainer = Instance.new("ScrollingFrame")
@@ -669,28 +689,14 @@ ui.ThemeButtons = {}
 local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
 local currentActiveBtn = nil
 
--- Helper: highlight selected button like tabs
-local function updateThemeHighlight(selectedButton)
-    for _, btn in ipairs(ui.ThemeButtons) do
-        local bg = btn:FindFirstChildWhichIsA("Frame")
-        if bg then
-            if btn == selectedButton then
-                bg.BackgroundTransparency = 0.6  -- semi-transparent highlight
-            else
-                bg.BackgroundTransparency = 0
-            end
-        end
-    end
-end
-
 -- Create theme buttons using createButton
 for _, themeName in ipairs(themesList) do
     local btn = createButton(themeName, settingsContainer)
     table.insert(ui.ThemeButtons, btn)
 
     btn.MouseButton1Click:Connect(function()
-        updateThemeHighlight(btn)
         currentActiveBtn = btn
+        addClickAnimation(btn)
         ui:applyTheme(themeName)
     end)
 end
@@ -700,7 +706,6 @@ if ui.CurrentTheme then
     for _, btn in ipairs(ui.ThemeButtons) do
         if btn:FindFirstChildWhichIsA("TextLabel").Text == ui.CurrentTheme then
             currentActiveBtn = btn
-            updateThemeHighlight(btn)
             break
         end
     end
