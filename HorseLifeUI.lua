@@ -1,4 +1,4 @@
-local VERSION = "v0.0.3"
+local VERSION = "v0.0.4"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -54,10 +54,12 @@ function FarmUI.new()
     self.Screen.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.Screen.Parent = game:GetService("CoreGui")
 
-    -- Outline frame
+    -- Outline frame (use MinWidth so it matches updateWidth logic)
+    local initialWidth = self.MinWidth
+    local initialOpenHeight = 500
     self.Outline = Instance.new("Frame")
-    self.Outline.Size = UDim2.new(0, 360, 0, 500)
-    self.Outline.Position = UDim2.new(0.5, -180, 0.5, -250)
+    self.Outline.Size = UDim2.new(0, initialWidth, 0, initialOpenHeight)
+    self.Outline.Position = UDim2.new(0.5, -initialWidth/2, 0.5, -initialOpenHeight/2)
     self.Outline.BorderSizePixel = 0
     self.Outline.Parent = self.Screen
     Instance.new("UICorner", self.Outline).CornerRadius = UDim.new(0, 18)
@@ -173,8 +175,9 @@ function FarmUI.new()
     self:makeDraggable(self.TitleBar)
     self:setupEvents()
     
-    -- Force minimized visuals at start
-    self.Outline.Size = UDim2.new(0,360,0,50)
+    -- Force minimized visuals at start (use MinWidth)
+    self.Outline.Size = UDim2.new(0, self.MinWidth, 0, 50)
+    self.Outline.Position = UDim2.new(0.5, -self.MinWidth/2, 0.5, -25)
     self.TabsContainer.Visible = false
     self.TitleLabel.Text = "Starting..."
     return self
@@ -246,10 +249,12 @@ function FarmUI:setupEvents()
         FarmUI.Status = self.Minimized and "Minimized" or "Open"
 
         if self.Minimized then
-            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+            local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
             self.TabsContainer.Visible = false
         else
-            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+            local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 500)}):Play()
             self.TabsContainer.Visible = true
             -- restore current tab only
             for _,tab in ipairs(self.ContentArea:GetChildren()) do
@@ -276,7 +281,8 @@ self.StopButton.MouseButton1Click:Connect(function()
     -- restore UI
     self.Minimized = false
     FarmUI.Status = "Open"
-    TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+    local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset) 
+    TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 500)}):Play()
     self.TabsContainer.Visible = true
 
     -- restore only current tab visible
@@ -310,7 +316,8 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         -- keep UI minimized while running
         self.Minimized = true
         FarmUI.Status = "Minimized"
-        TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+        local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
+        TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
         self.TabsContainer.Visible = false
 
         -- Show Stop button and toggle
@@ -331,7 +338,8 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         -- keep minimized while paused
         self.Minimized = true
         FarmUI.Status = "Minimized"
-        TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+        local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
+        TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
         self.TabsContainer.Visible = false
     end
 end)
@@ -596,9 +604,11 @@ function FarmUI:initLoadingAnimation(steps, delayTime, autoOpen)
         ShowToast("Logic " .. Logic.GetVersion() .. " init.")
 
         if autoOpen then
+            self:updateWidth() -- ensure outline width matches tab count
             self.Minimized = false
             FarmUI.Status = "Open"
-            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,500)}):Play()
+            local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset) 
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 500)}):Play()
             self.TabsContainer.Visible = true
         end
     end)
