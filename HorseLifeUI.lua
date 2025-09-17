@@ -1,4 +1,4 @@
-local VERSION = "v0.0.6"
+local VERSION = "v0.0.7"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -45,7 +45,7 @@ function FarmUI.new()
 
     self.BaseTabWidth = 100   -- each tab button is 100px wide
     self.BasePadding = 8      -- padding between tabs
-    self.MinWidth = 360       -- minimum menu width
+    self.MinWidth = 464       -- minimum menu width
 
     -- Root ScreenGui
     self.Screen = Instance.new("ScreenGui")
@@ -59,7 +59,7 @@ function FarmUI.new()
     local initialOpenHeight = 500
     self.Outline = Instance.new("Frame")
     self.Outline.Size = UDim2.new(0, initialWidth, 0, initialOpenHeight)
-    self.Outline.Position = UDim2.new(0.5, -initialWidth/2, 0.5, -initialOpenHeight/2)
+    self.Outline.Position = UDim2.new(0.5, -initialWidth/2, 0.2, 0) -- 0.5, -initialWidth/2 → centers horizontally. 0.2, 0 → 20% down from the top of the screen.
     self.Outline.BorderSizePixel = 0
     self.Outline.Parent = self.Screen
     Instance.new("UICorner", self.Outline).CornerRadius = UDim.new(0, 18)
