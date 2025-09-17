@@ -1,4 +1,4 @@
-local VERSION = "v0.1.8"
+local VERSION = "v0.1.9"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -181,7 +181,6 @@ function FarmUI.new()
     self.Outline.Size = UDim2.new(0, self.MinWidth, 0, 50)
     self.Outline.Position = UDim2.new(0.5, -self.MinWidth/2, topPercent, 0)
     self.TabsContainer.Visible = false
-    self.TitleLabel.Text = "Starting..."
     return self
 end
 
@@ -328,8 +327,8 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         self.TaskActive = false
         self.taskToggleButton.Text = "▶️"
         self:stopTitleAnimation()
-        Logic.SetStatus("Paused Task: " .. self.CurrentResource)
 
+        Logic.SetStatus("Paused Task: " .. self.CurrentResource)
         Logic.toggle(self.CurrentResource) -- 🔗 pause
 
         -- keep minimized while paused
@@ -877,8 +876,14 @@ end
 task.spawn(function()
     while true do
         if not ui.LoadingActive then
-            if Logic.getState().running then
+            local state = Logic.getState()
+            
+            if state.running then
                 updateTitleFromStatus(Logic.GetStatus())
+            elseif self.CurrentResource and not self.TaskActive then
+                -- paused
+                local pausedText = "Paused: " .. self.CurrentResource
+                updateTitleFromStatus(pausedText)
             else
                 local defaultText = EXPLOIT_NAME .. " " .. VERSION
                 if defaultText ~= lastStatus then
