@@ -1,4 +1,4 @@
-local VERSION = "v0.1.6"
+local VERSION = "v0.1.7"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -871,10 +871,12 @@ end
 
 task.spawn(function()
     while true do
-        if Logic.getState().running then
-            updateTitleFromStatus(Logic.GetStatus())
-        else
-            ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION -- default when not running
+        if not FarmUI.LoadingActive then
+            if Logic.getState().running then
+                updateTitleFromStatus(Logic.GetStatus())
+            else
+                ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
+            end
         end
         task.wait(0.05)
     end
