@@ -1,4 +1,4 @@
-local VERSION = "v0.3.6"
+local VERSION = "v0.3.7"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -660,47 +660,56 @@ local function attachFarmButton(button, resourceName)
 end
 
 -- ==========================
--- Farming Tab Container
-local farmingContainer = Instance.new("Frame")
-farmingContainer.Size = UDim2.new(1, -16, 1, -16)
-farmingContainer.Position = UDim2.new(0, 8, 0, 8)
-farmingContainer.BackgroundTransparency = 1
-farmingContainer.Parent = farmingTab
+-- Farming Tab Scrollable Container
+local farmingFrame = Instance.new("ScrollingFrame")
+farmingFrame.Size = UDim2.new(1, -16, 1, -16)
+farmingFrame.Position = UDim2.new(0, 8, 0, 8)
+farmingFrame.BackgroundTransparency = 1
+farmingFrame.ScrollBarThickness = 0
+farmingFrame.CanvasSize = UDim2.new(0,0,0,0)
+farmingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+farmingFrame.Parent = farmingTab
 
--- Layout for automatic vertical spacing
+-- Layout inside the scroll frame for spacing
 local farmingLayout = Instance.new("UIListLayout")
-farmingLayout.Padding = UDim.new(0, 12) -- match Info/Settings tabs
+farmingLayout.Padding = UDim.new(0, 8)
 farmingLayout.SortOrder = Enum.SortOrder.LayoutOrder
 farmingLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-farmingLayout.Parent = farmingContainer
+farmingLayout.Parent = farmingFrame
+
+-- Optional left padding
+local farmingPadding = Instance.new("UIPadding")
+farmingPadding.PaddingLeft = UDim.new(0, 16)
+farmingPadding.Parent = farmingFrame
+
+-- Track sections
+local function addSection(title)
+    return createSection(farmingFrame, title, 0)
+end
 
 -- === Coins Section ===
-createSection(farmingContainer, "Coins", 0)
-
+addSection("Coins")
 do
-    local btn = createFarmingButton("Collect Coins", farmingContainer)
+    local btn = createFarmingButton("Collect Coins", farmingFrame)
     attachFarmButton(btn, "Coins")
 end
 
 -- === XP Section ===
-createSection(farmingContainer, "XP", 0)
-
+addSection("XP")
 do
-    local btn = createFarmingButton("Gain XP Jump", farmingContainer)
+    local btn = createFarmingButton("Gain XP Jump", farmingFrame)
     attachFarmButton(btn, "XPJump")
 end
-
 do
-    local btn = createFarmingButton("Gain XP Agility", farmingContainer)
+    local btn = createFarmingButton("Gain XP Agility", farmingFrame)
     attachFarmButton(btn, "XPAgility")
 end
 
 -- === Resources Section ===
-createSection(farmingContainer, "Resources", 0)
-
+addSection("Resources")
 for _, resourceName in ipairs(Logic.ResourceList) do
     if resourceName ~= "Coins" and resourceName ~= "XPJump" and resourceName ~= "XPAgility" then
-        local btn = createFarmingButton("Collect " .. resourceName, farmingContainer)
+        local btn = createFarmingButton("Collect " .. resourceName, farmingFrame)
         attachFarmButton(btn, resourceName)
     end
 end
