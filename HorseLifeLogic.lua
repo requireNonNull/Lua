@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.0.5"
+local VERSION = "v0.0.6"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -333,6 +333,11 @@ end
 
 function Logic.GetStatus()
     return Logic.Status
+end
+
+function Logic.SetStatus(newStatus)
+    if type(newStatus) ~= "string" then return end
+    Logic.Status = newStatus
 end
 
 function Logic.SetTpDelay(delay)
