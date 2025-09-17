@@ -1,4 +1,4 @@
-local VERSION = "v0.1.5"
+local VERSION = "v0.1.6"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -307,7 +307,6 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         self.TaskActive = true
         self.taskToggleButton.Text = "⏸️"
         self:stopTitleAnimation()
-        self:animateTitle("Collecting " .. self.CurrentResource, "dots")
 
         Logic.toggle(self.CurrentResource) -- 🔗 resume
 
@@ -329,7 +328,7 @@ self.taskToggleButton.MouseButton1Click:Connect(function()
         self.TaskActive = false
         self.taskToggleButton.Text = "▶️"
         self:stopTitleAnimation()
-        self:animateTitle("Paused: " .. self.CurrentResource, "fade")
+        Logic.SetStatus("Paused Task: " .. self.CurrentResource)
 
         Logic.toggle(self.CurrentResource) -- 🔗 pause
 
@@ -679,7 +678,6 @@ local function attachFarmButton(button, resourceName)
             ui.TabsContainer.Visible = false
         end
 
-        ui:animateTitle("Collecting " .. resourceName, "dots")
         Logic.start(resourceName)
     end)
 end
@@ -857,6 +855,29 @@ RunService.Heartbeat:Connect(function(delta)
         #Players:GetPlayers(),
         ping
     )
+end)
+
+local function updateTitleFromStatus(status)
+    if not status or status == "" then return end
+
+    if string.find(status, "Collecting") then
+        ui:animateTitle(status, "dots")  -- dots animation
+    elseif string.find(status, "Waiting") or string.find(status, "Paused") then
+        ui:animateTitle(status, "fade")  -- fade animation
+    else
+        ui.TitleLabel.Text = status      -- static text for everything else
+    end
+end
+
+task.spawn(function()
+    while true do
+        if Logic.getState().running then
+            updateTitleFromStatus(Logic.GetStatus())
+        else
+            ui.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION -- default when not running
+        end
+        task.wait(0.05)
+    end
 end)
 
 if DEBUG_MODE then
