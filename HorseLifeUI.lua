@@ -1,4 +1,4 @@
-local VERSION = "v0.0.4"
+local VERSION = "v0.0.5"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -691,7 +691,8 @@ local function attachFarmButton(button, resourceName)
         if not ui.Minimized then
             ui.Minimized = true
             FarmUI.Status = "Minimized"
-            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0,360,0,50)}):Play()
+            local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
             ui.TabsContainer.Visible = false
         end
 
