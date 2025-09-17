@@ -1,4 +1,4 @@
-local VERSION = "v0.0.8"
+local VERSION = "v0.0.9"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -186,26 +186,22 @@ function FarmUI.new()
 end
 
 function FarmUI:updateWidth()
-    local tabCount = #self.TabButtons:GetChildren()
-    -- filter only actual buttons
-    local realTabs = 0
-    for _,child in ipairs(self.TabButtons:GetChildren()) do
+    local tabCount = 0
+    for _, child in ipairs(self.TabButtons:GetChildren()) do
         if child:IsA("TextButton") then
-            realTabs += 1
+            tabCount += 1
         end
     end
-    tabCount = realTabs
 
-    -- total width = tabs * width + (tabs-1)*padding + some margin
     local neededWidth = tabCount * self.BaseTabWidth + (tabCount - 1) * self.BasePadding + 40
     if neededWidth < self.MinWidth then
         neededWidth = self.MinWidth
     end
 
-    -- apply new size + reposition so it stays centered
     local currentHeight = self.Outline.Size.Y.Offset
+    local currentVerticalPosition = self.Outline.Position.Y.Scale
     self.Outline.Size = UDim2.new(0, neededWidth, 0, currentHeight)
-    self.Outline.Position = UDim2.new(0.5, -neededWidth/2, 0.5, -currentHeight/2)
+    self.Outline.Position = UDim2.new(0.5, -neededWidth/2, currentVerticalPosition, 0)
 end
 
 -- ==========================
