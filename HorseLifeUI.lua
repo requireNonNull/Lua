@@ -1,4 +1,4 @@
-local VERSION = "v0.1.9"
+local VERSION = "v0.2.0"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -880,9 +880,9 @@ task.spawn(function()
             
             if state.running then
                 updateTitleFromStatus(Logic.GetStatus())
-            elseif self.CurrentResource and not self.TaskActive then
+            elseif ui.CurrentResource and not ui.TaskActive then
                 -- paused
-                local pausedText = "Paused: " .. self.CurrentResource
+                local pausedText = "Paused: " .. ui.CurrentResource
                 updateTitleFromStatus(pausedText)
             else
                 local defaultText = EXPLOIT_NAME .. " " .. VERSION
