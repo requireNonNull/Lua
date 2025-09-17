@@ -1,4 +1,4 @@
-local VERSION = "v0.3.8"
+local VERSION = "v0.3.9"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -666,31 +666,27 @@ farmingFrame.Size = UDim2.new(1, -16, 1, -16)
 farmingFrame.Position = UDim2.new(0, 8, 0, 8)
 farmingFrame.BackgroundTransparency = 1
 farmingFrame.ScrollBarThickness = 0
-farmingFrame.CanvasSize = UDim2.new(0,0,0,0)
 farmingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 farmingFrame.Parent = farmingTab
 
--- Layout inside the scroll frame for spacing
+-- Layout for spacing & centering
 local farmingLayout = Instance.new("UIListLayout")
-farmingLayout.Padding = UDim.new(0, 8)
+farmingLayout.Padding = UDim.new(0, 12) -- vertical spacing between sections/buttons
 farmingLayout.SortOrder = Enum.SortOrder.LayoutOrder
-farmingLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+farmingLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 farmingLayout.Parent = farmingFrame
 
--- Optional left padding
---local farmingPadding = Instance.new("UIPadding")
---farmingPadding.PaddingLeft = UDim.new(0, 16)
---farmingPadding.Parent = farmingFrame
+-- Top + bottom padding
+local farmingPadding = Instance.new("UIPadding")
+farmingPadding.PaddingTop = UDim.new(0, 12)    -- same as spacing
+farmingPadding.PaddingBottom = UDim.new(0, 12) -- extra space at the bottom
+farmingPadding.Parent = farmingFrame
 
--- Extra bottom padding
-local bottomPadding = Instance.new("Frame")
-bottomPadding.Size = UDim2.new(1, 0, 0, 12) -- same as UIListLayout.Padding
-bottomPadding.BackgroundTransparency = 1
-bottomPadding.Parent = farmingFrame
-
--- Track sections
+-- Helper function for sections
 local function addSection(title)
-    return createSection(farmingFrame, title, 0)
+    local header = createSection(farmingFrame, title, 0)
+    header.LayoutOrder = #farmingFrame:GetChildren() + 1
+    return header
 end
 
 -- === Coins Section ===
@@ -698,6 +694,7 @@ addSection("Coins")
 do
     local btn = createFarmingButton("Collect Coins", farmingFrame)
     attachFarmButton(btn, "Coins")
+    btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
 
 -- === XP Section ===
@@ -705,10 +702,12 @@ addSection("XP")
 do
     local btn = createFarmingButton("Gain XP Jump", farmingFrame)
     attachFarmButton(btn, "XPJump")
+    btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
 do
     local btn = createFarmingButton("Gain XP Agility", farmingFrame)
     attachFarmButton(btn, "XPAgility")
+    btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
 
 -- === Resources Section ===
@@ -717,9 +716,9 @@ for _, resourceName in ipairs(Logic.ResourceList) do
     if resourceName ~= "Coins" and resourceName ~= "XPJump" and resourceName ~= "XPAgility" then
         local btn = createFarmingButton("Collect " .. resourceName, farmingFrame)
         attachFarmButton(btn, resourceName)
+        btn.LayoutOrder = #farmingFrame:GetChildren() + 1
     end
 end
-
 -- ==========================
 -- Info Tab
 
