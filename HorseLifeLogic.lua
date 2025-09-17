@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.2"
+local VERSION = "v0.1.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -185,7 +185,7 @@ local function farmingLoop()
 			end)
 
 			if pos then
-				local heightOffset = (current == "Coins") and 1 or 12
+				local heightOffset = (current == "Coins") and 4 or 12
 				tpTo(char, pos, heightOffset)
 				safeWait(TeleportDelay)
 			end
