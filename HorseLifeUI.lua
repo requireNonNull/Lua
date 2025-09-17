@@ -1,4 +1,4 @@
-local VERSION = "v0.3.7"
+local VERSION = "v0.3.8"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -678,9 +678,15 @@ farmingLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 farmingLayout.Parent = farmingFrame
 
 -- Optional left padding
-local farmingPadding = Instance.new("UIPadding")
-farmingPadding.PaddingLeft = UDim.new(0, 16)
-farmingPadding.Parent = farmingFrame
+--local farmingPadding = Instance.new("UIPadding")
+--farmingPadding.PaddingLeft = UDim.new(0, 16)
+--farmingPadding.Parent = farmingFrame
+
+-- Extra bottom padding
+local bottomPadding = Instance.new("Frame")
+bottomPadding.Size = UDim2.new(1, 0, 0, 12) -- same as UIListLayout.Padding
+bottomPadding.BackgroundTransparency = 1
+bottomPadding.Parent = farmingFrame
 
 -- Track sections
 local function addSection(title)
