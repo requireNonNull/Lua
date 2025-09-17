@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.0.8"
+local VERSION = "v0.0.9"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -170,7 +170,6 @@ local function farmingLoop()
 		    collected += 1
 		    local remaining = #targets - dropped
 		    Logic.Status = "Collecting " .. collected .. " of " .. remaining .. " " .. current
-		end
 	
 			local pos
 			pcall(function()
