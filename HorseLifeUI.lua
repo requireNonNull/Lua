@@ -1,4 +1,4 @@
-local VERSION = "v0.0.2"
+local VERSION = "v0.0.3"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -42,6 +42,10 @@ local Themes = {
 -- Constructor
 function FarmUI.new()
     local self = setmetatable({}, FarmUI)
+
+    self.BaseTabWidth = 100   -- each tab button is 100px wide
+    self.BasePadding = 8      -- padding between tabs
+    self.MinWidth = 360       -- minimum menu width
 
     -- Root ScreenGui
     self.Screen = Instance.new("ScreenGui")
@@ -174,6 +178,29 @@ function FarmUI.new()
     self.TabsContainer.Visible = false
     self.TitleLabel.Text = "Starting..."
     return self
+end
+
+function FarmUI:updateWidth()
+    local tabCount = #self.TabButtons:GetChildren()
+    -- filter only actual buttons
+    local realTabs = 0
+    for _,child in ipairs(self.TabButtons:GetChildren()) do
+        if child:IsA("TextButton") then
+            realTabs += 1
+        end
+    end
+    tabCount = realTabs
+
+    -- total width = tabs * width + (tabs-1)*padding + some margin
+    local neededWidth = tabCount * self.BaseTabWidth + (tabCount - 1) * self.BasePadding + 40
+    if neededWidth < self.MinWidth then
+        neededWidth = self.MinWidth
+    end
+
+    -- apply new size + reposition so it stays centered
+    local currentHeight = self.Outline.Size.Y.Offset
+    self.Outline.Size = UDim2.new(0, neededWidth, 0, currentHeight)
+    self.Outline.Position = UDim2.new(0.5, -neededWidth/2, 0.5, -currentHeight/2)
 end
 
 -- ==========================
@@ -481,6 +508,9 @@ function FarmUI:addTab(name)
         updateTabHighlight(button)
     end
 
+    -- 👇 auto-resize outline when new tab added
+    self:updateWidth()
+
     return content
 end
 
@@ -578,10 +608,9 @@ end
 -- Initialize UI
 local ui = FarmUI.new()
 local farmingTab = ui:addTab("Farming")
+local teleportsTab = ui:addTab("Teleports")
 local settingsTab = ui:addTab("Settings")
 local infoTab = ui:addTab("Info")
-local teleportsTab = ui:addTab("Teleports")
-
 
 -- init loading sequence
 ui:initLoadingAnimation(
