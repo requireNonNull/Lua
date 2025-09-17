@@ -1,4 +1,4 @@
-local VERSION = "v0.3.5"
+local VERSION = "v0.3.6"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -659,48 +659,49 @@ local function attachFarmButton(button, resourceName)
     end)
 end
 
-local currentY = 8 -- initial padding
+-- ==========================
+-- Farming Tab Container
+local farmingContainer = Instance.new("Frame")
+farmingContainer.Size = UDim2.new(1, -16, 1, -16)
+farmingContainer.Position = UDim2.new(0, 8, 0, 8)
+farmingContainer.BackgroundTransparency = 1
+farmingContainer.Parent = farmingTab
 
--- Coins Section
-createSection(farmingTab, "Coins", currentY)
-currentY = currentY + 32
+-- Layout for automatic vertical spacing
+local farmingLayout = Instance.new("UIListLayout")
+farmingLayout.Padding = UDim.new(0, 12) -- match Info/Settings tabs
+farmingLayout.SortOrder = Enum.SortOrder.LayoutOrder
+farmingLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+farmingLayout.Parent = farmingContainer
 
-do
-    local btn = createFarmingButton("Collect Coins", farmingTab)
-    btn.Position = UDim2.new(0.05, 0, 0, currentY)
-    attachFarmButton(btn, "Coins") -- 🔗 bind to Logic.Coins
-    currentY = currentY + 42
-end
-
--- XPJump Section
-createSection(farmingTab, "XP", currentY)
-currentY = currentY + 32
-
-do
-    local btn = createFarmingButton("Gain XP Jump", farmingTab)
-    btn.Position = UDim2.new(0.05, 0, 0, currentY)
-    attachFarmButton(btn, "XPJump") -- 🔗 bind to Logic.XPJump
-    currentY = currentY + 42
-end
+-- === Coins Section ===
+createSection(farmingContainer, "Coins", 0)
 
 do
-    local btn = createFarmingButton("Gain XP Agility", farmingTab)
-    btn.Position = UDim2.new(0.05, 0, 0, currentY)
-    attachFarmButton(btn, "XPAgility") -- 🔗 bind to Logic.XPAgility
-    currentY = currentY + 42
+    local btn = createFarmingButton("Collect Coins", farmingContainer)
+    attachFarmButton(btn, "Coins")
 end
 
--- Resources Section
-createSection(farmingTab, "Resources", currentY)
-currentY = currentY + 32
+-- === XP Section ===
+createSection(farmingContainer, "XP", 0)
+
+do
+    local btn = createFarmingButton("Gain XP Jump", farmingContainer)
+    attachFarmButton(btn, "XPJump")
+end
+
+do
+    local btn = createFarmingButton("Gain XP Agility", farmingContainer)
+    attachFarmButton(btn, "XPAgility")
+end
+
+-- === Resources Section ===
+createSection(farmingContainer, "Resources", 0)
 
 for _, resourceName in ipairs(Logic.ResourceList) do
-    -- skip coins/xp since we already added them above
     if resourceName ~= "Coins" and resourceName ~= "XPJump" and resourceName ~= "XPAgility" then
-        local btn = createFarmingButton("Collect " .. resourceName, farmingTab)
-        btn.Position = UDim2.new(0.05, 0, 0, currentY)
+        local btn = createFarmingButton("Collect " .. resourceName, farmingContainer)
         attachFarmButton(btn, resourceName)
-        currentY = currentY + 42
     end
 end
 
