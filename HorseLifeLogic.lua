@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.3"
+local VERSION = "v0.1.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -198,13 +198,13 @@ local function farmingLoop()
 				end
 			end)
 
-			if current ~= "Coins" and current ~= "XPAgility" and current ~= "XPJump" then
+			--if current ~= "Coins" and current ~= "XPAgility" and current ~= "XPJump" then
 				local startTime = tick()
 				while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
 					if tick() - startTime > timeout then break end
 					safeWait(0.1)
 				end
-			end
+			--end
 
 			task.wait(0.1)
 		end
