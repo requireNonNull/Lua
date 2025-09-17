@@ -1,4 +1,4 @@
-local VERSION = "v0.1.2"
+local VERSION = "v0.1.3"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -367,17 +367,6 @@ function FarmUI:applyTheme(name)
     else
         local th = Themes[name]
         self.OutlineGradient.Color = ColorSequence.new(th.Accent1, th.Accent2)
-    end
-
-    -- update theme buttons to show active
-    if self.ThemeButtons then
-        for tName,button in pairs(self.ThemeButtons) do
-            if tName == name then
-                button.BackgroundTransparency = 0.6
-            else
-                button.BackgroundTransparency = 0
-            end
-        end
     end
 end
 
