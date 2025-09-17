@@ -1,4 +1,4 @@
-local VERSION = "v0.0.2"
+local VERSION = "v0.0.3"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -640,11 +640,11 @@ end
 -- ==========================
 -- Settings Tab: Design Header + Theme Buttons
 -- Settings container
-local settingsContainer = Instance.new("Frame")
-settingsContainer.Size = UDim2.new(1, -16, 1, -16)
-settingsContainer.Position = UDim2.new(0, 8, 0, 8)
-settingsContainer.BackgroundTransparency = 1
-settingsContainer.Parent = settingsTab
+--local settingsContainer = Instance.new("Frame")
+--settingsContainer.Size = UDim2.new(1, -16, 1, -16)
+--settingsContainer.Position = UDim2.new(0, 8, 0, 8)
+--settingsContainer.BackgroundTransparency = 1
+--settingsContainer.Parent = settingsTab
 
 local settingsLayout = Instance.new("UIListLayout")
 settingsLayout.Padding = UDim.new(0, 12)
