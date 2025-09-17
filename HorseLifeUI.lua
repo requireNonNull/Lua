@@ -1,4 +1,4 @@
-local VERSION = "v0.3.9"
+local VERSION = "v0.0.1"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -580,6 +580,8 @@ local ui = FarmUI.new()
 local farmingTab = ui:addTab("Farming")
 local settingsTab = ui:addTab("Settings")
 local infoTab = ui:addTab("Info")
+local teleportsTab = ui:addTab("Teleports")
+
 
 -- init loading sequence
 ui:initLoadingAnimation(
