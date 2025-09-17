@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.0.4"
+local VERSION = "v0.0.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -135,7 +135,7 @@ local function farmingLoop()
 
 		if not folder then
 			if DEBUG_MODE then warn("[DEBUG] Resource folder not found for:", current) end
-			Logic.Status = "Folder not found for: " .. resourceName
+			Logic.Status = "Folder not found for: " .. current
 			safeWait(1)
 			continue
 		end
@@ -148,13 +148,13 @@ local function farmingLoop()
 		end
 
 		if #targets == 0 then
-			Logic.Status = "Waiting for " .. resourceName
+			Logic.Status = "Waiting for " .. current
 			randomTeleport(char)
 			safeWait(3)
 			continue
 		end
 		
-		Logic.Status = "Found " .. #targets .. " of " .. resourceName
+		Logic.Status = "Found " .. #targets .. " of " .. current
 		task.wait(0.25)
 
 		for _, obj in ipairs(targets) do
