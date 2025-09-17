@@ -1,4 +1,4 @@
-local VERSION = "v0.0.5"
+local VERSION = "v0.0.6"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -638,40 +638,59 @@ local function updateThemeHighlight(selectedButton)
 end
 
 -- ==========================
--- Settings Tab: Design Header + Theme Buttons
--- Settings container
---local settingsContainer = Instance.new("Frame")
---settingsContainer.Size = UDim2.new(1, -16, 1, -16)
---settingsContainer.Position = UDim2.new(0, 8, 0, 8)
---settingsContainer.BackgroundTransparency = 1
---settingsContainer.Parent = settingsTab
+-- Settings Tab Scrollable Container
+local settingsFrame = Instance.new("ScrollingFrame")
+settingsFrame.Size = UDim2.new(1, -16, 1, -16)
+settingsFrame.Position = UDim2.new(0, 8, 0, 8)
+settingsFrame.BackgroundTransparency = 1
+settingsFrame.ScrollBarThickness = 0
+settingsFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+settingsFrame.Parent = settingsTab
 
+-- Layout for spacing & centering
 local settingsLayout = Instance.new("UIListLayout")
 settingsLayout.Padding = UDim.new(0, 12)
 settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 settingsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-settingsLayout.Parent = settingsContainer
+settingsLayout.Parent = settingsFrame
+
+-- Top + bottom padding
+local settingsPadding = Instance.new("UIPadding")
+settingsPadding.PaddingTop = UDim.new(0, 12)
+settingsPadding.PaddingBottom = UDim.new(0, 12)
+settingsPadding.Parent = settingsFrame
 
 -- Header
-local headerDesign = createSection(settingsContainer, "Design", 0)
+createSection(settingsFrame, "Design", 0)
 
--- Theme buttons
+-- === Theme Buttons ===
 ui.ThemeButtons = {}
 local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
 local currentActiveBtn = nil
 
+local function updateThemeHighlight(selectedBtn)
+    for _, btn in pairs(ui.ThemeButtons) do
+        if btn == selectedBtn then
+            btn.BackgroundTransparency = 0.6 -- semi-transparent highlight
+        else
+            btn.BackgroundTransparency = 0 -- normal
+        end
+    end
+end
+
 for _, themeName in ipairs(themesList) do
-    local btn = createButton(themeName, settingsContainer)
+    local btn = createButton(themeName, settingsFrame) -- same as farm buttons
+    btn.LayoutOrder = #settingsFrame:GetChildren() + 1
     ui.ThemeButtons[themeName] = btn
 
     btn.MouseButton1Click:Connect(function()
-        updateThemeHighlight(btn)  -- highlight this button
-        currentActiveBtn = btn     -- store current active
-        ui:applyTheme(themeName)   -- apply the theme
+        updateThemeHighlight(btn)
+        currentActiveBtn = btn
+        ui:applyTheme(themeName)
     end)
 end
 
--- Initially select the current theme
+-- Select current theme on load
 if ui.CurrentTheme and ui.ThemeButtons[ui.CurrentTheme] then
     currentActiveBtn = ui.ThemeButtons[ui.CurrentTheme]
     updateThemeHighlight(currentActiveBtn)
