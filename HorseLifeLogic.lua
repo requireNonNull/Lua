@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.0.7"
+local VERSION = "v0.0.8"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -155,14 +155,22 @@ local function farmingLoop()
 		end
 		
 		Logic.Status = "Found " .. #targets .. " of " .. current
-		task.wait(0.25)
+		task.wait(0.5)
 
-		for i, obj in ipairs(targets) do
-			if not Farmer.Running or Farmer.Mode ~= current then break end
-			if not obj or not obj.Parent then continue end
-
-			-- Update status
-    		Logic.Status = "Collecting " .. i .. " of " .. #targets .. " " .. current
+		local collected = 0
+		local dropped = 0
+		for _, obj in ipairs(targets) do
+		    if not Farmer.Running or Farmer.Mode ~= current then break end
+		
+		    if not obj or not obj.Parent then
+		        dropped += 1
+		        continue
+		    end
+		
+		    collected += 1
+		    local remaining = #targets - dropped
+		    Logic.Status = "Collecting " .. collected .. " of " .. remaining .. " " .. current
+		end
 	
 			local pos
 			pcall(function()
