@@ -1,4 +1,4 @@
-local VERSION = "v0.1.1"
+local VERSION = "v0.1.2"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -429,20 +429,6 @@ local function createButton(text, parent)
     return btn
 end
 
-local function setButtonActive(btn, active)
-    local bg = btn:FindFirstChildWhichIsA("Frame")
-    if bg then
-        local stroke = bg:FindFirstChildWhichIsA("UIStroke")
-        if stroke then
-            if active then
-                BackgroundTransparency = 0.6 -- semi-transparent highlight
-            else
-                BackgroundTransparency = 0 -- normal
-            end
-        end
-    end
-end
-
 -- ==========================
 -- Add Tabs (with transparent highlight)
 function FarmUI:addTab(name)
@@ -560,36 +546,6 @@ function FarmUI:stopTitleAnimation()
     self.TitleLabel.TextTransparency = 0
 end
 
--- Reusable button click animation
--- Pass any button, and it will rotate slightly left-down and then back
-local function addClickAnimation(button)
-    button.MouseButton1Click:Connect(function()
-        local moveAmount = UDim2.new(0, 4, 0, 4)  -- move down-right
-        local rotateAmount = 8                     -- rotate degrees
-        local duration = 0.1
-
-        -- Store original position
-        local origPos = button.Position
-        local origRot = button.Rotation
-
-        -- Tween down-left (move + rotate)
-        local tweenDown = TweenService:Create(button, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-            Position = origPos + moveAmount,
-            Rotation = origRot + rotateAmount
-        })
-
-        -- Tween back up (reverse)
-        local tweenUp = TweenService:Create(button, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
-            Position = origPos,
-            Rotation = origRot
-        })
-
-        tweenDown:Play()
-        tweenDown.Completed:Wait()
-        tweenUp:Play()
-    end)
-end
-
 local function createSection(parent, title, yOffset)
     -- Section header
     local header = Instance.new("TextLabel")
@@ -696,7 +652,6 @@ for _, themeName in ipairs(themesList) do
 
     btn.MouseButton1Click:Connect(function()
         currentActiveBtn = btn
-        addClickAnimation(btn)
         ui:applyTheme(themeName)
     end)
 end
