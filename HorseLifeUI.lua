@@ -1,4 +1,4 @@
-local VERSION = "v0.1.4"
+local VERSION = "v0.1.5"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -807,7 +807,7 @@ changelogLabel.TextXAlignment = Enum.TextXAlignment.Center
 changelogLabel.TextYAlignment = Enum.TextYAlignment.Top
 changelogLabel.TextWrapped = true
 changelogLabel.RichText = true
-changelogLabel.Text = "- v0.0.1: WIP\n- v0.0.2: WIP\n"
+changelogLabel.Text = "- v0.0.1: Lorem ipsum dolor sit amet, consectetur adipiscing elit. In molestie nec purus in dapibus. Cras cursus, nisi at eleifend dignissim, ipsum arcu pretium nulla, a dignissim diam ipsum eget purus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque nec interdum mi. Nullam rutrum eros lectus, at euismod tellus tempus. \n\n- v0.0.2: Lorem ipsum dolor sit amet, consectetur adipiscing elit. In molestie nec purus in dapibus. Cras cursus, nisi at eleifend dignissim, ipsum arcu pretium nulla, a dignissim diam ipsum eget purus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque nec interdum mi. Nullam rutrum eros lectus, at euismod tellus tempus. \n"
 changelogLabel.Parent = changelogFrame
 
 -- Auto-update canvas size
