@@ -1,4 +1,4 @@
-local VERSION = "v0.0.1"
+local VERSION = "v0.0.2"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -435,9 +435,9 @@ local function setButtonActive(btn, active)
         local stroke = bg:FindFirstChildWhichIsA("UIStroke")
         if stroke then
             if active then
-                stroke.Color = Color3.fromRGB(255,200,0)
+                BackgroundTransparency = 0.6 -- semi-transparent highlight
             else
-                stroke.Color = Color3.fromRGB(80,80,80)
+                BackgroundTransparency = 0 -- normal
             end
         end
     end
@@ -627,6 +627,16 @@ ui:initLoadingAnimation(
     true -- auto open
 )
 
+local function updateThemeHighlight(selectedButton)
+    for _, btn in pairs(ui.ThemeButtons) do
+        if btn == selectedButton then
+            btn.BackgroundTransparency = 0.6 -- semi-transparent like active tab
+        else
+            btn.BackgroundTransparency = 0 -- normal
+        end
+    end
+end
+
 -- ==========================
 -- Settings Tab: Design Header + Theme Buttons
 -- Settings container
@@ -655,19 +665,16 @@ for _, themeName in ipairs(themesList) do
     ui.ThemeButtons[themeName] = btn
 
     btn.MouseButton1Click:Connect(function()
-        if currentActiveBtn then
-            setButtonActive(currentActiveBtn, false)
-        end
-        setButtonActive(btn, true)
-        currentActiveBtn = btn
-        ui:applyTheme(themeName)
+        updateThemeHighlight(btn)  -- highlight this button
+        currentActiveBtn = btn     -- store current active
+        ui:applyTheme(themeName)   -- apply the theme
     end)
 end
 
--- Initially select the current theme button
+-- Initially select the current theme
 if ui.CurrentTheme and ui.ThemeButtons[ui.CurrentTheme] then
     currentActiveBtn = ui.ThemeButtons[ui.CurrentTheme]
-    setButtonActive(currentActiveBtn, true)
+    updateThemeHighlight(currentActiveBtn)
 end
 
 -- ==========================
