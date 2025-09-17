@@ -1,4 +1,4 @@
-local VERSION = "v0.0.6"
+local VERSION = "v0.0.7"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -400,11 +400,11 @@ local function createButton(text, parent)
     corner.CornerRadius = UDim.new(0,6)
     corner.Parent = bg
 
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(80,80,80)
-    stroke.Thickness = 1
-    stroke.Transparency = 0 -- opaque
-    stroke.Parent = bg
+    --local stroke = Instance.new("UIStroke")
+    --stroke.Color = Color3.fromRGB(80,80,80)
+    --stroke.Thickness = 1
+    --stroke.Transparency = 0 -- opaque
+    --stroke.Parent = bg
 
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new{
