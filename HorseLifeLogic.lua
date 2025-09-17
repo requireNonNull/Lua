@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.0.3"
+local VERSION = "v0.0.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -135,6 +135,7 @@ local function farmingLoop()
 
 		if not folder then
 			if DEBUG_MODE then warn("[DEBUG] Resource folder not found for:", current) end
+			Logic.Status = "Folder not found for: " .. resourceName
 			safeWait(1)
 			continue
 		end
@@ -147,15 +148,22 @@ local function farmingLoop()
 		end
 
 		if #targets == 0 then
+			Logic.Status = "Waiting for " .. resourceName
 			randomTeleport(char)
 			safeWait(3)
 			continue
 		end
+		
+		Logic.Status = "Found " .. #targets .. " of " .. resourceName
+		task.wait(0.25)
 
 		for _, obj in ipairs(targets) do
 			if not Farmer.Running or Farmer.Mode ~= current then break end
 			if not obj or not obj.Parent then continue end
 
+			-- Update status
+    		Logic.Status = "Collecting " .. i .. " of " .. #targets .. " " .. current
+	
 			local pos
 			pcall(function()
 				local ok, pivot = pcall(function() return obj:GetPivot().Position end)
@@ -209,13 +217,13 @@ Logic.Teleports = {
     ["Equipment"] = Vector3.new(-59, 14, 119),
     ["Market Realm"] = Vector3.new(65, 11, -28),
     ["Board Storage"] = Vector3.new(-231, 13, -148),
-    ["Garden Plot"] = Vector3.new(-250, 15, -258),
     ["Horse Shrine"] = Vector3.new(460, 21, 245),
+    ["Plush Machine"] = Vector3.new(1885, 14, -310),
 
     -- Farming / Resource Spots
     ["Dig Site"] = Vector3.new(-172, 13, -1485),
     ["Fishing Spot"] = Vector3.new(221, 13, 172),
-    ["Plush Machine"] = Vector3.new(1885, 14, -310),
+    ["Garden Plot"] = Vector3.new(-250, 15, -258),
 
     -- Contests / Minigames
     ["Training Course"] = Vector3.new(175, 13, -220),
@@ -238,11 +246,11 @@ Logic.Teleports = {
 Logic.TeleportCategories = {
     {
         Header = "Main Locations",
-        Items = { "Spawn", "Shop", "Equipment", "Market Realm", "Board Storage", "Garden Plot", "Horse Shrine" }
+        Items = { "Spawn", "Shop", "Equipment", "Market Realm", "Board Storage", "Horse Shrine", "Plush Machine"  }
     },
     {
         Header = "Farming Spots",
-        Items = { "Dig Site", "Fishing Spot", "Plush Machine" }
+        Items = { "Dig Site", "Fishing Spot", "Garden Plot"}
     },
     {
         Header = "Contests",
@@ -281,8 +289,9 @@ local function getPositionFromPath(path)
     return nil
 end
 
--- ==========================
--- Teleport function
+-- Add a Status field inside Logic
+Logic.Status = "Idle"  -- default: Idle, Farming, Waiting, Error, etc.
+
 function Logic.TeleportTo(name)
     local target = Logic.Teleports[name]
     if not target then
@@ -300,6 +309,7 @@ end
 function Logic.start(resourceName)
 	Farmer.Mode = resourceName
 	Farmer.Running = true
+	Logic.Status = " " .. resourceName
 	print("[INFO] Farming started for:", resourceName)
 end
 
@@ -319,6 +329,10 @@ end
 
 function Logic.getState()
 	return { running = Farmer.Running, mode = Farmer.Mode }
+end
+
+function Logic.GetStatus()
+    return Logic.Status
 end
 
 function Logic.SetTpDelay(delay)
