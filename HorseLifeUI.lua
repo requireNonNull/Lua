@@ -1,4 +1,4 @@
-local VERSION = "v0.0.8"
+local VERSION = "v0.0.9"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -638,8 +638,6 @@ local function updateThemeHighlight(selectedButton)
 end
 
 -- ==========================
--- Settings Tab
-
 -- Settings Tab Scrollable Container
 local settingsContainer = Instance.new("ScrollingFrame")
 settingsContainer.Size = UDim2.new(1, -16, 1, -16)
@@ -656,29 +654,39 @@ settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 settingsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 settingsLayout.Parent = settingsContainer
 
+-- Top + bottom padding
+local settingsPadding = Instance.new("UIPadding")
+settingsPadding.PaddingTop = UDim.new(0, 12)
+settingsPadding.PaddingBottom = UDim.new(0, 12)
+settingsPadding.Parent = settingsContainer
+
 -- Header
 createSection(settingsContainer, "Design", 0)
 
--- === Theme Buttons ===
+-- ==========================
+-- Theme buttons
 ui.ThemeButtons = {}
 local themesList = {"Dark","White","PitchBlack","DarkPurple","Rainbow"}
 local currentActiveBtn = nil
 
-for _, themeName in ipairs(themesList) do
-    -- Create button without inner frame (like farm buttons)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -10, 0, 36)
-    btn.BackgroundTransparency = 1
-    btn.Text = themeName
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 14
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.TextXAlignment = Enum.TextXAlignment.Center
-    btn.TextYAlignment = Enum.TextYAlignment.Center
-    btn.AutoButtonColor = false
-    btn.Parent = settingsContainer
+-- Helper: highlight selected button like tabs
+local function updateThemeHighlight(selectedButton)
+    for _, btn in ipairs(ui.ThemeButtons) do
+        local bg = btn:FindFirstChildWhichIsA("Frame")
+        if bg then
+            if btn == selectedButton then
+                bg.BackgroundTransparency = 0.6  -- semi-transparent highlight
+            else
+                bg.BackgroundTransparency = 0
+            end
+        end
+    end
+end
 
-    ui.ThemeButtons[themeName] = btn
+-- Create theme buttons using createButton
+for _, themeName in ipairs(themesList) do
+    local btn = createButton(themeName, settingsContainer)
+    table.insert(ui.ThemeButtons, btn)
 
     btn.MouseButton1Click:Connect(function()
         updateThemeHighlight(btn)
@@ -688,9 +696,14 @@ for _, themeName in ipairs(themesList) do
 end
 
 -- Initially select the current theme
-if ui.CurrentTheme and ui.ThemeButtons[ui.CurrentTheme] then
-    currentActiveBtn = ui.ThemeButtons[ui.CurrentTheme]
-    updateThemeHighlight(currentActiveBtn)
+if ui.CurrentTheme then
+    for _, btn in ipairs(ui.ThemeButtons) do
+        if btn:FindFirstChildWhichIsA("TextLabel").Text == ui.CurrentTheme then
+            currentActiveBtn = btn
+            updateThemeHighlight(btn)
+            break
+        end
+    end
 end
 
 -- ==========================
