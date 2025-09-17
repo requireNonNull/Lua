@@ -1,4 +1,4 @@
-local VERSION = "v0.2.0"
+local VERSION = "v0.2.1"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -601,6 +601,48 @@ ui:initLoadingAnimation(
 )
 
 -- ==========================
+-- Teleports Tab Scrollable Container
+local teleportsContainer = Instance.new("ScrollingFrame")
+teleportsContainer.Size = UDim2.new(1, -16, 1, -16)
+teleportsContainer.Position = UDim2.new(0, 8, 0, 8)
+teleportsContainer.BackgroundTransparency = 1
+teleportsContainer.ScrollBarThickness = 0
+teleportsContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+teleportsContainer.Parent = teleportsTab
+
+-- Layout for spacing & centering
+local teleportsLayout = Instance.new("UIListLayout")
+teleportsLayout.Padding = UDim.new(0, 12)
+teleportsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+teleportsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+teleportsLayout.Parent = teleportsContainer
+
+-- Top + bottom padding
+local teleportsPadding = Instance.new("UIPadding")
+teleportsPadding.PaddingTop = UDim.new(0, 12)
+teleportsPadding.PaddingBottom = UDim.new(0, 12)
+teleportsPadding.Parent = teleportsContainer
+
+-- ==========================
+-- Teleport Buttons (Dynamic from Logic)
+ui.TeleportButtons = {}
+
+for _, category in ipairs(Logic.TeleportCategories) do
+    -- Section header
+    createSection(teleportsContainer, category.Header, 0)
+
+    for _, name in ipairs(category.Items) do
+        local btn = createButton(name, teleportsContainer)
+        table.insert(ui.TeleportButtons, btn)
+
+        btn.MouseButton1Click:Connect(function()
+            Logic.TeleportTo(name)
+            Logic.SetStatus("Teleported to " .. name)
+        end)
+    end
+end
+
+-- ==========================
 -- Settings Tab Scrollable Container
 local settingsContainer = Instance.new("ScrollingFrame")
 settingsContainer.Size = UDim2.new(1, -16, 1, -16)
@@ -882,7 +924,7 @@ task.spawn(function()
                 updateTitleFromStatus(Logic.GetStatus())
             elseif ui.CurrentResource and not ui.TaskActive then
                 -- paused
-                local pausedText = "Paused: " .. ui.CurrentResource
+                local pausedText = "Paused Task: " .. ui.CurrentResource
                 updateTitleFromStatus(pausedText)
             else
                 local defaultText = EXPLOIT_NAME .. " " .. VERSION
