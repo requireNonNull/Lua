@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.1"
+local VERSION = "v0.1.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -274,40 +274,25 @@ Logic.TeleportCategories = {
 }
 -- ==========================
 -- Dynamic position resolver
-local function getPositionFromPath(target)
-    if typeof(target) == "Vector3" then
-        return target
-    elseif typeof(target) == "Instance" then
-        if target:IsA("BasePart") then
-            return target.Position
-        elseif target:IsA("Model") then
-            if target.PrimaryPart then
-                return target.PrimaryPart.Position
-            else
-                return target:GetPivot().Position
-            end
-        end
-    elseif typeof(target) == "table" then
-        if target.type == "npc" then
-            local npcFolder = workspace:FindFirstChild("DynamicNPCs")
-            if not npcFolder then return nil end
+local function findNpcInstance(name)
+    local npcFolder = workspace:FindFirstChild("DynamicNPCs")
+    if not npcFolder then return nil end
 
-            local npcParent = npcFolder:FindFirstChild(target.name)
-            if not npcParent then return nil end
-
-            local npcModel = npcParent:FindFirstChild("NPC")
-            if not npcModel or not npcModel:IsA("Model") then return nil end
-
-            if npcModel.PrimaryPart then
-                return npcModel.PrimaryPart.Position
-            else
-                return npcModel:GetPivot().Position
+    -- Look through all children with this name
+    for _, child in ipairs(npcFolder:GetChildren()) do
+        if child.Name == name then
+            -- Is this the "real" one? Check for an NPC model or HRP
+            if child:FindFirstChild("NPC") then
+                return child.NPC -- the model inside
+            elseif child:FindFirstChild("HumanoidRootPart") or child.PrimaryPart then
+                return child
             end
         end
     end
 
     return nil
 end
+	
 -- Add a Status field inside Logic
 Logic.Status = "Idle"  -- default: Idle, Farming, Waiting, Error, etc.
 
@@ -318,10 +303,46 @@ function Logic.TeleportTo(name)
         return
     end
 
-    local pos = getPositionFromPath(target)
+    local pos
+
+    if typeof(target) == "Vector3" then
+        pos = target
+    elseif typeof(target) == "string" then
+        -- check if it's a path or NPC
+        if string.find(target, "workspace.DynamicNPCs") or Logic.TeleportCategories[5] then
+            -- try resolving NPC by name
+            local npc = findNpcInstance(name)
+            if npc then
+                if npc.PrimaryPart then
+                    pos = npc.PrimaryPart.Position
+                else
+                    local part = npc:FindFirstChildWhichIsA("BasePart")
+                    if part then pos = part.Position end
+                end
+            end
+        else
+            -- treat as normal path
+            pos = getPositionFromPath(target)
+        end
+    elseif typeof(target) == "Instance" then
+        if target:IsA("Model") then
+            if target.PrimaryPart then
+                pos = target.PrimaryPart.Position
+            else
+                local part = target:FindFirstChildWhichIsA("BasePart")
+                if part then pos = part.Position end
+            end
+        elseif target:IsA("BasePart") then
+            pos = target.Position
+        end
+    end
+
     if pos then
         local char = player.Character or player.CharacterAdded:Wait()
         tpTo(char, pos)
+        if DEBUG_MODE then print("[DEBUG][TP] Teleported to", name, pos) end
+    else
+        warn("[Logic] Failed to resolve teleport target for:", name)
     end
 end
 
