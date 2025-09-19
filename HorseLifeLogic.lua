@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.5"
+local VERSION = "v0.1.6"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -12,7 +12,7 @@ local player = Players.LocalPlayer
 -- ==========================
 local Farmer = { Running = false, Mode = nil }
 
-local safeModeEnabled = true
+local safeModeEnabled = false
 local TeleportDelay = 0.5 -- Default delay
 
 -- ==========================
