@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.8"
+local VERSION = "v0.1.9"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -280,7 +280,7 @@ Logic.TeleportCategories = {
     },
     {
         Header = "Dynamics",
-        Items = { "Boss Totem" }
+        Items = { "BossTotem" }
     },
     {
         Header = "Events",
