@@ -1,4 +1,4 @@
-local VERSION = "v0.2.1"
+local VERSION = "v0.2.2"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -638,6 +638,14 @@ for _, category in ipairs(Logic.TeleportCategories) do
         btn.MouseButton1Click:Connect(function()
             Logic.TeleportTo(name)
             Logic.SetStatus("Teleported to " .. name)
+                
+            if not ui.Minimized then
+            ui.Minimized = true
+            FarmUI.Status = "Minimized"
+            local targetW = math.max(ui.MinWidth, ui.Outline.Size.X.Offset)
+            TweenService:Create(ui.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
+            ui.TabsContainer.Visible = false
+            end
         end)
     end
 end
