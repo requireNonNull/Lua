@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.6"
+local VERSION = "v0.1.7"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -198,13 +198,25 @@ local function farmingLoop()
 				end
 			end)
 
-			--if current ~= "Coins" and current ~= "XPAgility" and current ~= "XPJump" then
-				local startTime = tick()
-				while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
-					if tick() - startTime > timeout then break end
-					safeWait(0.1)
-				end
-			--end
+			-- Check if the current mode is related to Coins or XP
+			if current == "Coins" or current == "XPAgility" or current == "XPJump" then
+			    -- Only wait for deletion if safeModeEnabled is true
+			    if safeModeEnabled then
+			        local startTime = tick()
+			        while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
+			            if tick() - startTime > timeout then break end
+			            safeWait(0.1)
+			        end
+			    end
+			else
+			    -- Always wait for deletion if it's a resource
+			    local startTime = tick()
+			    while obj and obj.Parent and Farmer.Running and Farmer.Mode == current do
+			        if tick() - startTime > timeout then break end
+			        safeWait(0.1)
+			    end
+			end
+
 
 			task.wait(0.1)
 		end
