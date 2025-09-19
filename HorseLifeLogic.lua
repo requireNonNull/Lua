@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.7"
+local VERSION = "v0.1.8"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -344,7 +344,7 @@ function Logic.TeleportTo(name)
             end
 
         -- Check if it's a dynamic model like BossTotem
-        elseif string.find(target, "workspace.Terrain") or Logic.TeleportCategories[6] then
+        elseif string.find(target, "workspace.Terrain.TotemModel") or Logic.TeleportCategories[6] then
             -- Try resolving BossTotem (or any other similar model dynamically)
             local model = workspace.Terrain:FindFirstChild(name)
             if model and model:IsA("Model") then
