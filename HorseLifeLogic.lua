@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.1.4"
+local VERSION = "v0.1.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -240,6 +240,9 @@ Logic.Teleports = {
     -- Events
     ["Alien Event"] = Vector3.new(-1805, 41, -227),
 
+	-- Dynamic Spawns
+    ["Boss Totem"] = "workspace.Terrain.TotemModel.BossTotem",
+
     -- NPCs
     ["Orion"] = "workspace.DynamicNPCs.Orion",
     ["Alex"] = "workspace.DynamicNPCs.Alex",
@@ -262,6 +265,10 @@ Logic.TeleportCategories = {
     {
         Header = "Contests",
         Items = { "Training Course", "Taming Contest", "Cosmetic Contest" }
+    },
+    {
+        Header = "Dynamics",
+        Items = { "Boss Totem" }
     },
     {
         Header = "Events",
@@ -305,12 +312,15 @@ function Logic.TeleportTo(name)
 
     local pos
 
+    -- Check if the target is a Vector3, treat as a direct position
     if typeof(target) == "Vector3" then
         pos = target
+    
+    -- Check if the target is a string (which may represent paths, NPCs, or models)
     elseif typeof(target) == "string" then
-        -- check if it's a path or NPC
+        -- Check if it's a path or NPC
         if string.find(target, "workspace.DynamicNPCs") or Logic.TeleportCategories[5] then
-            -- try resolving NPC by name
+            -- Try resolving NPC by name
             local npc = findNpcInstance(name)
             if npc then
                 if npc.PrimaryPart then
@@ -320,10 +330,27 @@ function Logic.TeleportTo(name)
                     if part then pos = part.Position end
                 end
             end
+
+        -- Check if it's a dynamic model like BossTotem
+        elseif string.find(target, "workspace.Terrain") or Logic.TeleportCategories[6] then
+            -- Try resolving BossTotem (or any other similar model dynamically)
+            local model = workspace.Terrain:FindFirstChild(name)
+            if model and model:IsA("Model") then
+                -- Look for the PrimaryPart or any BasePart
+                if model.PrimaryPart then
+                    pos = model.PrimaryPart.Position
+                else
+                    local part = model:FindFirstChildWhichIsA("BasePart")
+                    if part then pos = part.Position end
+                end
+            end
+
+        -- Treat as a normal path otherwise
         else
-            -- treat as normal path
             pos = getPositionFromPath(target)
         end
+
+    -- If the target is a direct instance (Model or BasePart)
     elseif typeof(target) == "Instance" then
         if target:IsA("Model") then
             if target.PrimaryPart then
@@ -337,6 +364,7 @@ function Logic.TeleportTo(name)
         end
     end
 
+    -- Perform teleportation if a valid position is found
     if pos then
         local char = player.Character or player.CharacterAdded:Wait()
         tpTo(char, pos)
