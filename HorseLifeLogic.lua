@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.0"
+local VERSION = "v0.2.1"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -316,7 +316,7 @@ end
 Logic.Status = "Idle"  -- default: Idle, Farming, Waiting, Error, etc.
 
 -- Helper function to resolve a full path string to an instance
-local function resolvePath(path)
+local function findPartByPath(path)
     local current = game
     for part in string.gmatch(path, "[^%.]+") do
         current = current:FindFirstChild(part)
@@ -324,9 +324,28 @@ local function resolvePath(path)
             return nil
         end
     end
-    return current
+    
+    -- Return the final part, which could be a BasePart or Model
+    if current:IsA("BasePart") or current:IsA("Model") then
+        return current
+    end
+    
+    -- If it's a model, return the primary part or any base part within it
+    if current:IsA("Model") then
+        if current.PrimaryPart then
+            return current.PrimaryPart
+        else
+            local part = current:FindFirstChildWhichIsA("BasePart")
+            return part
+        end
+    end
+
+    return nil
 end
 
+-- ==========================
+-- Teleport Function with Dynamic Path Resolution
+-- ==========================
 function Logic.TeleportTo(name)
     local target = Logic.Teleports[name]
     if not target then
@@ -336,31 +355,20 @@ function Logic.TeleportTo(name)
 
     local pos
 
-    -- If the target is a string, treat it as a path
+    -- If the target is a string (path), resolve it dynamically
     if typeof(target) == "string" then
-        local resolved = resolvePath(target)
+        local resolved = findPartByPath(target)
         if resolved then
-            if resolved:IsA("Model") and resolved.PrimaryPart then
-                pos = resolved.PrimaryPart.Position
-            elseif resolved:IsA("BasePart") then
+            -- If it's a model or part, get the position
+            if resolved:IsA("BasePart") then
                 pos = resolved.Position
+            elseif resolved:IsA("Model") and resolved.PrimaryPart then
+                pos = resolved.PrimaryPart.Position
             end
         end
-    -- If the target is already a vector, treat as direct position
+    -- If the target is already a vector (position)
     elseif typeof(target) == "Vector3" then
         pos = target
-    -- If the target is an instance (like NPCs or models)
-    elseif typeof(target) == "Instance" then
-        if target:IsA("Model") then
-            if target.PrimaryPart then
-                pos = target.PrimaryPart.Position
-            else
-                local part = target:FindFirstChildWhichIsA("BasePart")
-                if part then pos = part.Position end
-            end
-        elseif target:IsA("BasePart") then
-            pos = target.Position
-        end
     end
 
     -- Perform teleportation if a valid position is found
