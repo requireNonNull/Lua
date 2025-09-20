@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.1"
+local VERSION = "v0.2.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -318,19 +318,28 @@ Logic.Status = "Idle"  -- default: Idle, Farming, Waiting, Error, etc.
 -- Helper function to resolve a full path string to an instance
 local function findPartByPath(path)
     local current = game
+    local fullPath = path -- Keep track of the full path being checked
+    
+    -- Iterate over each part in the path string
     for part in string.gmatch(path, "[^%.]+") do
         current = current:FindFirstChild(part)
+        
+        -- If a part doesn't exist at any point, log the failure and return nil
         if not current then
+            if DEBUG_MODE then
+                print("[DEBUG] Failed to find part at:", fullPath)
+            end
             return nil
         end
+        fullPath = fullPath .. "." .. part  -- Add the current part to the full path
     end
     
-    -- Return the final part, which could be a BasePart or Model
+    -- Once the path is resolved, check if it's a BasePart or Model, and return the appropriate part
     if current:IsA("BasePart") or current:IsA("Model") then
         return current
     end
     
-    -- If it's a model, return the primary part or any base part within it
+    -- If it's a model, return the primary part or any base part inside it
     if current:IsA("Model") then
         if current.PrimaryPart then
             return current.PrimaryPart
@@ -340,6 +349,7 @@ local function findPartByPath(path)
         end
     end
 
+    -- If none of the conditions are met, return nil
     return nil
 end
 
@@ -375,7 +385,9 @@ function Logic.TeleportTo(name)
     if pos then
         local char = player.Character or player.CharacterAdded:Wait()
         tpTo(char, pos)
-        if DEBUG_MODE then print("[DEBUG][TP] Teleported to", name, pos) end
+        if DEBUG_MODE then
+            print("[DEBUG][TP] Teleported to", name, pos)
+        end
     else
         warn("[Logic] Failed to resolve teleport target for:", name)
     end
