@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.2"
+local VERSION = "v0.2.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -365,8 +365,19 @@ function Logic.TeleportTo(name)
 
     local pos
 
+    -- Check if the target is an NPC and resolve the NPC's position
+    if typeof(target) == "string" and string.match(name, "^[%a%s]+$") then
+        -- Check if the name corresponds to an NPC in the DynamicNPCs folder
+        local npc = findNpcInstance(name)
+        if npc then
+            if npc:IsA("Model") and npc.PrimaryPart then
+                pos = npc.PrimaryPart.Position
+            elseif npc:IsA("BasePart") then
+                pos = npc.Position
+            end
+        end
     -- If the target is a string (path), resolve it dynamically
-    if typeof(target) == "string" then
+    elseif typeof(target) == "string" then
         local resolved = findPartByPath(target)
         if resolved then
             -- If it's a model or part, get the position
