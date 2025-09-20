@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.3"
+local VERSION = "v0.2.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -319,6 +319,7 @@ Logic.Status = "Idle"  -- default: Idle, Farming, Waiting, Error, etc.
 local function findPartByPath(path)
     local current = game
     local fullPath = path -- Keep track of the full path being checked
+	print("[DEBUG] Attempting to resolve teleport target path:", path)
     
     -- Iterate over each part in the path string
     for part in string.gmatch(path, "[^%.]+") do
@@ -332,6 +333,7 @@ local function findPartByPath(path)
             return nil
         end
         fullPath = fullPath .. "." .. part  -- Add the current part to the full path
+		print("[DEBUG] Set fullPath:", fullPath)
     end
     
     -- Once the path is resolved, check if it's a BasePart or Model, and return the appropriate part
@@ -364,6 +366,9 @@ function Logic.TeleportTo(name)
     end
 
     local pos
+
+	-- Debug the target to see what it's set to
+    print("[DEBUG] Teleport target:", target)
 
     -- Check if the target is an NPC and resolve the NPC's position
     if typeof(target) == "string" and string.match(name, "^[%a%s]+$") then
