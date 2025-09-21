@@ -61,14 +61,14 @@ function farmingLoop()
         local horses = horseFolder:GetChildren()
         if #horses > 0 then
             for _, horse in pairs(horses) do
-                if horse and horse.Name ~= "" and (horse.Name == "Horse" or horse.Name == "Pony") then
+                if horse and horse.Name ~= "" and table.find(validHorseNames, horse.Name) then
                     while horse.Parent == horseFolder do
                         teleportToHorse(horse)
                         moveMouseAndFireEvent(horse)
                         task.wait(0.1)
                     end
                     print("Horse deleted, now checking for DisplayAnimalGui.")
-		                task.wait(0.2)
+                    task.wait(0.2)
                     waitForAnimalGuiToDisable()
                     task.wait(1)  -- Small delay before moving to the next horse
                 end
