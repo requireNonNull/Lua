@@ -71,11 +71,18 @@ function farmingLoop()
                     task.wait(0.2)
                     waitForAnimalGuiToDisable()
                     task.wait(0.1)
-                    local args = {
-                    	"WesternLasso",
-                    	1
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("PurchaseItemRemote"):InvokeServer(unpack(args))
+
+                    -- Debugging: Check if remote exists before firing it
+                    local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("PurchaseItemRemote", 10)
+                    if remote then
+                        local args = {"WesternLasso", 1}
+                        pcall(function()
+                            print("Firing PurchaseItemRemote with args:", args)
+                            remote:InvokeServer(unpack(args))
+                        end)
+                    else
+                        print("PurchaseItemRemote not found!")
+                    end
                     task.wait(1)  -- Small delay before moving to the next horse
                 end
             end
