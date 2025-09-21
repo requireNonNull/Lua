@@ -1,5 +1,5 @@
 local horseFolder = workspace.MobFolder
-local validHorseNames = {"Horse", "Pony"}
+local validHorseNames = {"Gargoyle", "Flora"}
 
 function teleportToHorse(horse)
     if horse and horse:IsA("Part") then
