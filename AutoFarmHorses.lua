@@ -70,6 +70,12 @@ function farmingLoop()
                     print("Horse deleted, now checking for DisplayAnimalGui.")
                     task.wait(0.2)
                     waitForAnimalGuiToDisable()
+                    task.wait(0.1)
+                    local args = {
+                    	"WesternLasso",
+                    	1
+                    }
+                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("PurchaseItemRemote"):InvokeServer(unpack(args))
                     task.wait(1)  -- Small delay before moving to the next horse
                 end
             end
