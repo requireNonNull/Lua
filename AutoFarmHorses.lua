@@ -1,3 +1,5 @@
+-- Version: 1.2.0 - Added delays, fixed teleporting issues, and optimized performance
+
 local horseFolder = workspace.MobFolder
 local validHorseNames = {"Gargoyle", "Flora"}
 
@@ -11,16 +13,24 @@ if not game.Players.LocalPlayer then
     error("Error: LocalPlayer is not found!")
 end
 
--- Function to teleport to horse
+-- Function to teleport to horse with delay
 function teleportToHorse(horse)
     if horse and horse:IsA("Part") then
         local horsePosition = horse.Position
         print("Teleporting to horse at position: " .. tostring(horsePosition))
-        pcall(function() 
-            game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(horsePosition) * CFrame.Angles(0, math.pi, 0))
-        end)
-        wait(0.1)
-        print("Teleported to horse at position: " .. tostring(horsePosition))
+
+        -- Check if character is fully loaded before teleporting
+        local character = game.Players.LocalPlayer.Character
+        if character and character.PrimaryPart then
+            -- Perform the teleportation
+            pcall(function() 
+                character:SetPrimaryPartCFrame(CFrame.new(horsePosition) * CFrame.Angles(0, math.pi, 0))
+            end)
+            wait(0.5)  -- Adding delay after teleporting to avoid immediate action after teleport
+            print("Teleported to horse at position: " .. tostring(horsePosition))
+        else
+            print("Error: Character or PrimaryPart is missing!")
+        end
     else
         print("Error in teleportToHorse: Horse is not a valid Part.")
     end
@@ -34,18 +44,22 @@ function moveMouseAndFireEvent(horse)
             local screenPosition = camera:WorldToScreenPoint(horse.Position)
             if isrbxactive() then
                 print("Moving mouse to: " .. tostring(screenPosition))
+
+                -- Wrap the mouse move and event firing in a single pcall
                 pcall(function() 
                     mousemoveabs(screenPosition.X, screenPosition.Y)
                 end)
 
                 local tameEvent = horse:FindFirstChild("TameEvent")
                 if tameEvent then
+                    -- Fire BeginAggro event
                     local args = {"BeginAggro"}
                     pcall(function() 
                         tameEvent:FireServer(unpack(args))
                         print("Fired BeginAggro event.")
                     end)
-                    wait(1)
+                    wait(1)  -- Wait between events
+                    -- Fire SuccessfulFeed event
                     local args = {"SuccessfulFeed"}
                     pcall(function() 
                         tameEvent:FireServer(unpack(args))
@@ -81,7 +95,7 @@ end
 
 -- Main farming loop
 function farmingLoop()
-    print("Starting farming loop - Version 1.1.2")
+    print("Starting farming loop - Version 1.2.2")
 
     while true do
         local horses = horseFolder:GetChildren()
@@ -99,13 +113,10 @@ function farmingLoop()
                     print("Valid horse found: " .. horse.Name)
 
                     while horse.Parent == horseFolder do
-                        pcall(function()  -- Wrap this in pcall to handle any errors that arise
-                            teleportToHorse(horse)
-                        end)
-                        pcall(function()  -- Wrap this in pcall to handle any errors that arise
-                            moveMouseAndFireEvent(horse)
-                        end)
-                        task.wait(0.1)
+                        -- Ensure delay between teleport and events to avoid overloading
+                        teleportToHorse(horse)  -- teleport to horse
+                        moveMouseAndFireEvent(horse)  -- fire events
+                        task.wait(1)  -- Added a longer wait to avoid overloading the game
                     end
 
                     print("Horse deleted, now checking for DisplayAnimalGui.")
@@ -135,3 +146,4 @@ end
 
 -- Start the farming loop
 farmingLoop()
+
