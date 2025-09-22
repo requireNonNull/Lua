@@ -1,4 +1,4 @@
-local VERSION = "v0.2.4"
+local VERSION = "v0.2.5"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -763,20 +763,31 @@ end
 
 -- === Horses Section ===
 addSection("Horses")
-local validHorses = { "Gargoyle", "Flora" }  -- add more names here if needed
+local validHorses = { "Gargoyle", "Flora" }  -- add more names here
 
 for _, horseName in ipairs(validHorses) do
-    local btn = createButton("Farm " .. horseName, farmingFrame)
-    btn.LayoutOrder = #farmingFrame:GetChildren() + 1
-    btn.MouseButton1Click:Connect(function()
-        -- Use pcall so UI never hard-crashes
-        local ok, err = pcall(function()
+    -- Create a *task name* that identifies this specific horse
+    -- e.g. "Horse:Gargoyle" or "Horse:Flora"
+    local taskName = "Horse:" .. horseName
+
+    -- Register a thin wrapper in Logic.Resources so attachFarmButton works
+    Logic.Resources[taskName] = {
+        start = function()
+            -- This is the call that actually farms the specific horse
             Logic.Resources["HorseFarming"].start(horseName)
-        end)
-        if not ok then
-            warn("[UI] Failed to start HorseFarming for " .. horseName .. ":", err)
+        end,
+        stop = function()
+            Logic.Resources["HorseFarming"].stop()
+        end,
+        toggle = function()
+            Logic.Resources["HorseFarming"].toggle()
         end
-    end)
+    }
+
+    -- Now create a UI button and attach it like any other resource
+    local btn = createButton("Farm " .. horseName, farmingFrame)
+    attachFarmButton(btn, taskName)
+    btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
 
 -- === Coins Section ===
