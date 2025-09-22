@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.6"
+local VERSION = "v0.2.7"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -132,6 +132,10 @@ local function farmingLoop()
 
 		local char = player.Character or player.CharacterAdded:Wait()
 		local current = Farmer.Mode
+		if current == "HorseFarming" then
+		    task.wait(0.2)
+		    continue
+		end
 		local timeout = resourceTimeouts[current] or 10
 		local folder = resourcePaths[current]
 
@@ -572,15 +576,21 @@ do
         if DEBUG_MODE then print("[HorseFarming] Fired Tame Events for:", horse.Name) end
     end
 
-    local function waitForAnimalGuiToDisable()
-        local playerGui = player:WaitForChild("PlayerGui")
-        while playerGui:FindFirstChild("DisplayAnimalGui") and playerGui.DisplayAnimalGui.Enabled do
-            task.wait(0.1)
-        end
-        if not playerGui:FindFirstChild("DisplayAnimalGui") then
-            task.wait(1)
-        end
-    end
+	local function waitForAnimalGuiToDisable()
+	    local playerGui = player:WaitForChild("PlayerGui")
+	    local gui = playerGui:FindFirstChild("DisplayAnimalGui")
+	
+	    if not gui then
+	        return -- nothing to wait for
+	    end
+	
+	    -- Wait until it either disables or disappears
+	    while gui and gui.Parent and gui.Enabled do
+	        task.wait(0.1)
+	        gui = playerGui:FindFirstChild("DisplayAnimalGui") -- recheck each loop
+	    end
+	end
+
 
     local function randomHorseTeleport()
         -- reuse existing teleportSpots
