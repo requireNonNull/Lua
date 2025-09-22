@@ -1,4 +1,4 @@
-local VERSION = "v0.3.2"
+local VERSION = "v0.3.4"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -774,42 +774,42 @@ end
 -- === Horses Section ===
 addSection("Horses")
 
-local validHorses = { "Gargoyle", "Flora" }  -- add more horse names if needed
+local validHorses = { "Gargoyle", "Flora" }
 
 local function makeHorseButton(horseName)
     local btn = createButton("Farm " .. horseName, farmingFrame)
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 
     btn.MouseButton1Click:Connect(function()
-        -- mark the UI as running the HorseFarming task
-        ui.CurrentResource = "HorseFarming"
+        if ui.TaskActive then return end
         ui.TaskActive = true
+        ui.CurrentResource = "HorseFarming"
 
-        -- update UI visuals to show running state
+        -- UI visuals (same as attachFarmButton)
         ui.CloseButton.Visible = false
         ui.MinimizeButton.Visible = false
         ui.StopButton.Visible = true
         ui.taskToggleButton.Visible = true
         ui.taskToggleButton.Text = "⏸️"
-
         if not ui.Minimized then
             ui.Minimized = true
-            ui.Status = "Minimized"
+            FarmUI.Status = "Minimized"
             local targetW = math.max(ui.MinWidth, ui.Outline.Size.X.Offset)
             TweenService:Create(ui.Outline, TweenInfo.new(0.3),
                 { Size = UDim2.new(0, targetW, 0, 50) }):Play()
             ui.TabsContainer.Visible = false
         end
 
-        -- safe call into Logic to start horse farming
+        -- start horse farming (protected)
         local ok, err = pcall(function()
             local horseLogic = Logic.Resources and Logic.Resources["HorseFarming"]
             assert(horseLogic, "HorseFarming not found in Logic.Resources")
             horseLogic.start(horseName)
         end)
+
         if not ok then
             warn("[UI] Failed to start HorseFarming:", err)
-            -- revert UI state so it doesn't stay stuck
+            -- revert UI state
             ui.TaskActive = false
             ui.CurrentResource = nil
             ui.CloseButton.Visible = true
