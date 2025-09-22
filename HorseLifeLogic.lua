@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.3.1"
+local VERSION = "v0.3.2"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -134,7 +134,7 @@ local function farmingLoop()
 		local char = player.Character or player.CharacterAdded:Wait()
 		local current = Farmer.Mode
 		-- ✅ Skip any horse names
-		if table.find(validHorseNames, current) then
+		if current == "HorseFarming" then
 		    task.wait(0.2)
 		    continue
 		end
