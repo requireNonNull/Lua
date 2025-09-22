@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.3.4"
+local VERSION = "v0.3.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -525,23 +525,22 @@ for _, resourceName in ipairs(Logic.ResourceList) do
 end
 
 -- ==========================
--- Horse Farming Logic
+-- Horse Farming Logic (Hardened)
 -- ==========================
 do
-    local horseFolder = workspace:FindFirstChild("MobFolder")
+    -- do NOT cache horseFolder forever; re-resolve inside the loop
     local validHorseNames = { "Gargoyle", "Flora" }
 
     -- Which horse the user selected (nil = any valid horse)
     Logic.TargetHorse = nil
 
-    if horseFolder then
-        print("[HorseFarming] MobFolder found:", horseFolder:GetFullName())
-    else
-        warn("[HorseFarming] MobFolder NOT found!")
+    -- Helpers
+    local function getHorseFolder()
+        return workspace:FindFirstChild("MobFolder")
     end
 
-    -- Helpers
     local function teleportToHorse(horse)
+        if not horse or not horse.Parent then return end
         local part
         if horse:IsA("BasePart") then
             part = horse
@@ -553,56 +552,77 @@ do
         if not part then return end
 
         local char = player.Character or player.CharacterAdded:Wait()
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            pcall(function() tpTo(char, part.Position, 3) end)
-            if DEBUG_MODE then print("[HorseFarming] TP to:", horse.Name) end
-            safeWait(0.5)
-        end
+        if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
+        pcall(function() tpTo(char, part.Position, 3) end)
+        if DEBUG_MODE then print("[HorseFarming] Teleported to:", horse.Name) end
+        safeWait(0.4)
     end
 
     local function fireTameEvents(horse)
-        local ev = horse:FindFirstChild("TameEvent")
-        if not ev then return end
-        pcall(function() ev:FireServer("BeginAggro") end)
-        safeWait(1)
-        pcall(function() ev:FireServer("SuccessfulFeed") end)
-        if DEBUG_MODE then print("[HorseFarming] Tamed:", horse.Name) end
-    end
-
-local function waitForAnimalGuiToDisable(timeout)
-    timeout = timeout or 10  -- seconds to wait before giving up
-    local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
-    if not playerGui then return end
-
-    local start = tick()
-    while tick() - start < timeout do
-        local gui = playerGui:FindFirstChild("DisplayAnimalGui")
-        if not gui or not gui.Parent or not gui:IsA("ScreenGui") or not gui.Enabled then
-            return  -- ✅ either it disappeared or was never there
+        if not horse or not horse.Parent then return end
+        local tameEvent = horse:FindFirstChild("TameEvent")
+        if not (tameEvent and tameEvent.Parent) then
+            if DEBUG_MODE then warn("[HorseFarming] TameEvent missing for:", horse and horse.Name) end
+            return
         end
-        task.wait(0.1)
+        -- defensive pcall and parent checks between calls
+        pcall(function()
+            if tameEvent and tameEvent.Parent then tameEvent:FireServer("BeginAggro") end
+        end)
+        safeWait(0.9)
+        pcall(function()
+            if tameEvent and tameEvent.Parent then tameEvent:FireServer("SuccessfulFeed") end
+        end)
+        if DEBUG_MODE then print("[HorseFarming] Fired tame events for:", horse.Name) end
     end
 
-    -- ⏳ Timeout reached – no GUI appeared or it never disabled
-    if DEBUG_MODE then warn("[HorseFarming] No AnimalGui within timeout") end
-	end
-	
+    local function waitForAnimalGuiToDisable(timeout)
+        timeout = timeout or 6
+        local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
+        if not playerGui then return end
+
+        local start = tick()
+        while tick() - start < timeout do
+            -- bail early if the task was stopped externally
+            if not Farmer.Running or Farmer.Mode ~= "HorseFarming" then
+                if DEBUG_MODE then print("[HorseFarming] waitForAnimalGuiToDisable aborted by stop") end
+                return
+            end
+
+            local gui = playerGui:FindFirstChild("DisplayAnimalGui")
+            if not gui or not gui.Parent or not gui:IsA("ScreenGui") or not gui.Enabled then
+                return
+            end
+            task.wait(0.1)
+        end
+
+        -- timed out
+        if DEBUG_MODE then warn("[HorseFarming] waitForAnimalGuiToDisable timed out after " .. tostring(timeout) .. "s") end
+    end
+
     local function randomHorseTeleport()
         local char = player.Character or player.CharacterAdded:Wait()
         randomTeleport(char)
     end
 
-    -- Main Horse Farming Loop
+    -- Main horse farming loop (resilient)
     local function horseFarmLoop()
         while true do
+            -- small yield so this thread doesn't hog CPU
+            task.wait(0.1)
+
+            -- run only if horse farming is the active mode
             if not Farmer.Running or Farmer.Mode ~= "HorseFarming" then
                 task.wait(0.2)
                 continue
             end
 
+            -- re-resolve folder each cycle (it might be recreated)
+            local horseFolder = getHorseFolder()
             if not horseFolder then
                 Logic.Status = "[HorseFarming] MobFolder missing!"
-                safeWait(2)
+                if DEBUG_MODE then warn("[HorseFarming] MobFolder not found, retrying...") end
+                safeWait(1.5)
                 continue
             end
 
@@ -610,52 +630,81 @@ local function waitForAnimalGuiToDisable(timeout)
             if #horses == 0 then
                 Logic.Status = "Waiting for horses..."
                 randomHorseTeleport()
-                safeWait(5)
+                safeWait(3)
                 continue
             end
 
+            -- iterate snapshot; check validity frequently
             for _, horse in ipairs(horses) do
                 if not Farmer.Running or Farmer.Mode ~= "HorseFarming" then break end
+                if not horse or not horse.Parent then
+                    safeWait(0.05)
+                    continue
+                end
 
-                if table.find(validHorseNames, horse.Name)
-                and (not Logic.TargetHorse or Logic.TargetHorse == horse.Name) then
+                -- only valid horse names, and match target if set
+                if table.find(validHorseNames, horse.Name) and (not Logic.TargetHorse or Logic.TargetHorse == horse.Name) then
                     Logic.Status = "Taming: " .. horse.Name
 
-                    while horse.Parent == horseFolder
-                    and Farmer.Running
-                    and Farmer.Mode == "HorseFarming" do
+                    -- attempt to tame until the horse is gone or stopped
+                    local attemptStart = tick()
+                    while horse.Parent == horseFolder and Farmer.Running and Farmer.Mode == "HorseFarming" do
+                        -- safety: break long runs occasionally to let other tasks run
+                        if tick() - attemptStart > 40 then
+                            -- too long on the same horse, break and try next (avoid infinite loops)
+                            if DEBUG_MODE then warn("[HorseFarming] Giving up on horse after 40s:", horse.Name) end
+                            break
+                        end
+
+                        -- guard against horse being removed mid-run
+                        if not horse or not horse.Parent then break end
+
                         teleportToHorse(horse)
                         fireTameEvents(horse)
-                        safeWait(1)
+
+                        -- after firing events, some servers update DisplayAnimalGui or remove horse.
+                        -- wait a short time, but bail quickly if stop requested.
+                        for i = 1, 10 do
+                            if not (Farmer.Running and Farmer.Mode == "HorseFarming") then break end
+                            task.wait(0.15)
+                        end
                     end
 
-                    waitForAnimalGuiToDisable()
+                    -- wait for GUI to close (timeout-safe)
+                    waitForAnimalGuiToDisable(6)
+
+                    -- small pause before proceeding
                     safeWait(0.2)
                 end
             end
         end
     end
+
     task.spawn(horseFarmLoop)
 
     -- Logic API
-	Logic.Resources["HorseFarming"] = {
-	    start = function(targetHorse)
-	        Logic.TargetHorse = targetHorse or nil
-	        Logic.start("HorseFarming")
-	    end,
-	    stop = function()
-	        Logic.TargetHorse = nil
-	        Logic.stop()
-	    end,
-	    toggle = function(targetHorse)
-	        if Farmer.Running and Farmer.Mode == "HorseFarming" then
-	            Logic.Resources["HorseFarming"].stop()
-	        else
-	            Logic.Resources["HorseFarming"].start(targetHorse)
-	        end
-	    end
-	}
-	end
+    Logic.Resources["HorseFarming"] = {
+        start = function(targetHorse)
+            -- set target then start the HorseFarming mode
+            Logic.TargetHorse = targetHorse or nil
+            -- ensure we set the generic mode to HorseFarming (UI expects this)
+            Logic.start("HorseFarming")
+            if DEBUG_MODE then print("[HorseFarming] Requested start for:", tostring(targetHorse)) end
+        end,
+        stop = function()
+            Logic.TargetHorse = nil
+            Logic.stop()
+            if DEBUG_MODE then print("[HorseFarming] stop requested") end
+        end,
+        toggle = function(targetHorse)
+            if Farmer.Running and Farmer.Mode == "HorseFarming" then
+                Logic.Resources["HorseFarming"].stop()
+            else
+                Logic.Resources["HorseFarming"].start(targetHorse)
+            end
+        end
+    }
+end
 
 -- ==========================
 -- Export
