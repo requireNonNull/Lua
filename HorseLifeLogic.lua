@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.5"
+local VERSION = "v0.2.6"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -18,6 +18,8 @@ local TeleportDelay = 0.5 -- Default delay
 -- ==========================
 -- Helpers
 -- ==========================
+
+
 local function safeWait(base)
 	if safeModeEnabled then
 		task.wait(base + math.random() * 0.5)
@@ -472,6 +474,13 @@ function Logic.SetTpDelay(delay)
 	end
 end
 
+Logic.TargetHorse = nil
+
+function Logic.RandomHorseTeleport()
+    local char = player.Character or player.CharacterAdded:Wait()
+    randomTeleport(char) -- reuses the teleportSpots + tpTo
+end
+
 function Logic.GetVersion()
     return VERSION
 end
@@ -511,9 +520,15 @@ end
 -- ==========================
 -- Add to the bottom of your Logic Module
 -- ==========================
+-- ==========================
+-- Horse Farming (specific horse support + random teleports)
+-- ==========================
 do
     local horseFolder = workspace:FindFirstChild("MobFolder")
-    local validHorseNames = {"Gargoyle", "Flora"}
+    local validHorseNames = { "Gargoyle", "Flora" }
+
+    -- Track which horse (if any) the user wants to farm
+    Logic.TargetHorse = nil -- nil = farm ANY valid horse
 
     if horseFolder then
         print("[HorseFarming] horseFolder found:", horseFolder:GetFullName())
@@ -521,15 +536,24 @@ do
         warn("[HorseFarming] horseFolder NOT found!")
     end
 
-    -- Helpers
+    -- === Helpers ===
     local function teleportToHorse(horse)
-        if not horse or not horse:IsA("BasePart") then return end
+        if not horse then return end
+        local part
+        if horse:IsA("BasePart") then
+            part = horse
+        elseif horse.PrimaryPart then
+            part = horse.PrimaryPart
+        else
+            part = horse:FindFirstChildWhichIsA("BasePart")
+        end
+        if not part then return end
+
         local char = player.Character or player.CharacterAdded:Wait()
         if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
 
-        local pos = horse.Position
         pcall(function()
-            tpTo(char, pos, 3) -- reuse Logic's tp with random offset + slight height
+            tpTo(char, part.Position, 3) -- slight height offset
         end)
         if DEBUG_MODE then print("[HorseFarming] Teleported to horse:", horse.Name) end
         safeWait(0.5)
@@ -558,6 +582,13 @@ do
         end
     end
 
+    local function randomHorseTeleport()
+        -- reuse existing teleportSpots
+        local char = player.Character or player.CharacterAdded:Wait()
+        randomTeleport(char)
+    end
+
+    -- === Main Loop ===
     local function horseFarmLoop()
         while true do
             if not Farmer.Running or Farmer.Mode ~= "HorseFarming" then
@@ -574,15 +605,24 @@ do
             local horses = horseFolder:GetChildren()
             if #horses == 0 then
                 Logic.Status = "Waiting for horses to spawn..."
+                randomHorseTeleport()      -- NEW: roam while waiting
                 safeWait(5)
                 continue
             end
 
             for _, horse in ipairs(horses) do
                 if not Farmer.Running or Farmer.Mode ~= "HorseFarming" then break end
-                if table.find(validHorseNames, horse.Name) then
+
+                -- Must be a valid horse, and match target if set
+                if table.find(validHorseNames, horse.Name)
+                and (not Logic.TargetHorse or Logic.TargetHorse == horse.Name) then
+
                     Logic.Status = "Taming: " .. horse.Name
-                    while horse.Parent == horseFolder and Farmer.Running and Farmer.Mode == "HorseFarming" do
+
+                    -- Loop until this horse disappears or farming stops
+                    while horse.Parent == horseFolder
+                    and Farmer.Running
+                    and Farmer.Mode == "HorseFarming" do
                         teleportToHorse(horse)
                         fireTameEvents(horse)
                         safeWait(1)
@@ -606,13 +646,26 @@ do
 
     task.spawn(horseFarmLoop)
 
-    -- Add to Logic API
+    -- === Logic API ===
     Logic.Resources["HorseFarming"] = {
-        start = function() Logic.start("HorseFarming") end,
-        stop = Logic.stop,
-        toggle = function() Logic.toggle("HorseFarming") end
+        start = function(targetHorse)
+            Logic.TargetHorse = targetHorse or nil -- pass name or nil for any
+            Logic.start("HorseFarming")
+        end,
+        stop = function()
+            Logic.TargetHorse = nil
+            Logic.stop()
+        end,
+        toggle = function(targetHorse)
+            if Farmer.Running and Farmer.Mode == "HorseFarming" then
+                Logic.Resources["HorseFarming"].stop()
+            else
+                Logic.Resources["HorseFarming"].start(targetHorse)
+            end
+        end
     }
 
+    -- Add to resource list for UI building
     table.insert(Logic.ResourceList, "HorseFarming")
 end
 
