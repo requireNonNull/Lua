@@ -1,4 +1,4 @@
-local VERSION = "v0.2.3"
+local VERSION = "v0.2.4"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -761,12 +761,21 @@ local function addSection(title)
     return header
 end
 
+-- === Horses Section ===
 addSection("Horses")
-for _, horseName in ipairs({ "Gargoyle", "Flora" }) do
+local validHorses = { "Gargoyle", "Flora" }  -- add more names here if needed
+
+for _, horseName in ipairs(validHorses) do
     local btn = createButton("Farm " .. horseName, farmingFrame)
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
     btn.MouseButton1Click:Connect(function()
-        Logic.Resources["HorseFarming"].start(horseName)
+        -- Use pcall so UI never hard-crashes
+        local ok, err = pcall(function()
+            Logic.Resources["HorseFarming"].start(horseName)
+        end)
+        if not ok then
+            warn("[UI] Failed to start HorseFarming for " .. horseName .. ":", err)
+        end
     end)
 end
 
