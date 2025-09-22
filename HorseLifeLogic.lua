@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.7"
+local VERSION = "v0.2.8"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -577,20 +577,19 @@ do
     end
 
 	local function waitForAnimalGuiToDisable()
-	    local playerGui = player:WaitForChild("PlayerGui")
-	    local gui = playerGui:FindFirstChild("DisplayAnimalGui")
+	    -- Always re-fetch PlayerGui each call
+	    local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
+	    if not playerGui then return end
 	
-	    if not gui then
-	        return -- nothing to wait for
-	    end
-	
-	    -- Wait until it either disables or disappears
-	    while gui and gui.Parent and gui.Enabled do
+	    -- Loop until the GUI is gone or disabled
+	    while true do
+	        local gui = playerGui:FindFirstChild("DisplayAnimalGui")
+	        if not gui or not gui.Parent or not gui:IsA("ScreenGui") or not gui.Enabled then
+	            break
+	        end
 	        task.wait(0.1)
-	        gui = playerGui:FindFirstChild("DisplayAnimalGui") -- recheck each loop
 	    end
 	end
-
 
     local function randomHorseTeleport()
         -- reuse existing teleportSpots
@@ -657,23 +656,27 @@ do
     task.spawn(horseFarmLoop)
 
     -- === Logic API ===
-    Logic.Resources["HorseFarming"] = {
-        start = function(targetHorse)
-            Logic.TargetHorse = targetHorse or nil -- pass name or nil for any
-            Logic.start("HorseFarming")
-        end,
-        stop = function()
-            Logic.TargetHorse = nil
-            Logic.stop()
-        end,
-        toggle = function(targetHorse)
-            if Farmer.Running and Farmer.Mode == "HorseFarming" then
-                Logic.Resources["HorseFarming"].stop()
-            else
-                Logic.Resources["HorseFarming"].start(targetHorse)
-            end
+Logic.Resources["HorseFarming"] = {
+    start = function(targetHorse)
+        if not workspace:FindFirstChild("MobFolder") then
+            warn("[HorseFarming] Cannot start: MobFolder missing")
+            return
         end
-    }
+        Logic.TargetHorse = targetHorse or nil
+        Logic.start("HorseFarming")
+    end,
+    stop = function()
+        Logic.TargetHorse = nil
+        Logic.stop()
+    end,
+    toggle = function(targetHorse)
+        if Farmer.Running and Farmer.Mode == "HorseFarming" then
+            Logic.Resources["HorseFarming"].stop()
+        else
+            Logic.Resources["HorseFarming"].start(targetHorse)
+        end
+    end
+}
 
     -- Add to resource list for UI building
     table.insert(Logic.ResourceList, "HorseFarming")
