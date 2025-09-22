@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.4"
+local VERSION = "v0.2.5"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -506,6 +506,114 @@ for _, resourceName in ipairs(Logic.ResourceList) do
 		stop = Logic.stop,
 		toggle = function() Logic.toggle(resourceName) end
 	}
+end
+
+-- ==========================
+-- Add to the bottom of your Logic Module
+-- ==========================
+do
+    local horseFolder = workspace:FindFirstChild("MobFolder")
+    local validHorseNames = {"Gargoyle", "Flora"}
+
+    if horseFolder then
+        print("[HorseFarming] horseFolder found:", horseFolder:GetFullName())
+    else
+        warn("[HorseFarming] horseFolder NOT found!")
+    end
+
+    -- Helpers
+    local function teleportToHorse(horse)
+        if not horse or not horse:IsA("BasePart") then return end
+        local char = player.Character or player.CharacterAdded:Wait()
+        if not (char and char:FindFirstChild("HumanoidRootPart")) then return end
+
+        local pos = horse.Position
+        pcall(function()
+            tpTo(char, pos, 3) -- reuse Logic's tp with random offset + slight height
+        end)
+        if DEBUG_MODE then print("[HorseFarming] Teleported to horse:", horse.Name) end
+        safeWait(0.5)
+    end
+
+    local function fireTameEvents(horse)
+        if not horse then return end
+        local tameEvent = horse:FindFirstChild("TameEvent")
+        if not tameEvent then
+            if DEBUG_MODE then warn("[HorseFarming] No TameEvent for horse:", horse.Name) end
+            return
+        end
+        pcall(function() tameEvent:FireServer("BeginAggro") end)
+        safeWait(1)
+        pcall(function() tameEvent:FireServer("SuccessfulFeed") end)
+        if DEBUG_MODE then print("[HorseFarming] Fired Tame Events for:", horse.Name) end
+    end
+
+    local function waitForAnimalGuiToDisable()
+        local playerGui = player:WaitForChild("PlayerGui")
+        while playerGui:FindFirstChild("DisplayAnimalGui") and playerGui.DisplayAnimalGui.Enabled do
+            task.wait(0.1)
+        end
+        if not playerGui:FindFirstChild("DisplayAnimalGui") then
+            task.wait(1)
+        end
+    end
+
+    local function horseFarmLoop()
+        while true do
+            if not Farmer.Running or Farmer.Mode ~= "HorseFarming" then
+                task.wait(0.2)
+                continue
+            end
+
+            if not horseFolder then
+                Logic.Status = "[HorseFarming] horseFolder missing!"
+                safeWait(2)
+                continue
+            end
+
+            local horses = horseFolder:GetChildren()
+            if #horses == 0 then
+                Logic.Status = "Waiting for horses to spawn..."
+                safeWait(5)
+                continue
+            end
+
+            for _, horse in ipairs(horses) do
+                if not Farmer.Running or Farmer.Mode ~= "HorseFarming" then break end
+                if table.find(validHorseNames, horse.Name) then
+                    Logic.Status = "Taming: " .. horse.Name
+                    while horse.Parent == horseFolder and Farmer.Running and Farmer.Mode == "HorseFarming" do
+                        teleportToHorse(horse)
+                        fireTameEvents(horse)
+                        safeWait(1)
+                    end
+
+                    waitForAnimalGuiToDisable()
+                    safeWait(0.2)
+
+                    -- Optional purchase remote after taming
+                    local remote = safeFind("ReplicatedStorage.Remotes.PurchaseItemRemote")
+                    if remote then
+                        pcall(function()
+                            remote:InvokeServer("WesternLasso", 1)
+                        end)
+                        if DEBUG_MODE then print("[HorseFarming] Purchased WesternLasso") end
+                    end
+                end
+            end
+        end
+    end
+
+    task.spawn(horseFarmLoop)
+
+    -- Add to Logic API
+    Logic.Resources["HorseFarming"] = {
+        start = function() Logic.start("HorseFarming") end,
+        stop = Logic.stop,
+        toggle = function() Logic.toggle("HorseFarming") end
+    }
+
+    table.insert(Logic.ResourceList, "HorseFarming")
 end
 
 -- ==========================
