@@ -1,4 +1,4 @@
-local VERSION = "v0.2.9"
+local VERSION = "v0.3.0"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -761,26 +761,59 @@ local function addSection(title)
     return header
 end
 
+-- inside your UI file, where `self` is the FarmUI instance
+local function makeHorseButton(horseName)
+    local btn = createButton("Farm " .. horseName, farmingFrame)
+    btn.LayoutOrder = #farmingFrame:GetChildren() + 1
+
+    btn.MouseButton1Click:Connect(function()
+        -- mark the UI as running the HorseFarming task
+        self.CurrentResource = "HorseFarming"
+        self.TaskActive = true
+
+        -- update UI visuals to show running state (same as attachFarmButton)
+        self.CloseButton.Visible = false
+        self.MinimizeButton.Visible = false
+        self.StopButton.Visible = true
+        self.taskToggleButton.Visible = true
+        self.taskToggleButton.Text = "⏸️"
+        if not self.Minimized then
+            self.Minimized = true
+            FarmUI.Status = "Minimized"
+            local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
+            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
+            self.TabsContainer.Visible = false
+        end
+
+        -- call horse start in a protected call so UI doesn't crash
+        local ok, err = pcall(function()
+            Logic.Resources["HorseFarming"].start(horseName)
+        end)
+        if not ok then
+            warn("[UI] Failed to start HorseFarming:", err)
+            -- revert UI state
+            self.TaskActive = false
+            self.CurrentResource = nil
+            self.CloseButton.Visible = true
+            self.MinimizeButton.Visible = true
+            self.StopButton.Visible = false
+            self.taskToggleButton.Visible = false
+        end
+    end)
+
+    return btn
+end
+
 -- === Horses Section ===
 addSection("Horses")
 
 -- List the horses you want buttons for
 local validHorses = { "Gargoyle", "Flora" }  -- add more names here
 
-for _, horseName in ipairs(validHorses) do
-    -- Create the button with a friendly label
-    local btn = createButton("Farm " .. horseName, farmingFrame)
-    btn.LayoutOrder = #farmingFrame:GetChildren() + 1
-
-    -- When clicked, set the current resource and start HorseFarming
-    btn.MouseButton1Click:Connect(function()
-        -- Tell the main UI that HorseFarming is the active resource
-        -- so your ⏸️/▶️ toggle button can stop/start it correctly
-        ui.CurrentResource = "HorseFarming"
-
-        -- Start farming this specific horse
-        Logic.Resources["HorseFarming"].start(horseName)
-    end)
+-- create buttons:
+for _, h in ipairs(validHorses) do
+    local b = makeHorseButton(h)
+end
 end
 
 -- === Coins Section ===
