@@ -1,4 +1,4 @@
-local VERSION = "v0.2.6"
+local VERSION = "v0.2.7"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -787,7 +787,7 @@ for _, horseName in ipairs(validHorses) do
 
     -- Create the UI button and attach it to the Logic.Resources wrapper
     local btn = createButton(displayName, farmingFrame)
-    attachFarmButton(btn, displayName)
+    attachFarmButton(btn, horseName)
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
 
