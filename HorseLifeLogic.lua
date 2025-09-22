@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.3.3"
+local VERSION = "v0.3.4"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -569,16 +569,24 @@ do
         if DEBUG_MODE then print("[HorseFarming] Tamed:", horse.Name) end
     end
 
-    local function waitForAnimalGuiToDisable()
-        local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
-        if not playerGui then return end
-        while true do
-            local gui = playerGui:FindFirstChild("DisplayAnimalGui")
-            if not gui or not gui.Enabled then break end
-            task.wait(0.1)
+local function waitForAnimalGuiToDisable(timeout)
+    timeout = timeout or 10  -- seconds to wait before giving up
+    local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
+    if not playerGui then return end
+
+    local start = tick()
+    while tick() - start < timeout do
+        local gui = playerGui:FindFirstChild("DisplayAnimalGui")
+        if not gui or not gui.Parent or not gui:IsA("ScreenGui") or not gui.Enabled then
+            return  -- ✅ either it disappeared or was never there
         end
+        task.wait(0.1)
     end
 
+    -- ⏳ Timeout reached – no GUI appeared or it never disabled
+    if DEBUG_MODE then warn("[HorseFarming] No AnimalGui within timeout") end
+	end
+	
     local function randomHorseTeleport()
         local char = player.Character or player.CharacterAdded:Wait()
         randomTeleport(char)
