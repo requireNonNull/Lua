@@ -1,4 +1,4 @@
-local VERSION = "v0.2.8"
+local VERSION = "v0.2.9"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -776,7 +776,7 @@ for _, horseName in ipairs(validHorses) do
     btn.MouseButton1Click:Connect(function()
         -- Tell the main UI that HorseFarming is the active resource
         -- so your ⏸️/▶️ toggle button can stop/start it correctly
-        self.CurrentResource = "HorseFarming"
+        ui.CurrentResource = "HorseFarming"
 
         -- Start farming this specific horse
         Logic.Resources["HorseFarming"].start(horseName)
