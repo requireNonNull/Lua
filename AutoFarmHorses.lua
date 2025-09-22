@@ -4,11 +4,12 @@ local validHorseNames = {"Gargoyle", "Flora"}
 function teleportToHorse(horse)
     if horse and horse:IsA("Part") then
         local horsePosition = horse.Position
+        print("Teleporting to horse at position: " .. tostring(horsePosition))
         game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(horsePosition) * CFrame.Angles(0, math.pi, 0))
         wait(0.1)
         print("Teleported to horse at position: " .. tostring(horsePosition))
     else
-        print("Horse is not a valid Part.")
+        print("Error in teleportToHorse: Horse is not a valid Part.")
     end
 end
 
@@ -18,8 +19,9 @@ function moveMouseAndFireEvent(horse)
         if camera then
             local screenPosition = camera:WorldToScreenPoint(horse.Position)
             if isrbxactive() then
-                mousemoveabs(screenPosition.X, screenPosition.Y)
                 print("Moving mouse to: " .. tostring(screenPosition))
+                mousemoveabs(screenPosition.X, screenPosition.Y)
+                
                 local tameEvent = horse:FindFirstChild("TameEvent")
                 if tameEvent then
                     local args = {"BeginAggro"}
@@ -30,16 +32,16 @@ function moveMouseAndFireEvent(horse)
                     tameEvent:FireServer(unpack(args))
                     print("Fired SuccessfulFeed event.")
                 else
-                    print("TameEvent not found on horse.")
+                    print("Error in moveMouseAndFireEvent: TameEvent not found on horse.")
                 end
             else
-                print("Roblox is not in focus, cannot perform actions.")
+                print("Error in moveMouseAndFireEvent: Roblox is not in focus, cannot perform actions.")
             end
         else
-            print("Camera is not available.")
+            print("Error in moveMouseAndFireEvent: Camera is not available.")
         end
     else
-        print("Horse is not a valid Part.")
+        print("Error in moveMouseAndFireEvent: Horse is not a valid Part.")
     end
 end
 
@@ -57,20 +59,29 @@ function waitForAnimalGuiToDisable()
 end
 
 function farmingLoop()
+    print("Starting farming loop - Version 1.1.0")
+    
     while true do
         local horses = horseFolder:GetChildren()
+        print("Checking for horses, found: " .. #horses)
         
         -- If no horses are found, wait longer to prevent the loop from spamming
         if #horses == 0 then
+            print("No horses found. Waiting for 5 seconds.")
             task.wait(5)  -- Wait for new horses if none are found
         else
             for _, horse in pairs(horses) do
+                print("Checking horse: " .. horse.Name)
+
                 if horse and horse.Name ~= "" and table.find(validHorseNames, horse.Name) then
+                    print("Valid horse found: " .. horse.Name)
+
                     while horse.Parent == horseFolder do
                         teleportToHorse(horse)
                         moveMouseAndFireEvent(horse)
                         task.wait(0.1)
                     end
+
                     print("Horse deleted, now checking for DisplayAnimalGui.")
                     task.wait(0.2)
                     waitForAnimalGuiToDisable()
@@ -88,6 +99,8 @@ function farmingLoop()
                         print("PurchaseItemRemote not found!")
                     end
                     task.wait(1)  -- Small delay before moving to the next horse
+                else
+                    print("Horse is not valid or not in the valid list.")
                 end
             end
         end
