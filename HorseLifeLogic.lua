@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.9"
+local VERSION = "v0.3.0"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -14,6 +14,7 @@ local Farmer = { Running = false, Mode = nil }
 
 local safeModeEnabled = false
 local TeleportDelay = 0.5 -- Default delay
+local validHorseNames = { "Gargoyle", "Flora" }
 
 -- ==========================
 -- Helpers
@@ -132,7 +133,8 @@ local function farmingLoop()
 
 		local char = player.Character or player.CharacterAdded:Wait()
 		local current = Farmer.Mode
-		if current == "HorseFarming" then
+		-- ✅ Skip any horse names
+		if table.find(validHorseNames, current) then
 		    task.wait(0.2)
 		    continue
 		end
@@ -529,7 +531,6 @@ end
 -- ==========================
 do
     local horseFolder = workspace:FindFirstChild("MobFolder")
-    local validHorseNames = { "Gargoyle", "Flora" }
 
     -- Track which horse (if any) the user wants to farm
     Logic.TargetHorse = nil -- nil = farm ANY valid horse
