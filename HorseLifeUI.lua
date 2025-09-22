@@ -1,4 +1,4 @@
-local VERSION = "v0.3.0"
+local VERSION = "v0.3.1"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -761,59 +761,59 @@ local function addSection(title)
     return header
 end
 
--- inside your UI file, where `self` is the FarmUI instance
+-- === Horses Section ===
+addSection("Horses")
+
+local validHorses = { "Gargoyle", "Flora" }  -- add more horse names if needed
+
 local function makeHorseButton(horseName)
     local btn = createButton("Farm " .. horseName, farmingFrame)
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 
     btn.MouseButton1Click:Connect(function()
         -- mark the UI as running the HorseFarming task
-        self.CurrentResource = "HorseFarming"
-        self.TaskActive = true
+        ui.CurrentResource = "HorseFarming"
+        ui.TaskActive = true
 
-        -- update UI visuals to show running state (same as attachFarmButton)
-        self.CloseButton.Visible = false
-        self.MinimizeButton.Visible = false
-        self.StopButton.Visible = true
-        self.taskToggleButton.Visible = true
-        self.taskToggleButton.Text = "⏸️"
-        if not self.Minimized then
-            self.Minimized = true
-            FarmUI.Status = "Minimized"
-            local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
-            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
-            self.TabsContainer.Visible = false
+        -- update UI visuals to show running state
+        ui.CloseButton.Visible = false
+        ui.MinimizeButton.Visible = false
+        ui.StopButton.Visible = true
+        ui.taskToggleButton.Visible = true
+        ui.taskToggleButton.Text = "⏸️"
+
+        if not ui.Minimized then
+            ui.Minimized = true
+            ui.Status = "Minimized"
+            local targetW = math.max(ui.MinWidth, ui.Outline.Size.X.Offset)
+            TweenService:Create(ui.Outline, TweenInfo.new(0.3),
+                { Size = UDim2.new(0, targetW, 0, 50) }):Play()
+            ui.TabsContainer.Visible = false
         end
 
-        -- call horse start in a protected call so UI doesn't crash
+        -- safe call into Logic to start horse farming
         local ok, err = pcall(function()
-            Logic.Resources["HorseFarming"].start(horseName)
+            local horseLogic = Logic.Resources and Logic.Resources["HorseFarming"]
+            assert(horseLogic, "HorseFarming not found in Logic.Resources")
+            horseLogic.start(horseName)
         end)
         if not ok then
             warn("[UI] Failed to start HorseFarming:", err)
-            -- revert UI state
-            self.TaskActive = false
-            self.CurrentResource = nil
-            self.CloseButton.Visible = true
-            self.MinimizeButton.Visible = true
-            self.StopButton.Visible = false
-            self.taskToggleButton.Visible = false
+            -- revert UI state so it doesn't stay stuck
+            ui.TaskActive = false
+            ui.CurrentResource = nil
+            ui.CloseButton.Visible = true
+            ui.MinimizeButton.Visible = true
+            ui.StopButton.Visible = false
+            ui.taskToggleButton.Visible = false
         end
     end)
 
     return btn
 end
 
--- === Horses Section ===
-addSection("Horses")
-
--- List the horses you want buttons for
-local validHorses = { "Gargoyle", "Flora" }  -- add more names here
-
--- create buttons:
 for _, h in ipairs(validHorses) do
-    local b = makeHorseButton(h)
-end
+    makeHorseButton(h)
 end
 
 -- === Coins Section ===
