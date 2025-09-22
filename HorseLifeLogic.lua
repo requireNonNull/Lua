@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.3.2"
+local VERSION = "v0.3.3"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -134,8 +134,9 @@ local function farmingLoop()
 		local char = player.Character or player.CharacterAdded:Wait()
 		local current = Farmer.Mode
 		-- ✅ Skip any horse names
-		if current == "HorseFarming" then
-		    task.wait(0.2)
+		if current == "HorseFarming" or Logic.TargetHorse then
+		    -- We handle horses in a separate loop, so do nothing here
+		    task.wait(0.5)
 		    continue
 		end
 		local timeout = resourceTimeouts[current] or 10
@@ -629,28 +630,24 @@ do
     task.spawn(horseFarmLoop)
 
     -- Logic API
-    Logic.Resources["HorseFarming"] = {
-        start = function(targetHorse)
-            if not workspace:FindFirstChild("MobFolder") then
-                warn("[HorseFarming] Cannot start: MobFolder missing")
-                return
-            end
-            Logic.TargetHorse = targetHorse or nil
-            Logic.start("HorseFarming")  -- ✅ keep Mode = "HorseFarming"
-        end,
-        stop = function()
-            Logic.TargetHorse = nil
-            Logic.stop()
-        end,
-        toggle = function(targetHorse)
-            if Farmer.Running and Farmer.Mode == "HorseFarming" then
-                Logic.Resources["HorseFarming"].stop()
-            else
-                Logic.Resources["HorseFarming"].start(targetHorse)
-            end
-        end
-    }
-end
+	Logic.Resources["HorseFarming"] = {
+	    start = function(targetHorse)
+	        Logic.TargetHorse = targetHorse or nil
+	        Logic.start("HorseFarming")
+	    end,
+	    stop = function()
+	        Logic.TargetHorse = nil
+	        Logic.stop()
+	    end,
+	    toggle = function(targetHorse)
+	        if Farmer.Running and Farmer.Mode == "HorseFarming" then
+	            Logic.Resources["HorseFarming"].stop()
+	        else
+	            Logic.Resources["HorseFarming"].start(targetHorse)
+	        end
+	    end
+	}
+	end
 
 -- ==========================
 -- Export
