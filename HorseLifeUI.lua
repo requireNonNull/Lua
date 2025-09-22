@@ -1,4 +1,4 @@
-local VERSION = "v0.2.5"
+local VERSION = "v0.2.6"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -766,27 +766,28 @@ addSection("Horses")
 local validHorses = { "Gargoyle", "Flora" }  -- add more names here
 
 for _, horseName in ipairs(validHorses) do
-    -- Create a *task name* that identifies this specific horse
-    -- e.g. "Horse:Gargoyle" or "Horse:Flora"
-    local taskName = "Horse:" .. horseName
+    -- A unique UI name (used only by the button text)
+    local displayName = "Farm " .. horseName
 
-    -- Register a thin wrapper in Logic.Resources so attachFarmButton works
-    Logic.Resources[taskName] = {
+    -- Register a thin wrapper in Logic.Resources
+    -- IMPORTANT: use the *horseName* directly for the wrapper,
+    -- not "Horse:<name>", so we never pass a fake resource to the resource loop.
+    Logic.Resources[displayName] = {
         start = function()
-            -- This is the call that actually farms the specific horse
+            -- ✅ Directly start the HorseFarming mode with the correct target
             Logic.Resources["HorseFarming"].start(horseName)
         end,
         stop = function()
             Logic.Resources["HorseFarming"].stop()
         end,
         toggle = function()
-            Logic.Resources["HorseFarming"].toggle()
+            Logic.Resources["HorseFarming"].toggle(horseName)
         end
     }
 
-    -- Now create a UI button and attach it like any other resource
-    local btn = createButton("Farm " .. horseName, farmingFrame)
-    attachFarmButton(btn, taskName)
+    -- Create the UI button and attach it to the Logic.Resources wrapper
+    local btn = createButton(displayName, farmingFrame)
+    attachFarmButton(btn, displayName)
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
 end
 
