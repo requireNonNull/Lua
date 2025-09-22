@@ -1,4 +1,4 @@
-local VERSION = "v0.2.7"
+local VERSION = "v0.2.8"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -763,32 +763,24 @@ end
 
 -- === Horses Section ===
 addSection("Horses")
+
+-- List the horses you want buttons for
 local validHorses = { "Gargoyle", "Flora" }  -- add more names here
 
 for _, horseName in ipairs(validHorses) do
-    -- A unique UI name (used only by the button text)
-    local displayName = "Farm " .. horseName
-
-    -- Register a thin wrapper in Logic.Resources
-    -- IMPORTANT: use the *horseName* directly for the wrapper,
-    -- not "Horse:<name>", so we never pass a fake resource to the resource loop.
-    Logic.Resources[displayName] = {
-        start = function()
-            -- ✅ Directly start the HorseFarming mode with the correct target
-            Logic.Resources["HorseFarming"].start(horseName)
-        end,
-        stop = function()
-            Logic.Resources["HorseFarming"].stop()
-        end,
-        toggle = function()
-            Logic.Resources["HorseFarming"].toggle(horseName)
-        end
-    }
-
-    -- Create the UI button and attach it to the Logic.Resources wrapper
-    local btn = createButton(displayName, farmingFrame)
-    attachFarmButton(btn, horseName)
+    -- Create the button with a friendly label
+    local btn = createButton("Farm " .. horseName, farmingFrame)
     btn.LayoutOrder = #farmingFrame:GetChildren() + 1
+
+    -- When clicked, set the current resource and start HorseFarming
+    btn.MouseButton1Click:Connect(function()
+        -- Tell the main UI that HorseFarming is the active resource
+        -- so your ⏸️/▶️ toggle button can stop/start it correctly
+        self.CurrentResource = "HorseFarming"
+
+        -- Start farming this specific horse
+        Logic.Resources["HorseFarming"].start(horseName)
+    end)
 end
 
 -- === Coins Section ===
