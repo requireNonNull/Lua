@@ -1,12 +1,24 @@
 local horseFolder = workspace.MobFolder
 local validHorseNames = {"Gargoyle", "Flora"}
-local devVersion = 0.0.1
 
+-- Early debug: Check if the horseFolder exists
+if not horseFolder then
+    error("Error: horseFolder (workspace.MobFolder) is not found!")
+end
+
+-- Early debug: Check if LocalPlayer is available
+if not game.Players.LocalPlayer then
+    error("Error: LocalPlayer is not found!")
+end
+
+-- Function to teleport to horse
 function teleportToHorse(horse)
     if horse and horse:IsA("Part") then
         local horsePosition = horse.Position
         print("Teleporting to horse at position: " .. tostring(horsePosition))
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(horsePosition) * CFrame.Angles(0, math.pi, 0))
+        pcall(function() 
+            game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(horsePosition) * CFrame.Angles(0, math.pi, 0))
+        end)
         wait(0.1)
         print("Teleported to horse at position: " .. tostring(horsePosition))
     else
@@ -14,6 +26,7 @@ function teleportToHorse(horse)
     end
 end
 
+-- Function to move mouse and fire events
 function moveMouseAndFireEvent(horse)
     if horse and horse:IsA("Part") then
         local camera = game:GetService("Workspace").CurrentCamera
@@ -21,17 +34,23 @@ function moveMouseAndFireEvent(horse)
             local screenPosition = camera:WorldToScreenPoint(horse.Position)
             if isrbxactive() then
                 print("Moving mouse to: " .. tostring(screenPosition))
-                mousemoveabs(screenPosition.X, screenPosition.Y)
-                
+                pcall(function() 
+                    mousemoveabs(screenPosition.X, screenPosition.Y)
+                end)
+
                 local tameEvent = horse:FindFirstChild("TameEvent")
                 if tameEvent then
                     local args = {"BeginAggro"}
-                    tameEvent:FireServer(unpack(args))
-                    print("Fired BeginAggro event.")
+                    pcall(function() 
+                        tameEvent:FireServer(unpack(args))
+                        print("Fired BeginAggro event.")
+                    end)
                     wait(1)
                     local args = {"SuccessfulFeed"}
-                    tameEvent:FireServer(unpack(args))
-                    print("Fired SuccessfulFeed event.")
+                    pcall(function() 
+                        tameEvent:FireServer(unpack(args))
+                        print("Fired SuccessfulFeed event.")
+                    end)
                 else
                     print("Error in moveMouseAndFireEvent: TameEvent not found on horse.")
                 end
@@ -46,6 +65,7 @@ function moveMouseAndFireEvent(horse)
     end
 end
 
+-- Function to wait for DisplayAnimalGui to disable
 function waitForAnimalGuiToDisable()
     local playerGui = game:GetService("Players").LocalPlayer.PlayerGui
     -- Wait until DisplayAnimalGui is disabled or deleted
@@ -59,13 +79,14 @@ function waitForAnimalGuiToDisable()
     end
 end
 
+-- Main farming loop
 function farmingLoop()
-    print("Starting farming loop - Version 1.1.0")
-    
+    print("Starting farming loop - Version 1.1.2")
+
     while true do
         local horses = horseFolder:GetChildren()
         print("Checking for horses, found: " .. #horses)
-        
+
         -- If no horses are found, wait longer to prevent the loop from spamming
         if #horses == 0 then
             print("No horses found. Waiting for 5 seconds.")
@@ -78,8 +99,12 @@ function farmingLoop()
                     print("Valid horse found: " .. horse.Name)
 
                     while horse.Parent == horseFolder do
-                        teleportToHorse(horse)
-                        moveMouseAndFireEvent(horse)
+                        pcall(function()  -- Wrap this in pcall to handle any errors that arise
+                            teleportToHorse(horse)
+                        end)
+                        pcall(function()  -- Wrap this in pcall to handle any errors that arise
+                            moveMouseAndFireEvent(horse)
+                        end)
                         task.wait(0.1)
                     end
 
@@ -108,5 +133,5 @@ function farmingLoop()
     end
 end
 
+-- Start the farming loop
 farmingLoop()
-print("local devVersion = " .. devVersion)
