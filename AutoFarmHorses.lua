@@ -59,7 +59,11 @@ end
 function farmingLoop()
     while true do
         local horses = horseFolder:GetChildren()
-        if #horses > 0 then
+        
+        -- If no horses are found, wait longer to prevent the loop from spamming
+        if #horses == 0 then
+            task.wait(5)  -- Wait for new horses if none are found
+        else
             for _, horse in pairs(horses) do
                 if horse and horse.Name ~= "" and table.find(validHorseNames, horse.Name) then
                     while horse.Parent == horseFolder do
@@ -86,8 +90,6 @@ function farmingLoop()
                     task.wait(1)  -- Small delay before moving to the next horse
                 end
             end
-        else
-            task.wait(5)  -- Wait for new horses if none are found
         end
     end
 end
