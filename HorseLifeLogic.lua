@@ -1,7 +1,7 @@
 -- // Logic
 local Logic = {}
 
-local VERSION = "v0.2.8"
+local VERSION = "v0.2.9"
 local DEBUG_MODE = true
 
 local Players = game:GetService("Players")
@@ -678,8 +678,6 @@ Logic.Resources["HorseFarming"] = {
     end
 }
 
-    -- Add to resource list for UI building
-    table.insert(Logic.ResourceList, "HorseFarming")
 end
 
 -- ==========================
