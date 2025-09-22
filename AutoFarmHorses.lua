@@ -1,5 +1,6 @@
 local horseFolder = workspace.MobFolder
 local validHorseNames = {"Gargoyle", "Flora"}
+local devVersion = 0.0.1
 
 function teleportToHorse(horse)
     if horse and horse:IsA("Part") then
@@ -108,3 +109,4 @@ function farmingLoop()
 end
 
 farmingLoop()
+print("local devVersion = " .. devVersion)
