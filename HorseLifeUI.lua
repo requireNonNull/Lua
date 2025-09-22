@@ -1,4 +1,4 @@
-local VERSION = "v0.2.2"
+local VERSION = "v0.2.3"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -761,6 +761,15 @@ local function addSection(title)
     return header
 end
 
+addSection("Horses")
+for _, horseName in ipairs({ "Gargoyle", "Flora" }) do
+    local btn = createButton("Farm " .. horseName, farmingFrame)
+    btn.LayoutOrder = #farmingFrame:GetChildren() + 1
+    btn.MouseButton1Click:Connect(function()
+        Logic.Resources["HorseFarming"].start(horseName)
+    end)
+end
+
 -- === Coins Section ===
 addSection("Coins")
 do
@@ -791,6 +800,7 @@ for _, resourceName in ipairs(Logic.ResourceList) do
         btn.LayoutOrder = #farmingFrame:GetChildren() + 1
     end
 end
+
 -- ==========================
 -- Info Tab
 
