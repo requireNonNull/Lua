@@ -1,4 +1,4 @@
-local VERSION = "v0.3.1"
+local VERSION = "v0.3.2"
 local EXPLOIT_NAME = "Horse Life 🐎 Menu"
 local DEBUG_MODE = true
 
@@ -247,13 +247,14 @@ function FarmUI:setupEvents()
 
         if self.Minimized then
             local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
-            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
+            TweenService:Create(self.Outline, TweenInfo.new(0.3),
+                {Size = UDim2.new(0, targetW, 0, 50)}):Play()
             self.TabsContainer.Visible = false
         else
             local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
-            TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 500)}):Play()
+            TweenService:Create(self.Outline, TweenInfo.new(0.3),
+                {Size = UDim2.new(0, targetW, 0, 500)}):Play()
             self.TabsContainer.Visible = true
-            -- restore current tab only
             for _,tab in ipairs(self.ContentArea:GetChildren()) do
                 if tab:IsA("ScrollingFrame") then
                     tab.Visible = (tab == self.CurrentTab)
@@ -261,85 +262,94 @@ function FarmUI:setupEvents()
             end
         end
     end)
-    
--- ==========================
--- Stop button functionality
-self.StopButton.MouseButton1Click:Connect(function()
-    if self.CurrentResource then
-        Logic.stop(self.CurrentResource) -- 🔗 stop farming logic
-    end
 
-    -- force stop farming
-    self.TaskActive = false
-    self.CurrentResource = nil
-    self:stopTitleAnimation()
-    self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
-
-    -- restore UI
-    self.Minimized = false
-    FarmUI.Status = "Open"
-    local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset) 
-    TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 500)}):Play()
-    self.TabsContainer.Visible = true
-
-    -- restore only current tab visible
-    for _,tab in ipairs(self.ContentArea:GetChildren()) do
-        if tab:IsA("ScrollingFrame") then
-            tab.Visible = (tab == self.CurrentTab)
+    -- ==========================
+    -- Stop button functionality
+    self.StopButton.MouseButton1Click:Connect(function()
+        if self.CurrentResource then
+            if self.CurrentResource == "HorseFarming" then
+                -- ✅ call the special horse stop so TargetHorse is cleared
+                Logic.Resources["HorseFarming"].stop()
+            else
+                Logic.stop(self.CurrentResource)
+            end
         end
-    end
 
-    -- hide STOP, restore normal controls
-    self.CloseButton.Visible = true
-    self.MinimizeButton.Visible = true
-    self.StopButton.Visible = false
-    self.taskToggleButton.Visible = false
-end)
-
--- ==========================
--- Toggle button functionality
-self.taskToggleButton.MouseButton1Click:Connect(function()
-    if not self.CurrentResource then return end -- 🚫 no active task
-
-    if not self.TaskActive then
-        -- Resume farming
-        self.TaskActive = true
-        self.taskToggleButton.Text = "⏸️"
-        self:stopTitleAnimation()
-
-        Logic.toggle(self.CurrentResource) -- 🔗 resume
-
-        -- keep UI minimized while running
-        self.Minimized = true
-        FarmUI.Status = "Minimized"
-        local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
-        TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
-        self.TabsContainer.Visible = false
-
-        -- Show Stop button and toggle
-        self.StopButton.Visible = true
-        self.taskToggleButton.Visible = true
-        self.CloseButton.Visible = false
-        self.MinimizeButton.Visible = false
-
-    else
-        -- Pause farming
         self.TaskActive = false
-        self.taskToggleButton.Text = "▶️"
+        self.CurrentResource = nil
         self:stopTitleAnimation()
+        self.TitleLabel.Text = EXPLOIT_NAME .. " " .. VERSION
 
-        Logic.SetStatus("Paused Task: " .. self.CurrentResource)
-        Logic.toggle(self.CurrentResource) -- 🔗 pause
-
-        -- keep minimized while paused
-        self.Minimized = true
-        FarmUI.Status = "Minimized"
+        -- restore UI
+        self.Minimized = false
+        FarmUI.Status = "Open"
         local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
-        TweenService:Create(self.Outline, TweenInfo.new(0.3), {Size = UDim2.new(0, targetW, 0, 50)}):Play()
-        self.TabsContainer.Visible = false
-    end
-end)
+        TweenService:Create(self.Outline, TweenInfo.new(0.3),
+            {Size = UDim2.new(0, targetW, 0, 500)}):Play()
+        self.TabsContainer.Visible = true
+        for _,tab in ipairs(self.ContentArea:GetChildren()) do
+            if tab:IsA("ScrollingFrame") then
+                tab.Visible = (tab == self.CurrentTab)
+            end
+        end
 
+        -- hide STOP, restore normal controls
+        self.CloseButton.Visible = true
+        self.MinimizeButton.Visible = true
+        self.StopButton.Visible = false
+        self.taskToggleButton.Visible = false
+    end)
+
+    -- ==========================
+    -- Toggle button functionality
+    self.taskToggleButton.MouseButton1Click:Connect(function()
+        if not self.CurrentResource then return end
+
+        if not self.TaskActive then
+            -- ▶️ Resume farming
+            self.TaskActive = true
+            self.taskToggleButton.Text = "⏸️"
+            self:stopTitleAnimation()
+
+            if self.CurrentResource == "HorseFarming" then
+                Logic.Resources["HorseFarming"].toggle(Logic.TargetHorse)
+            else
+                Logic.toggle(self.CurrentResource)
+            end
+
+            -- keep UI minimized while running
+            self.Minimized = true
+            FarmUI.Status = "Minimized"
+            local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
+            TweenService:Create(self.Outline, TweenInfo.new(0.3),
+                {Size = UDim2.new(0, targetW, 0, 50)}):Play()
+            self.TabsContainer.Visible = false
+
+            self.StopButton.Visible = true
+            self.taskToggleButton.Visible = true
+            self.CloseButton.Visible = false
+            self.MinimizeButton.Visible = false
+        else
+            -- ⏸️ Pause farming
+            self.TaskActive = false
+            self.taskToggleButton.Text = "▶️"
+            self:stopTitleAnimation()
+
+            Logic.SetStatus("Paused Task: " .. self.CurrentResource)
+            if self.CurrentResource == "HorseFarming" then
+                Logic.Resources["HorseFarming"].toggle(Logic.TargetHorse)
+            else
+                Logic.toggle(self.CurrentResource)
+            end
+
+            self.Minimized = true
+            FarmUI.Status = "Minimized"
+            local targetW = math.max(self.MinWidth, self.Outline.Size.X.Offset)
+            TweenService:Create(self.Outline, TweenInfo.new(0.3),
+                {Size = UDim2.new(0, targetW, 0, 50)}):Play()
+            self.TabsContainer.Visible = false
+        end
+    end)
 end
 
 -- ==========================
