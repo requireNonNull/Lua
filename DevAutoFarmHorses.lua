@@ -9,10 +9,10 @@ local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
 local EMPTY_FOLDER_WAIT = 5                      -- Wait when no horses are found
 local LOOP_INTERVAL     = 0.5                    -- Main loop delay
-local TELEPORT_DELAY    = 0.5                    -- Delay after teleport
-local FEED_DELAY        = 1                      -- Delay between TameEvent fires
+local TELEPORT_DELAY    = 0.25                    -- Delay after teleport
+local FEED_DELAY        = 0.5                      -- Delay between TameEvent fires
 local PURCHASE_DELAY    = 1                      -- Delay before next horse
-local GUI_TIMEOUT       = 10                     -- Max seconds to wait for DisplayAnimalGui
+local GUI_TIMEOUT       = 5                     -- Max seconds to wait for DisplayAnimalGui
 local HORSE_TIMEOUT     = 30                     -- Max seconds to stay with a single horse
 local SEARCH_DELAY      = 2                      -- Delay between spawn-area teleports
 
@@ -233,6 +233,6 @@ local farmer = HorseFarmer.new(allTargets)
 farmer:start()
 
 -- Optional safety stop (remove for endless farming)
-task.delay(600, function()
+task.delay(6000, function()
     farmer:stop()
 end)
