@@ -158,18 +158,35 @@ function HorseFarmer:purchaseItem()
     task.wait(PURCHASE_DELAY)
 end
 
--- Sell all horses whose names are numbers
+-- Sell all horse slots found in the StablesGui
 function HorseFarmer:sellAllAnimals()
     if not self.autoSell then return end
-    local charFolder = workspace:FindFirstChild("Characters")
-    if not charFolder then return end
-    local playerFolder = charFolder:FindFirstChild(self.player.Name)
-    if not playerFolder then return end
-    local animals = playerFolder:FindFirstChild("Animals")
-    if not animals then return end
 
+    -- Path: PlayerGui.StablesGui.ContainerFrame.Menu.Content.Horses.Content
+    local gui = self.player:FindFirstChild("PlayerGui")
+    if not gui then return end
+
+    local stablesGui = gui:FindFirstChild("StablesGui")
+    if not stablesGui then return end
+
+    local container = stablesGui:FindFirstChild("ContainerFrame")
+    if not container then return end
+
+    local menu = container:FindFirstChild("Menu")
+    if not menu then return end
+
+    local contentMain = menu:FindFirstChild("Content")
+    if not contentMain then return end
+
+    local horses = contentMain:FindFirstChild("Horses")
+    if not horses then return end
+
+    local horsesContent = horses:FindFirstChild("Content")
+    if not horsesContent then return end
+
+    -- collect all child names that are valid numbers
     local slotNumbers = {}
-    for _, child in ipairs(animals:GetChildren()) do
+    for _, child in ipairs(horsesContent:GetChildren()) do
         if tonumber(child.Name) then
             table.insert(slotNumbers, child.Name)
         end
@@ -178,7 +195,8 @@ function HorseFarmer:sellAllAnimals()
     if #slotNumbers > 0 then
         local remote = self.remotes:FindFirstChild("SellSlotsRemote")
         if remote then
-            print("[HorseFarmer] Auto-selling slots:", table.concat(slotNumbers, ", "))
+            print("[HorseFarmer] Auto-selling slots from StablesGui:",
+                  table.concat(slotNumbers, ", "))
             pcall(function()
                 remote:InvokeServer(slotNumbers)
             end)
@@ -193,9 +211,13 @@ function HorseFarmer:processHorse(horse)
         self:interactWithHorse(horse)
         task.wait(1)
     end
+    task.wait(0.2)
     self:waitForAnimalGui()
+    task.wait(0.3)
     self:purchaseItem()
+    task.wait(0.5)
     self:sellAllAnimals()
+    task.wait(0.5)
 end
 
 function HorseFarmer:searchSpawnAreas()
