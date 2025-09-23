@@ -1,4 +1,4 @@
---// Version 1.6.0 - Farm all species from highest to lowest points
+--// Version 1.7.0 - Farm all species high→low + optional auto-sell
 --// Place in a LocalScript
 
 -----------------------
@@ -7,14 +7,14 @@
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
-local EMPTY_FOLDER_WAIT = 5                      -- Wait when no horses are found
-local LOOP_INTERVAL     = 0.5                    -- Main loop delay
-local TELEPORT_DELAY    = 0.25                    -- Delay after teleport
-local FEED_DELAY        = 0.5                      -- Delay between TameEvent fires
-local PURCHASE_DELAY    = 1                      -- Delay before next horse
-local GUI_TIMEOUT       = 5                     -- Max seconds to wait for DisplayAnimalGui
-local HORSE_TIMEOUT     = 30                     -- Max seconds to stay with a single horse
-local SEARCH_DELAY      = 2                      -- Delay between spawn-area teleports
+local EMPTY_FOLDER_WAIT = 5
+local LOOP_INTERVAL     = 0.5
+local TELEPORT_DELAY    = 0.5
+local FEED_DELAY        = 1
+local PURCHASE_DELAY    = 1
+local GUI_TIMEOUT       = 10
+local HORSE_TIMEOUT     = 30
+local SEARCH_DELAY      = 2
 
 -----------------------
 -- HORSE POINT TABLE
@@ -53,7 +53,7 @@ function HorseFarmer.getAllSpeciesHighToLow()
     return list
 end
 
-function HorseFarmer.new(horseTypes)
+function HorseFarmer.new(horseTypes, autoSell)
     local self = setmetatable({}, HorseFarmer)
 
     -- runtime references
@@ -70,14 +70,15 @@ function HorseFarmer.new(horseTypes)
     assert(self.remotes,     "Remotes folder not found!")
 
     self.targetHorseTypes = horseTypes or {}
-    self.running = false
-    self.spawnPositions = self:getUniqueSpawnPositions()
+    self.autoSell         = autoSell or false
+    self.running          = false
+    self.spawnPositions   = self:getUniqueSpawnPositions()
 
     return self
 end
 
 -----------------------
--- Utility: Collect all spawn positions from MobSpawns
+-- Utility: Collect all spawn positions
 -----------------------
 function HorseFarmer:getUniqueSpawnPositions()
     local unique, positions = {}, {}
@@ -153,6 +154,34 @@ function HorseFarmer:purchaseItem()
     task.wait(PURCHASE_DELAY)
 end
 
+-- NEW: Sell all horses whose names are numbers
+function HorseFarmer:sellAllAnimals()
+    if not self.autoSell then return end
+    local charFolder = workspace:FindFirstChild("Characters")
+    if not charFolder then return end
+    local playerFolder = charFolder:FindFirstChild(self.player.Name)
+    if not playerFolder then return end
+    local animals = playerFolder:FindFirstChild("Animals")
+    if not animals then return end
+
+    local slotNumbers = {}
+    for _, child in ipairs(animals:GetChildren()) do
+        if tonumber(child.Name) then
+            table.insert(slotNumbers, child.Name)
+        end
+    end
+
+    if #slotNumbers > 0 then
+        local remote = self.remotes:FindFirstChild("SellSlotsRemote")
+        if remote then
+            print("[HorseFarmer] Auto-selling slots:", table.concat(slotNumbers, ", "))
+            pcall(function()
+                remote:InvokeServer(slotNumbers)
+            end)
+        end
+    end
+end
+
 function HorseFarmer:processHorse(horse)
     local start = tick()
     while self.running and horse.Parent == self.horseFolder and tick() - start < HORSE_TIMEOUT do
@@ -162,6 +191,7 @@ function HorseFarmer:processHorse(horse)
     end
     self:waitForAnimalGui()
     self:purchaseItem()
+    self:sellAllAnimals() -- sell after GUI closes if enabled
 end
 
 function HorseFarmer:searchSpawnAreas()
@@ -227,12 +257,13 @@ end
 -----------------------
 -- Example Usage
 -----------------------
--- Automatically farm every species from highest point value to lowest.
+-- Auto-farm all species high→low and enable auto-sell
 local allTargets = HorseFarmer.getAllSpeciesHighToLow()
-local farmer = HorseFarmer.new(allTargets)
+-- Pass `true` to enable auto-selling after each capture
+local farmer = HorseFarmer.new(allTargets, true)
 farmer:start()
 
--- Optional safety stop (remove for endless farming)
-task.delay(6000, function()
+-- Optional stop after 10 minutes
+task.delay(600, function()
     farmer:stop()
 end)
