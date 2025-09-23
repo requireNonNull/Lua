@@ -1,4 +1,4 @@
---// Version 1.7.0 - Farm all species high→low + optional auto-sell
+--// Version 1.7.1 - Farm all species high→low + optional auto-sell + force-close GUI
 --// Place in a LocalScript
 
 -----------------------
@@ -12,7 +12,7 @@ local LOOP_INTERVAL     = 0.5
 local TELEPORT_DELAY    = 0.5
 local FEED_DELAY        = 1
 local PURCHASE_DELAY    = 1
-local GUI_TIMEOUT       = 3
+local GUI_TIMEOUT       = 3       -- seconds to wait before we kill the GUI
 local HORSE_TIMEOUT     = 30
 local SEARCH_DELAY      = 2
 
@@ -56,7 +56,6 @@ end
 function HorseFarmer.new(horseTypes, autoSell)
     local self = setmetatable({}, HorseFarmer)
 
-    -- runtime references
     self.player      = game.Players.LocalPlayer
     self.horseFolder = workspace:FindFirstChild(HORSE_FOLDER_NAME)
     self.spawnFolder = workspace:FindFirstChild(MOB_SPAWN_FOLDER)
@@ -102,10 +101,15 @@ function HorseFarmer:waitForAnimalGui()
     local gui = self.player:FindFirstChild("PlayerGui")
     if not gui then return end
     local start = tick()
-    while tick() - start < GUI_TIMEOUT do
-        local display = gui:FindFirstChild("DisplayAnimalGui")
-        if not (display and display.Enabled) then break end
+    local display = gui:FindFirstChild("DisplayAnimalGui")
+    while display and display.Enabled and tick() - start < GUI_TIMEOUT do
         task.wait(0.1)
+        display = gui:FindFirstChild("DisplayAnimalGui")
+    end
+    -- ⭐ FORCE DISABLE if still present
+    if display and display.Enabled then
+        warn("[HorseFarmer] GUI timeout, forcing disable.")
+        pcall(function() display.Enabled = false end)
     end
 end
 
@@ -154,7 +158,7 @@ function HorseFarmer:purchaseItem()
     task.wait(PURCHASE_DELAY)
 end
 
--- NEW: Sell all horses whose names are numbers
+-- Sell all horses whose names are numbers
 function HorseFarmer:sellAllAnimals()
     if not self.autoSell then return end
     local charFolder = workspace:FindFirstChild("Characters")
@@ -191,7 +195,7 @@ function HorseFarmer:processHorse(horse)
     end
     self:waitForAnimalGui()
     self:purchaseItem()
-    self:sellAllAnimals() -- sell after GUI closes if enabled
+    self:sellAllAnimals()
 end
 
 function HorseFarmer:searchSpawnAreas()
@@ -257,13 +261,11 @@ end
 -----------------------
 -- Example Usage
 -----------------------
--- Auto-farm all species high→low and enable auto-sell
 local allTargets = HorseFarmer.getAllSpeciesHighToLow()
--- Pass `true` to enable auto-selling after each capture
-local farmer = HorseFarmer.new(allTargets, true)
+local farmer = HorseFarmer.new(allTargets, true) -- true = enable auto-sell
 farmer:start()
 
--- Optional stop after 10 minutes
-task.delay(600, function()
+-- Optional stop after 5 minutes
+task.delay(300, function()
     farmer:stop()
 end)
