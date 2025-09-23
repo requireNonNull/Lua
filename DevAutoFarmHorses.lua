@@ -12,7 +12,7 @@ local LOOP_INTERVAL     = 0.5
 local TELEPORT_DELAY    = 0.5
 local FEED_DELAY        = 1
 local PURCHASE_DELAY    = 1
-local GUI_TIMEOUT       = 10
+local GUI_TIMEOUT       = 3
 local HORSE_TIMEOUT     = 30
 local SEARCH_DELAY      = 2
 
