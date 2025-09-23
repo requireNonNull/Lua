@@ -1,149 +1,238 @@
--- Version: 1.2.0 - Added delays, fixed teleporting issues, and optimized performance
+--// Version 1.6.0 - Farm all species from highest to lowest points
+--// Place in a LocalScript
 
-local horseFolder = workspace.MobFolder
-local validHorseNames = {"Gargoyle", "Flora"}
+-----------------------
+-- CONFIG
+-----------------------
+local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
+local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
+local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
+local EMPTY_FOLDER_WAIT = 5                      -- Wait when no horses are found
+local LOOP_INTERVAL     = 0.5                    -- Main loop delay
+local TELEPORT_DELAY    = 0.25                    -- Delay after teleport
+local FEED_DELAY        = 0.5                      -- Delay between TameEvent fires
+local PURCHASE_DELAY    = 1                      -- Delay before next horse
+local GUI_TIMEOUT       = 5                     -- Max seconds to wait for DisplayAnimalGui
+local HORSE_TIMEOUT     = 30                     -- Max seconds to stay with a single horse
+local SEARCH_DELAY      = 2                      -- Delay between spawn-area teleports
 
--- Early debug: Check if the horseFolder exists
-if not horseFolder then
-    error("Error: horseFolder (workspace.MobFolder) is not found!")
-end
+-----------------------
+-- HORSE POINT TABLE
+-----------------------
+local HORSE_POINTS = {
+    {name="Hippocampus", pts=9},
+    {name="Felorse",     pts=9},
+    {name="Flora",       pts=8},
+    {name="Fae",         pts=7},
+    {name="Cactaline",   pts=6},
+    {name="Kelpie",      pts=6},
+    {name="Peryton",     pts=6},
+    {name="Gargoyle",    pts=4},
+    {name="Clydesdale",  pts=4},
+    {name="Unicorn",     pts=4},
+    {name="Caprine",     pts=3},
+    {name="Bisorse",     pts=2},
+    {name="Horse",       pts=1},
+    {name="Pony",        pts=1},
+    {name="Equus",       pts=1},
+}
 
--- Early debug: Check if LocalPlayer is available
-if not game.Players.LocalPlayer then
-    error("Error: LocalPlayer is not found!")
-end
+-----------------------
+-- HORSE FARMER CLASS
+-----------------------
+local HorseFarmer = {}
+HorseFarmer.__index = HorseFarmer
 
--- Function to teleport to horse with delay
-function teleportToHorse(horse)
-    if horse and horse:IsA("Part") then
-        local horsePosition = horse.Position
-        print("Teleporting to horse at position: " .. tostring(horsePosition))
-
-        -- Check if character is fully loaded before teleporting
-        local character = game.Players.LocalPlayer.Character
-        if character and character.PrimaryPart then
-            -- Perform the teleportation
-            pcall(function() 
-                character:SetPrimaryPartCFrame(CFrame.new(horsePosition) * CFrame.Angles(0, math.pi, 0))
-            end)
-            wait(0.5)  -- Adding delay after teleporting to avoid immediate action after teleport
-            print("Teleported to horse at position: " .. tostring(horsePosition))
-        else
-            print("Error: Character or PrimaryPart is missing!")
-        end
-    else
-        print("Error in teleportToHorse: Horse is not a valid Part.")
+-- Helper: return every species sorted by points high→low
+function HorseFarmer.getAllSpeciesHighToLow()
+    table.sort(HORSE_POINTS, function(a,b) return a.pts > b.pts end)
+    local list = {}
+    for _, entry in ipairs(HORSE_POINTS) do
+        table.insert(list, entry.name)
     end
+    return list
 end
 
--- Function to move mouse and fire events
-function moveMouseAndFireEvent(horse)
-    if horse and horse:IsA("Part") then
-        local camera = game:GetService("Workspace").CurrentCamera
-        if camera then
-            local screenPosition = camera:WorldToScreenPoint(horse.Position)
-            if isrbxactive() then
-                print("Moving mouse to: " .. tostring(screenPosition))
+function HorseFarmer.new(horseTypes)
+    local self = setmetatable({}, HorseFarmer)
 
-                -- Wrap the mouse move and event firing in a single pcall
-                pcall(function() 
-                    mousemoveabs(screenPosition.X, screenPosition.Y)
-                end)
+    -- runtime references
+    self.player      = game.Players.LocalPlayer
+    self.horseFolder = workspace:FindFirstChild(HORSE_FOLDER_NAME)
+    self.spawnFolder = workspace:FindFirstChild(MOB_SPAWN_FOLDER)
+    self.camera      = workspace.CurrentCamera
+    self.remotes     = game:GetService("ReplicatedStorage"):WaitForChild("Remotes")
 
-                local tameEvent = horse:FindFirstChild("TameEvent")
-                if tameEvent then
-                    -- Fire BeginAggro event
-                    local args = {"BeginAggro"}
-                    pcall(function() 
-                        tameEvent:FireServer(unpack(args))
-                        print("Fired BeginAggro event.")
-                    end)
-                    wait(1)  -- Wait between events
-                    -- Fire SuccessfulFeed event
-                    local args = {"SuccessfulFeed"}
-                    pcall(function() 
-                        tameEvent:FireServer(unpack(args))
-                        print("Fired SuccessfulFeed event.")
-                    end)
-                else
-                    print("Error in moveMouseAndFireEvent: TameEvent not found on horse.")
-                end
-            else
-                print("Error in moveMouseAndFireEvent: Roblox is not in focus, cannot perform actions.")
+    assert(self.player,      "LocalPlayer not found!")
+    assert(self.horseFolder, "MobFolder not found!")
+    assert(self.spawnFolder, "MobSpawns folder not found!")
+    assert(self.camera,      "Camera not found!")
+    assert(self.remotes,     "Remotes folder not found!")
+
+    self.targetHorseTypes = horseTypes or {}
+    self.running = false
+    self.spawnPositions = self:getUniqueSpawnPositions()
+
+    return self
+end
+
+-----------------------
+-- Utility: Collect all spawn positions from MobSpawns
+-----------------------
+function HorseFarmer:getUniqueSpawnPositions()
+    local unique, positions = {}, {}
+    for _, child in ipairs(self.spawnFolder:GetChildren()) do
+        if child:IsA("BasePart") then
+            local key = tostring(child.Position)
+            if not unique[key] then
+                unique[key] = true
+                table.insert(positions, child.Position)
             end
-        else
-            print("Error in moveMouseAndFireEvent: Camera is not available.")
         end
-    else
-        print("Error in moveMouseAndFireEvent: Horse is not a valid Part.")
     end
+    print("[HorseFarmer] Found " .. #positions .. " unique spawn positions.")
+    return positions
 end
 
--- Function to wait for DisplayAnimalGui to disable
-function waitForAnimalGuiToDisable()
-    local playerGui = game:GetService("Players").LocalPlayer.PlayerGui
-    -- Wait until DisplayAnimalGui is disabled or deleted
-    while playerGui:FindFirstChild("DisplayAnimalGui") and playerGui.DisplayAnimalGui.Enabled do
+-----------------------
+-- Internal Helpers
+-----------------------
+function HorseFarmer:waitForAnimalGui()
+    local gui = self.player:FindFirstChild("PlayerGui")
+    if not gui then return end
+    local start = tick()
+    while tick() - start < GUI_TIMEOUT do
+        local display = gui:FindFirstChild("DisplayAnimalGui")
+        if not (display and display.Enabled) then break end
         task.wait(0.1)
     end
-    -- If DisplayAnimalGui is deleted, wait for 1 second before checking again
-    if not playerGui:FindFirstChild("DisplayAnimalGui") then
-        print("DisplayAnimalGui deleted, waiting for 1 second.")
+end
+
+function HorseFarmer:teleportTo(position)
+    local character = self.player.Character
+    if not (character and character.PrimaryPart) then return false end
+    pcall(function()
+        character:SetPrimaryPartCFrame(CFrame.new(position))
+    end)
+    task.wait(TELEPORT_DELAY)
+    return true
+end
+
+function HorseFarmer:teleportToHorse(horse)
+    if not (horse and horse:IsA("BasePart")) then return false end
+    return self:teleportTo(horse.Position)
+end
+
+function HorseFarmer:interactWithHorse(horse)
+    if not (horse and horse:IsA("BasePart")) then return end
+    if not isrbxactive() then
+        warn("Roblox window not active, skipping interaction.")
+        return
+    end
+
+    local screenPos, onScreen = self.camera:WorldToScreenPoint(horse.Position)
+    if onScreen then
+        pcall(function() mousemoveabs(screenPos.X, screenPos.Y) end)
+    end
+
+    local tameEvent = horse:FindFirstChild("TameEvent")
+    if not tameEvent then return end
+
+    pcall(function() tameEvent:FireServer("BeginAggro") end)
+    task.wait(FEED_DELAY)
+    pcall(function() tameEvent:FireServer("SuccessfulFeed") end)
+end
+
+function HorseFarmer:purchaseItem()
+    local remote = self.remotes:FindFirstChild("PurchaseItemRemote")
+    if not remote then
+        warn("PurchaseItemRemote not found!")
+        return
+    end
+    pcall(function() remote:InvokeServer(unpack(ITEM_TO_PURCHASE)) end)
+    task.wait(PURCHASE_DELAY)
+end
+
+function HorseFarmer:processHorse(horse)
+    local start = tick()
+    while self.running and horse.Parent == self.horseFolder and tick() - start < HORSE_TIMEOUT do
+        if not self:teleportToHorse(horse) then break end
+        self:interactWithHorse(horse)
         task.wait(1)
+    end
+    self:waitForAnimalGui()
+    self:purchaseItem()
+end
+
+function HorseFarmer:searchSpawnAreas()
+    for _, pos in ipairs(self.spawnPositions) do
+        if not self.running then return end
+        self:teleportTo(pos)
+        task.wait(SEARCH_DELAY)
     end
 end
 
--- Main farming loop
-function farmingLoop()
-    print("Starting farming loop - Version 1.2.2")
+-----------------------
+-- Public API
+-----------------------
+function HorseFarmer:start()
+    if self.running then
+        warn("HorseFarmer already running.")
+        return
+    end
+    self.running = true
+    print("[HorseFarmer] Starting loop for:", table.concat(self.targetHorseTypes, ", "))
 
-    while true do
-        local horses = horseFolder:GetChildren()
-        print("Checking for horses, found: " .. #horses)
+    task.spawn(function()
+        while self.running do
+            task.wait(LOOP_INTERVAL)
 
-        -- If no horses are found, wait longer to prevent the loop from spamming
-        if #horses == 0 then
-            print("No horses found. Waiting for 5 seconds.")
-            task.wait(5)  -- Wait for new horses if none are found
-        else
-            for _, horse in pairs(horses) do
-                print("Checking horse: " .. horse.Name)
+            self.horseFolder = workspace:FindFirstChild(HORSE_FOLDER_NAME)
+            if not self.horseFolder then
+                warn("MobFolder missing, retrying in 5s...")
+                task.wait(5)
+                continue
+            end
 
-                if horse and horse.Name ~= "" and table.find(validHorseNames, horse.Name) then
-                    print("Valid horse found: " .. horse.Name)
+            local horses = {}
+            for _, h in ipairs(self.horseFolder:GetChildren()) do
+                if table.find(self.targetHorseTypes, h.Name) then
+                    table.insert(horses, h)
+                end
+            end
 
-                    while horse.Parent == horseFolder do
-                        -- Ensure delay between teleport and events to avoid overloading
-                        teleportToHorse(horse)  -- teleport to horse
-                        moveMouseAndFireEvent(horse)  -- fire events
-                        task.wait(1)  -- Added a longer wait to avoid overloading the game
-                    end
-
-                    print("Horse deleted, now checking for DisplayAnimalGui.")
-                    task.wait(0.2)
-                    waitForAnimalGuiToDisable()
-                    task.wait(0.1)
-
-                    -- Debugging: Check if remote exists before firing it
-                    local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("PurchaseItemRemote", 10)
-                    if remote then
-                        local args = {"WesternLasso", 1}
-                        pcall(function()
-                            print("Firing PurchaseItemRemote with args:", args)
-                            remote:InvokeServer(unpack(args))
-                        end)
-                    else
-                        print("PurchaseItemRemote not found!")
-                    end
-                    task.wait(1)  -- Small delay before moving to the next horse
-                else
-                    print("Horse is not valid or not in the valid list.")
+            if #horses == 0 then
+                print("[HorseFarmer] No target horses found. Searching spawn areas...")
+                self:searchSpawnAreas()
+                task.wait(EMPTY_FOLDER_WAIT)
+            else
+                for _, horse in ipairs(horses) do
+                    if not self.running then break end
+                    print("[HorseFarmer] Farming horse:", horse.Name)
+                    self:processHorse(horse)
+                    task.wait()
                 end
             end
         end
-    end
+        print("[HorseFarmer] Loop stopped.")
+    end)
 end
 
--- Start the farming loop
-farmingLoop()
+function HorseFarmer:stop()
+    if not self.running then return end
+    print("[HorseFarmer] Stopping loop...")
+    self.running = false
+end
 
+-----------------------
+-- Example Usage
+-----------------------
+-- Automatically farm every species from highest point value to lowest.
+local allTargets = HorseFarmer.getAllSpeciesHighToLow()
+local farmer = HorseFarmer.new(allTargets)
+farmer:start()
+
+-- Optional safety stop (remove for endless farming)
+task.delay(6000, function()
+    farmer:stop()
+end)
