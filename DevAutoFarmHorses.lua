@@ -1,31 +1,20 @@
---// Version 1.4.0 - Adds spawn search positions, toggle start/stop, and multi-horse farming
---// Place this in a LocalScript
+--// Version 1.5.0 - Dynamic spawn detection from workspace.MobSpawns
+--// Place in a LocalScript
 
 -----------------------
 -- CONFIG
 -----------------------
-local HORSE_SPAWN_POSITIONS = {
-    Gargoyle = {
-        Vector3.new(1588, 18, -887),
-        Vector3.new(1720, 85, -133)
-    },
-    Flora = {
-        Vector3.new(2122, 238, -1670),
-        Vector3.new(2115, 20, -517),
-        Vector3.new(-1194, 20, -1113)
-    }
-}
-
-local HORSE_FOLDER_NAME = "MobFolder"
-local ITEM_TO_PURCHASE  = {"WesternLasso", 1}   -- Args for PurchaseItemRemote
-local EMPTY_FOLDER_WAIT = 5                     -- Wait when no horses found before next search
-local LOOP_INTERVAL     = 0.5                   -- Main loop delay
-local TELEPORT_DELAY    = 0.5                   -- Delay after teleport
-local FEED_DELAY        = 1                     -- Delay between TameEvent fires
-local PURCHASE_DELAY    = 1                     -- Delay before next horse
-local GUI_TIMEOUT       = 10                    -- Max seconds to wait for DisplayAnimalGui
-local HORSE_TIMEOUT     = 30                    -- Max seconds to stay with a single horse
-local SEARCH_DELAY      = 2                     -- Delay between teleporting to spawn positions
+local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
+local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
+local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
+local EMPTY_FOLDER_WAIT = 5                      -- Wait when no horses are found
+local LOOP_INTERVAL     = 0.5                    -- Main loop delay
+local TELEPORT_DELAY    = 0.5                    -- Delay after teleport
+local FEED_DELAY        = 1                      -- Delay between TameEvent fires
+local PURCHASE_DELAY    = 1                      -- Delay before next horse
+local GUI_TIMEOUT       = 10                     -- Max seconds to wait for DisplayAnimalGui
+local HORSE_TIMEOUT     = 30                     -- Max seconds to stay with a single horse
+local SEARCH_DELAY      = 2                      -- Delay between spawn-area teleports
 
 -----------------------
 -- HORSE FARMER CLASS
@@ -36,21 +25,48 @@ HorseFarmer.__index = HorseFarmer
 function HorseFarmer.new(horseTypes)
     local self = setmetatable({}, HorseFarmer)
 
+    -- runtime references
     self.player      = game.Players.LocalPlayer
     self.horseFolder = workspace:FindFirstChild(HORSE_FOLDER_NAME)
+    self.spawnFolder = workspace:FindFirstChild(MOB_SPAWN_FOLDER)
     self.camera      = workspace.CurrentCamera
     self.remotes     = game:GetService("ReplicatedStorage"):WaitForChild("Remotes")
 
     assert(self.player,      "LocalPlayer not found!")
     assert(self.horseFolder, "MobFolder not found!")
+    assert(self.spawnFolder, "MobSpawns folder not found!")
     assert(self.camera,      "Camera not found!")
     assert(self.remotes,     "Remotes folder not found!")
 
-    -- farming settings
-    self.targetHorseTypes = horseTypes or {}  -- e.g. {"Flora"} or {"Gargoyle","Flora"}
+    self.targetHorseTypes = horseTypes or {} -- e.g. {"Flora"}, {"Gargoyle"}, or {"Flora","Gargoyle"}
     self.running = false
 
+    -- gather spawn positions dynamically (unique)
+    self.spawnPositions = self:getUniqueSpawnPositions()
+
     return self
+end
+
+-----------------------
+-- Utility: Collect all spawn positions from MobSpawns
+-----------------------
+function HorseFarmer:getUniqueSpawnPositions()
+    local unique = {}
+    local positions = {}
+
+    for _, child in ipairs(self.spawnFolder:GetChildren()) do
+        -- We only care about BaseParts (spawn markers)
+        if child:IsA("BasePart") then
+            local key = tostring(child.Position)
+            if not unique[key] then
+                unique[key] = true
+                table.insert(positions, child.Position)
+            end
+        end
+    end
+
+    print("[HorseFarmer] Found " .. #positions .. " unique spawn positions.")
+    return positions
 end
 
 -----------------------
@@ -123,18 +139,12 @@ function HorseFarmer:processHorse(horse)
     self:purchaseItem()
 end
 
--- Search spawn positions when no horses are found
+-- Search spawn positions when no horses are present
 function HorseFarmer:searchSpawnAreas()
-    for _, horseType in ipairs(self.targetHorseTypes) do
-        local positions = HORSE_SPAWN_POSITIONS[horseType]
-        if positions then
-            for _, pos in ipairs(positions) do
-                if not self.running then return end
-                print("[HorseFarmer] Searching spawn area:", horseType, pos)
-                self:teleportTo(pos)
-                task.wait(SEARCH_DELAY)
-            end
-        end
+    for _, pos in ipairs(self.spawnPositions) do
+        if not self.running then return end
+        self:teleportTo(pos)
+        task.wait(SEARCH_DELAY)
     end
 end
 
@@ -154,7 +164,7 @@ function HorseFarmer:start()
         while self.running do
             task.wait(LOOP_INTERVAL)
 
-            -- Refresh folder reference
+            -- Refresh horseFolder in case it resets
             self.horseFolder = workspace:FindFirstChild(HORSE_FOLDER_NAME)
             if not self.horseFolder then
                 warn("MobFolder missing, retrying in 5s...")
@@ -162,6 +172,7 @@ function HorseFarmer:start()
                 continue
             end
 
+            -- Filter only horses we care about
             local horses = {}
             for _, h in ipairs(self.horseFolder:GetChildren()) do
                 if table.find(self.targetHorseTypes, h.Name) then
@@ -170,7 +181,7 @@ function HorseFarmer:start()
             end
 
             if #horses == 0 then
-                print("[HorseFarmer] No horses found, searching spawn areas...")
+                print("[HorseFarmer] No target horses found. Searching spawn areas...")
                 self:searchSpawnAreas()
                 task.wait(EMPTY_FOLDER_WAIT)
             else
@@ -193,27 +204,29 @@ function HorseFarmer:stop()
 end
 
 -----------------------
--- Example Usage
+-- Example Usage (for testing)
 -----------------------
--- You can expose these to a UI button:
--- Example: Start farming only Flora
---   local farmer = HorseFarmer.new({"Flora"})
---   farmer:start()
+--[[  
+-- You can bind these to UI buttons:
+-- Start farming only Flora:
+--    local farmer = HorseFarmer.new({"Flora"})
+--    farmer:start()
 --
--- Example: Start farming Gargoyle
---   local farmer = HorseFarmer.new({"Gargoyle"})
---   farmer:start()
+-- Start farming Gargoyle and Flora together:
+--    local farmer = HorseFarmer.new({"Gargoyle","Flora"})
+--    farmer:start()
 --
--- To stop farming from a UI toggle:
---   farmer:stop()
-
---[[  ❗ SAMPLE DEMO ❗
+-- Stop from a UI toggle:
+--    farmer:stop()
 ]]
--- Remove or comment out this demo when connecting to a UI
-local farmer = HorseFarmer.new({"Flora"})  -- Change to {"Gargoyle"} or both
+
+--[[ ❗ DEMO ❗
+]]
+-- Remove or comment out this block when integrating with a UI
+local farmer = HorseFarmer.new({"Flora", "Gargoyle"})
 farmer:start()
 
--- Stop after 60 seconds (demo only)
-task.delay(60, function()
+-- Stop automatically after 60 seconds (demo only)
+task.delay(10000, function()
     farmer:stop()
 end)
