@@ -1,4 +1,4 @@
---// Version 1.5.0 - Dynamic spawn detection from workspace.MobSpawns
+--// Version 1.6.0 - Farm all species from highest to lowest points
 --// Place in a LocalScript
 
 -----------------------
@@ -17,10 +17,41 @@ local HORSE_TIMEOUT     = 30                     -- Max seconds to stay with a s
 local SEARCH_DELAY      = 2                      -- Delay between spawn-area teleports
 
 -----------------------
+-- HORSE POINT TABLE
+-----------------------
+local HORSE_POINTS = {
+    {name="Hippocampus", pts=9},
+    {name="Felorse",     pts=9},
+    {name="Flora",       pts=8},
+    {name="Fae",         pts=7},
+    {name="Cactaline",   pts=6},
+    {name="Kelpie",      pts=6},
+    {name="Peryton",     pts=6},
+    {name="Gargoyle",    pts=4},
+    {name="Clydesdale",  pts=4},
+    {name="Unicorn",     pts=4},
+    {name="Caprine",     pts=3},
+    {name="Bisorse",     pts=2},
+    {name="Horse",       pts=1},
+    {name="Pony",        pts=1},
+    {name="Equus",       pts=1},
+}
+
+-----------------------
 -- HORSE FARMER CLASS
 -----------------------
 local HorseFarmer = {}
 HorseFarmer.__index = HorseFarmer
+
+-- Helper: return every species sorted by points high→low
+function HorseFarmer.getAllSpeciesHighToLow()
+    table.sort(HORSE_POINTS, function(a,b) return a.pts > b.pts end)
+    local list = {}
+    for _, entry in ipairs(HORSE_POINTS) do
+        table.insert(list, entry.name)
+    end
+    return list
+end
 
 function HorseFarmer.new(horseTypes)
     local self = setmetatable({}, HorseFarmer)
@@ -38,10 +69,8 @@ function HorseFarmer.new(horseTypes)
     assert(self.camera,      "Camera not found!")
     assert(self.remotes,     "Remotes folder not found!")
 
-    self.targetHorseTypes = horseTypes or {} -- e.g. {"Flora"}, {"Gargoyle"}, or {"Flora","Gargoyle"}
+    self.targetHorseTypes = horseTypes or {}
     self.running = false
-
-    -- gather spawn positions dynamically (unique)
     self.spawnPositions = self:getUniqueSpawnPositions()
 
     return self
@@ -51,11 +80,8 @@ end
 -- Utility: Collect all spawn positions from MobSpawns
 -----------------------
 function HorseFarmer:getUniqueSpawnPositions()
-    local unique = {}
-    local positions = {}
-
+    local unique, positions = {}, {}
     for _, child in ipairs(self.spawnFolder:GetChildren()) do
-        -- We only care about BaseParts (spawn markers)
         if child:IsA("BasePart") then
             local key = tostring(child.Position)
             if not unique[key] then
@@ -64,7 +90,6 @@ function HorseFarmer:getUniqueSpawnPositions()
             end
         end
     end
-
     print("[HorseFarmer] Found " .. #positions .. " unique spawn positions.")
     return positions
 end
@@ -139,7 +164,6 @@ function HorseFarmer:processHorse(horse)
     self:purchaseItem()
 end
 
--- Search spawn positions when no horses are present
 function HorseFarmer:searchSpawnAreas()
     for _, pos in ipairs(self.spawnPositions) do
         if not self.running then return end
@@ -156,7 +180,6 @@ function HorseFarmer:start()
         warn("HorseFarmer already running.")
         return
     end
-
     self.running = true
     print("[HorseFarmer] Starting loop for:", table.concat(self.targetHorseTypes, ", "))
 
@@ -164,7 +187,6 @@ function HorseFarmer:start()
         while self.running do
             task.wait(LOOP_INTERVAL)
 
-            -- Refresh horseFolder in case it resets
             self.horseFolder = workspace:FindFirstChild(HORSE_FOLDER_NAME)
             if not self.horseFolder then
                 warn("MobFolder missing, retrying in 5s...")
@@ -172,7 +194,6 @@ function HorseFarmer:start()
                 continue
             end
 
-            -- Filter only horses we care about
             local horses = {}
             for _, h in ipairs(self.horseFolder:GetChildren()) do
                 if table.find(self.targetHorseTypes, h.Name) then
@@ -204,29 +225,14 @@ function HorseFarmer:stop()
 end
 
 -----------------------
--- Example Usage (for testing)
+-- Example Usage
 -----------------------
---[[  
--- You can bind these to UI buttons:
--- Start farming only Flora:
---    local farmer = HorseFarmer.new({"Flora"})
---    farmer:start()
---
--- Start farming Gargoyle and Flora together:
---    local farmer = HorseFarmer.new({"Gargoyle","Flora"})
---    farmer:start()
---
--- Stop from a UI toggle:
---    farmer:stop()
-]]
-
---[[ ❗ DEMO ❗
-]]
--- Remove or comment out this block when integrating with a UI
-local farmer = HorseFarmer.new({"Flora", "Gargoyle"})
+-- Automatically farm every species from highest point value to lowest.
+local allTargets = HorseFarmer.getAllSpeciesHighToLow()
+local farmer = HorseFarmer.new(allTargets)
 farmer:start()
 
--- Stop automatically after 60 seconds (demo only)
-task.delay(10000, function()
+-- Optional safety stop (remove for endless farming)
+task.delay(600, function()
     farmer:stop()
 end)
