@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.1.1"
+local VERSION = "0.1.2"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -184,7 +184,7 @@ end
 
 -- Helper: check if we need to buy a new lasso
 function HorseFarmer:checkIfNeedsNewLasso()
-    local itemName = ITEM_TO_PURCHASE[1]
+    local itemName = ITEM_TO_PURCHASE[1] -- "WesternLasso"
     local desiredAmount = ITEM_TO_PURCHASE[2] or 1
     local playerGui = self.player:FindFirstChild("PlayerGui")
     if not playerGui then return end
@@ -193,10 +193,9 @@ function HorseFarmer:checkIfNeedsNewLasso()
     if not toolsData then return end
 
     local existingItem = toolsData:FindFirstChild(itemName)
-    local currentAmount = 0
-    if existingItem and existingItem:FindFirstChild("Amount") then
-        currentAmount = existingItem.Amount.Value
-    end
+    if not existingItem then return end
+
+    local currentAmount = existingItem.Value  -- <-- use .Value directly
 
     if currentAmount < desiredAmount then
         local remote = self.remotes:FindFirstChild("PurchaseItemRemote")
