@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.1.6"
+local VERSION = "0.1.7"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -489,7 +489,7 @@ local STOP_MODES = {
 }
 
 -- Choose mode here
-local stopMode = "thirtyMinutes"  -- change to any key above
+local stopMode = "twelveHours"  -- change to any key above
 
 -- Apply delay
 task.delay(STOP_MODES[stopMode], function()
