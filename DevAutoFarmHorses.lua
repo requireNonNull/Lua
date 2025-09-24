@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.0.5"
+local VERSION = "0.0.6"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -276,15 +276,41 @@ function HorseFarmer:sellAllAnimals()
     end
 end
 
+function HorseFarmer:getStableCount()
+    local gui = self.player:FindFirstChild("PlayerGui")
+    if not gui then return nil, nil end
+
+    local stablesGui = gui:FindFirstChild("StablesGui")
+    if not stablesGui then return nil, nil end
+
+    local capLabel = stablesGui.ContainerFrame
+        and stablesGui.ContainerFrame:FindFirstChild("Menu")
+        and stablesGui.ContainerFrame.Menu:FindFirstChild("Content")
+        and stablesGui.ContainerFrame.Menu.Content:FindFirstChild("StorageCapacity")
+
+    if capLabel then
+        local txtLabel = capLabel:FindFirstChild("Content") and capLabel.Content:FindFirstChild("TextLabel")
+        if txtLabel and txtLabel.Text then
+            local current, max = string.match(txtLabel.Text, "(%d+)%s*/%s*(%d+)")
+            return tonumber(current), tonumber(max)
+        end
+    end
+
+    return nil, nil
+end
+
 function HorseFarmer:processHorse(horse)
     local start = tick()
     local success = false
+
+    -- Capture stable count before taming
+    local beforeCount = select(1, self:getStableCount())
 
     -- Try to tame for HORSE_TIMEOUT seconds
     while self.running and horse.Parent == self.horseFolder and tick() - start < HORSE_TIMEOUT do
         if not self:teleportToHorse(horse) then break end
         self:interactWithHorse(horse)
-        task.wait(0.6)
+        task.wait(0.25)
     end
 
     -- Wait for GUI to close, force disable if timed out
@@ -292,17 +318,18 @@ function HorseFarmer:processHorse(horse)
     self:waitForAnimalGui()
     task.wait(0.5)
 
-    -- If horse no longer exists, we assume it was captured successfully
-    if not horse.Parent then
+    -- Capture stable count after taming
+    local afterCount = select(1, self:getStableCount())
+
+    if beforeCount and afterCount and afterCount > beforeCount then
         success = true
-        print("[HorseFarmer] ✅ Successfully processed:", horse.Name)
-        ShowToast("[HorseFarmer] ✅ Successfully processed:", horse.Name)
+        print(string.format("[HorseFarmer] ✅ Stable count increased (%d → %d).", beforeCount, afterCount))
+        ShowToast(string.format("[HorseFarmer] ✅ Stable count increased (%d → %d).", beforeCount, afterCount))
     else
-        warn("[HorseFarmer] ❌ Failed to process:", horse.Name)
-        ShowToast("[HorseFarmer] ❌ Failed to process:", horse.Name)
+        warn("[HorseFarmer] ❌ Failed to process: " .. horse.Name)
+        ShowToast("[HorseFarmer] ❌ Failed to process: " .. horse.Name)
     end
 
-    -- Only buy and sell if success
     if success then
         task.wait(0.2)
         self:purchaseItem()
@@ -332,7 +359,7 @@ function HorseFarmer:start()
     end
     self.running = true
     print("[HorseFarmer] Starting loop for:", table.concat(self.targetHorseTypes, ", "))
-    ShowToast("[HorseFarmer] Starting loop for:", table.concat(self.targetHorseTypes, ", "))
+    ShowToast("[HorseFarmer] Starting loop for: " .. table.concat(self.targetHorseTypes, ", "))
 
     task.spawn(function()
         while self.running do
@@ -362,7 +389,7 @@ function HorseFarmer:start()
                 for _, horse in ipairs(horses) do
                     if not self.running then break end
                     print("[HorseFarmer] Farming horse:", horse.Name)
-                    ShowToast("[HorseFarmer] Farming horse:", horse.Name)
+                    ShowToast("[HorseFarmer] Farming horse: " .. horse.Name)
                     self:processHorse(horse)
                     task.wait()
                 end
