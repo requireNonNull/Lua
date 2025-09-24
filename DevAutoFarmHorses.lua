@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.1.4"
+local VERSION = "0.1.6"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -121,7 +121,9 @@ function HorseFarmer:updateCoins()
     
     if not coinsLabel then return end
 
-    local newCoins = tonumber(coinsLabel.Text)
+    -- Remove all non-digit characters (commas, spaces, etc.)
+    local numberOnly = coinsLabel.Text:gsub("%D", "")
+    local newCoins = tonumber(numberOnly)
     if not newCoins then return end
 
     if self.previousCoins > 0 then
@@ -213,7 +215,7 @@ end
 -- Helper: check if we need to buy a new lasso
 function HorseFarmer:checkIfNeedsNewLasso()
     local itemName = ITEM_TO_PURCHASE[1] -- "WesternLasso"
-    local desiredAmount = ITEM_TO_PURCHASE[2] or 3
+    local desiredAmount = math.max(ITEM_TO_PURCHASE[2] or 3, 2) -- always at least 2
     local playerGui = self.player:FindFirstChild("PlayerGui")
     if not playerGui then return end
 
@@ -388,7 +390,7 @@ function HorseFarmer:processHorse(horse)
     end
 
     if success then
-        task.wait(3)
+        task.wait(0.5)
         self:sellAllAnimals()
     end
 
