@@ -1,17 +1,17 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.0.7"
+local VERSION = "0.0.8"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
 local EMPTY_FOLDER_WAIT = 5
-local LOOP_INTERVAL     = 0.5
+local LOOP_INTERVAL     = 0.2
 local TELEPORT_DELAY    = 0.15
-local FEED_DELAY        = 0.6
-local PURCHASE_DELAY    = 0.6
-local GUI_TIMEOUT       = 3       -- seconds to wait before we kill the GUI
-local HORSE_TIMEOUT     = 30
+local FEED_DELAY        = 0.4
+local PURCHASE_DELAY    = 0.2
+local GUI_TIMEOUT       = 1       -- seconds to wait before we kill the GUI
+local HORSE_TIMEOUT     = 20
 local SEARCH_DELAY      = 5
 local TELEPORT_HEIGHT_RANGE = {5, 10}  -- min, max random Y offset
 
@@ -310,7 +310,7 @@ function HorseFarmer:processHorse(horse)
     while self.running and horse.Parent == self.horseFolder and tick() - start < HORSE_TIMEOUT do
         if not self:teleportToHorse(horse) then break end
         self:interactWithHorse(horse)
-        task.wait(0.25)
+        task.wait(0.15)
     end
 
     -- Wait for GUI to close, force disable if timed out
