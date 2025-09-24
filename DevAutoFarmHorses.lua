@@ -4,6 +4,7 @@
 -----------------------
 -- CONFIG
 -----------------------
+local VERSION = "0.0.1"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -232,7 +233,7 @@ function HorseFarmer:processHorse(horse)
     if success then
         task.wait(0.2)
         self:purchaseItem()
-        task.wait(0.4)
+        task.wait(3)
         self:sellAllAnimals()
     end
 
@@ -305,6 +306,13 @@ end
 local allTargets = HorseFarmer.getAllSpeciesHighToLow()
 local farmer = HorseFarmer.new(allTargets, true) -- true = enable auto-sell
 farmer:start()
+
+print("DevAutoFarmHorses: " .. VERSION)
+print("DevAutoFarmHorses: " .. VERSION)
+print("DevAutoFarmHorses: " .. VERSION)
+print("DevAutoFarmHorses: " .. VERSION)
+print("DevAutoFarmHorses: " .. VERSION)
+print("DevAutoFarmHorses: " .. VERSION)
 
 -- Optional stop after 5 minutes
 task.delay(300, function()
