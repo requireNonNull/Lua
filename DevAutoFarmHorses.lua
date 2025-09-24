@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.1.2"
+local VERSION = "0.1.3"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -55,6 +55,9 @@ end
 function HorseFarmer.new(config)
     local self = setmetatable({}, HorseFarmer)
 
+    self.previousCoins = 0
+    self.totalSpentOnLassos = 0
+
     self.player      = game.Players.LocalPlayer
     self.horseFolder = workspace:FindFirstChild(HORSE_FOLDER_NAME)
     self.spawnFolder = workspace:FindFirstChild(MOB_SPAWN_FOLDER)
@@ -106,6 +109,31 @@ function ShowToast(message)
             arceus.show_toast(message)
         end
     end)
+end
+
+function HorseFarmer:updateCoins()
+    local coinsLabel = self.player:FindFirstChild("PlayerGui")
+        and self.player.PlayerGui:FindFirstChild("HUDGui")
+        and self.player.PlayerGui.HUDGui:FindFirstChild("RightFrame")
+        and self.player.PlayerGui.HUDGui.RightFrame:FindFirstChild("Other")
+        and self.player.PlayerGui.HUDGui.RightFrame.Other:FindFirstChild("Coins")
+        and self.player.PlayerGui.HUDGui.RightFrame.Other.Coins:FindFirstChild("AmountLabel")
+    
+    if not coinsLabel then return end
+
+    local newCoins = tonumber(coinsLabel.Text)
+    if not newCoins then return end
+
+    if self.previousCoins > 0 then
+        local spent = self.previousCoins - newCoins
+        if spent > 0 then
+            self.totalSpentOnLassos = self.totalSpentOnLassos + spent
+            print(string.format("[HorseFarmer] Coins: %d (Spent on lassos: %d)", newCoins, self.totalSpentOnLassos))
+            ShowToast(string.format("Coins: %d (Spent on lassos: %d)", newCoins, self.totalSpentOnLassos))
+        end
+    end
+
+    self.previousCoins = newCoins
 end
 
 function HorseFarmer:waitForAnimalGui()
@@ -207,10 +235,14 @@ function HorseFarmer:checkIfNeedsNewLasso()
 
         print("[HorseFarmer] Buying " .. itemName .. " (currently have " .. currentAmount .. ")")
         ShowToast("[HorseFarmer] Buying " .. itemName .. " (currently have " .. currentAmount .. ")")
+        
         pcall(function()
             remote:InvokeServer(unpack(ITEM_TO_PURCHASE))
         end)
+        
         task.wait(PURCHASE_DELAY)
+        
+        self:updateCoins()
     else
         print("[HorseFarmer] Already have enough " .. itemName .. " (" .. currentAmount .. ")")
         ShowToast("[HorseFarmer] Already have enough " .. itemName .. " (" .. currentAmount .. ")")
@@ -333,9 +365,9 @@ function HorseFarmer:processHorse(horse)
     -- Try to tame for HORSE_TIMEOUT seconds
     while self.running and horse.Parent == self.horseFolder and tick() - start < HORSE_TIMEOUT do
         if not self:teleportToHorse(horse) then break end
-        self:interactWithHorse(horse)
-        task.wait(0.15)
         self:checkIfNeedsNewLasso()
+        task.wait(0.15)
+        self:interactWithHorse(horse)
     end
 
     -- Wait for GUI to close, force disable if timed out
