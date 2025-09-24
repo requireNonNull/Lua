@@ -206,17 +206,36 @@ end
 
 function HorseFarmer:processHorse(horse)
     local start = tick()
+    local success = false
+
+    -- Try to tame for HORSE_TIMEOUT seconds
     while self.running and horse.Parent == self.horseFolder and tick() - start < HORSE_TIMEOUT do
         if not self:teleportToHorse(horse) then break end
         self:interactWithHorse(horse)
-        task.wait(1)
+        task.wait(0.6)
     end
+
+    -- Wait for GUI to close, force disable if timed out
     task.wait(0.2)
     self:waitForAnimalGui()
     task.wait(0.3)
-    self:purchaseItem()
-    task.wait(0.5)
-    self:sellAllAnimals()
+
+    -- If horse no longer exists, we assume it was captured successfully
+    if not horse.Parent then
+        success = true
+        print("[HorseFarmer] ✅ Successfully processed:", horse.Name)
+    else
+        warn("[HorseFarmer] ❌ Failed to process:", horse.Name)
+    end
+
+    -- Only buy and sell if success
+    if success then
+        task.wait(0.2)
+        self:purchaseItem()
+        task.wait(0.4)
+        self:sellAllAnimals()
+    end
+
     task.wait(0.5)
 end
 
