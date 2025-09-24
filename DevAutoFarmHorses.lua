@@ -4,7 +4,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.0.1"
+local VERSION = "0.0.2"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -314,7 +314,7 @@ print("DevAutoFarmHorses: " .. VERSION)
 print("DevAutoFarmHorses: " .. VERSION)
 print("DevAutoFarmHorses: " .. VERSION)
 
--- Optional stop after 5 minutes
-task.delay(300, function()
+-- Optional stop after 12 hours
+task.delay(43200, function()
     farmer:stop()
 end)
