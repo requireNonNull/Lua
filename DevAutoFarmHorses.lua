@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.1.7"
+local VERSION = "0.1.8"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -389,12 +389,10 @@ function HorseFarmer:processHorse(horse)
         ShowToast("[HorseFarmer] ❌ Failed to process: " .. horse.Name)
     end
 
-    if success then
-        task.wait(0.5)
-        self:sellAllAnimals()
-    end
+    task.wait(0.25)
+    self:sellAllAnimals()
 
-    task.wait(0.5)
+    task.wait(0.15)
 end
 
 function HorseFarmer:searchSpawnAreas()
