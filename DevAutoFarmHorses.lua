@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.0.8"
+local VERSION = "0.0.9"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -423,13 +423,16 @@ farmer:start()
 
 -- Stop modes in seconds
 local STOP_MODES = {
-    oneMinute  = 60,
-    fiveMinutes = 300,
-    tenMinutes  = 600
+    oneMinute    = 60,
+    fiveMinutes  = 300,
+    tenMinutes   = 600,
+    thirtyMinutes = 1800,      -- 30 minutes
+    oneHour      = 3600,       -- 1 hour
+    twelveHours  = 43200       -- 12 hours
 }
 
 -- Choose mode here
-local stopMode = "fiveMinutes"  -- change to "oneMinute" or "tenMinutes"
+local stopMode = "thirtyMinutes"  -- change to any key above
 
 -- Apply delay
 task.delay(STOP_MODES[stopMode], function()
