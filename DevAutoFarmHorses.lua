@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.1.0"
+local VERSION = "0.1.1"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -182,15 +182,40 @@ function HorseFarmer:interactWithHorse(horse)
     pcall(function() tameEvent:FireServer("SuccessfulFeed") end)
 end
 
-function HorseFarmer:purchaseItem()
-    local remote = self.remotes:FindFirstChild("PurchaseItemRemote")
-    if not remote then
-        warn("PurchaseItemRemote not found!")
-        ShowToast("PurchaseItemRemote not found!")
-        return
+-- Helper: check if we need to buy a new lasso
+function HorseFarmer:checkIfNeedsNewLasso()
+    local itemName = ITEM_TO_PURCHASE[1]
+    local desiredAmount = ITEM_TO_PURCHASE[2] or 1
+    local playerGui = self.player:FindFirstChild("PlayerGui")
+    if not playerGui then return end
+
+    local toolsData = playerGui:FindFirstChild("Data") and playerGui.Data:FindFirstChild("Tools")
+    if not toolsData then return end
+
+    local existingItem = toolsData:FindFirstChild(itemName)
+    local currentAmount = 0
+    if existingItem and existingItem:FindFirstChild("Amount") then
+        currentAmount = existingItem.Amount.Value
     end
-    pcall(function() remote:InvokeServer(unpack(ITEM_TO_PURCHASE)) end)
-    task.wait(PURCHASE_DELAY)
+
+    if currentAmount < desiredAmount then
+        local remote = self.remotes:FindFirstChild("PurchaseItemRemote")
+        if not remote then
+            warn("PurchaseItemRemote not found!")
+            ShowToast("PurchaseItemRemote not found!")
+            return
+        end
+
+        print("[HorseFarmer] Buying " .. itemName .. " (currently have " .. currentAmount .. ")")
+        ShowToast("[HorseFarmer] Buying " .. itemName .. " (currently have " .. currentAmount .. ")")
+        pcall(function()
+            remote:InvokeServer(unpack(ITEM_TO_PURCHASE))
+        end)
+        task.wait(PURCHASE_DELAY)
+    else
+        print("[HorseFarmer] Already have enough " .. itemName .. " (" .. currentAmount .. ")")
+        ShowToast("[HorseFarmer] Already have enough " .. itemName .. " (" .. currentAmount .. ")")
+    end
 end
 
 function HorseFarmer:sellAllAnimals()
@@ -311,6 +336,7 @@ function HorseFarmer:processHorse(horse)
         if not self:teleportToHorse(horse) then break end
         self:interactWithHorse(horse)
         task.wait(0.15)
+        self:checkIfNeedsNewLasso()
     end
 
     -- Wait for GUI to close, force disable if timed out
@@ -331,8 +357,6 @@ function HorseFarmer:processHorse(horse)
     end
 
     if success then
-        task.wait(0.2)
-        self:purchaseItem()
         task.wait(3)
         self:sellAllAnimals()
     end
