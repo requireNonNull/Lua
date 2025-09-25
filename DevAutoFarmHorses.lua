@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.2.0"
+local VERSION = "0.2.1"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -277,29 +277,28 @@ function HorseFarmer:checkIfNeedsNewLasso()
     end
 end
 
-function HorseFarmer:refreshAnimalData(stablesGui)
+function HorseFarmer:refreshAnimalData()
     local gui = self.player:FindFirstChild("PlayerGui")
     if not gui then return end
-    
+
     local animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
+
+    -- If data appears all favorited or missing, press 'H' to refresh
     if not animalData or #animalData:GetChildren() == 0 then
-        warn("[HorseFarmer] Animal data not loaded, forcing StablesGui open...")
-        ShowToast("[HorseFarmer] Animal data not loaded, forcing StablesGui open...")
+        warn("[HorseFarmer] Animal data not loaded, pressing 'H' to open Stables GUI...")
+        ShowToast("[HorseFarmer] Animal data not loaded, pressing 'H' to open Stables GUI...")
 
-        if stablesGui then
-            local wasOpen = stablesGui.Enabled
-            if not wasOpen then
-                stablesGui.Enabled = true
-                task.wait(1) -- let Roblox repopulate data
-                stablesGui.Enabled = false
-            else
-                task.wait(0.5) -- small delay to give time if already open
-            end
-        end
-
-        -- re-fetch
+        -- Press 'H' key (virtual keycode 0x48 / 72)
+        pcall(function()
+            keypress(0x48)
+        end)
+        task.wait(2) -- give time for Roblox to populate
+        pcall(function()
+            keypress(0x48)
+        end)
         animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
     end
+
     return animalData
 end
 
