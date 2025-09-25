@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.1.8"
+local VERSION = "0.2.0"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -14,6 +14,7 @@ local GUI_TIMEOUT       = 1       -- seconds to wait before we kill the GUI
 local HORSE_TIMEOUT     = 20
 local SEARCH_DELAY      = 5
 local TELEPORT_HEIGHT_RANGE = {5, 10}  -- min, max random Y offset
+local IGNORE_SUBSTRINGS = {"Boss"}  -- add any others you want to skip
 
 -----------------------
 -- HORSE POINT TABLE
@@ -109,6 +110,31 @@ function ShowToast(message)
             arceus.show_toast(message)
         end
     end)
+end
+
+-----------------------
+-- Fuzzy Horse Name Helper
+-----------------------
+
+-- Maps long names to base type
+local function normalizeHorseName(name)
+    -- Skip ignored names
+    for _, skip in ipairs(IGNORE_SUBSTRINGS) do
+        if string.find(name:lower(), skip:lower()) then
+            return nil
+        end
+    end
+
+    -- Try to match to known base types
+    for _, entry in ipairs(HORSE_POINTS) do
+        local base = entry.name:lower()
+        if string.find(name:lower(), base) then
+            return entry.name
+        end
+    end
+
+    -- fallback: return original
+    return name
 end
 
 function HorseFarmer:updateCoins()
@@ -251,6 +277,32 @@ function HorseFarmer:checkIfNeedsNewLasso()
     end
 end
 
+function HorseFarmer:refreshAnimalData(stablesGui)
+    local gui = self.player:FindFirstChild("PlayerGui")
+    if not gui then return end
+    
+    local animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
+    if not animalData or #animalData:GetChildren() == 0 then
+        warn("[HorseFarmer] Animal data not loaded, forcing StablesGui open...")
+        ShowToast("[HorseFarmer] Animal data not loaded, forcing StablesGui open...")
+
+        if stablesGui then
+            local wasOpen = stablesGui.Enabled
+            if not wasOpen then
+                stablesGui.Enabled = true
+                task.wait(1) -- let Roblox repopulate data
+                stablesGui.Enabled = false
+            else
+                task.wait(0.5) -- small delay to give time if already open
+            end
+        end
+
+        -- re-fetch
+        animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
+    end
+    return animalData
+end
+
 function HorseFarmer:sellAllAnimals()
     if not self.autoSell then return end
 
@@ -260,6 +312,13 @@ function HorseFarmer:sellAllAnimals()
 
     local stablesGui = gui:FindFirstChild("StablesGui")
     if not stablesGui then return end
+
+    local animalData = self:refreshAnimalData()
+    if not animalData then
+        warn("[HorseFarmer] Still no animal data, skipping cycle...")
+        ShowToast("[HorseFarmer] Still no animal data, skipping cycle...")
+        return
+    end
 
     local horsesContent = stablesGui
         and stablesGui:FindFirstChild("ContainerFrame")
@@ -289,7 +348,6 @@ function HorseFarmer:sellAllAnimals()
 
     -- ✅ Collect slots that are not favorited or equipped
     local slotNumbers = {}
-    local animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
 
     for _, child in ipairs(horsesContent:GetChildren()) do
         local slotNum = tonumber(child.Name)
@@ -398,6 +456,20 @@ end
 function HorseFarmer:searchSpawnAreas()
     for _, pos in ipairs(self.spawnPositions) do
         if not self.running then return end
+
+        -- re-check for horses before each teleport
+        local horses = {}
+        for _, h in ipairs(self.horseFolder:GetChildren()) do
+            if table.find(self.targetHorseTypes, h.Name) then
+                print("[HorseFarmer] Found horse in folder:", h.Name)
+                table.insert(horses, h)
+            end
+        end
+
+        if #horses > 0 then
+            return horses -- return immediately to process them
+        end
+
         self:teleportTo(pos)
         task.wait(SEARCH_DELAY)
     end
@@ -430,7 +502,10 @@ function HorseFarmer:start()
 
             local horses = {}
             for _, h in ipairs(self.horseFolder:GetChildren()) do
-                if table.find(self.targetHorseTypes, h.Name) then
+                local baseName = normalizeHorseName(h.Name)
+                if baseName and table.find(self.targetHorseTypes, baseName) then
+                    print("[HorseFarmer] Found horse:", h.Name)
+                    ShowToast("[HorseFarmer] Found horse: " .. h.Name)
                     table.insert(horses, h)
                 end
             end
@@ -438,7 +513,7 @@ function HorseFarmer:start()
             if #horses == 0 then
                 print("[HorseFarmer] No target horses found. Searching spawn areas...")
                 ShowToast("[HorseFarmer] No target horses found. Searching spawn areas...")
-                self:searchSpawnAreas()
+                horses = self:searchSpawnAreas() or {}
                 task.wait(EMPTY_FOLDER_WAIT)
             else
                 for _, horse in ipairs(horses) do
