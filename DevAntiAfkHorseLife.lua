@@ -1,6 +1,6 @@
 -- Anti-AFK Script with Synapse X Custom Lua Functions
 local isActive = false  -- State of Anti-AFK behavior
-local gui = Instance.new("ScreenGui", game.GetService("CoreGui"))
+local gui = Instance.new("ScreenGui")
 
 -- Anti-AFK Key Press Function
 local function keyPress(keyCode)
