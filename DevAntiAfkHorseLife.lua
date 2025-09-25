@@ -95,4 +95,4 @@ deleteButton.MouseButton1Click:Connect(function()
 end)
 
 -- Add GUI to Player's Screen
-gui.Parent = game.GetService("CoreGui")
+gui.Parent = game:GetService("CoreGui")
