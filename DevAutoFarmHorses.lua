@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.2.2"
+local VERSION = "0.2.3"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -284,20 +284,24 @@ function HorseFarmer:refreshAnimalData()
     local stablesGui = gui:FindFirstChild("StablesGui")
     local animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
 
-    -- Always open Stables GUI if not enabled
-    if not stablesGui or not stablesGui.Enabled then
-        warn("[HorseFarmer] Stables GUI not open, pressing 'H' to open...")
-        ShowToast("[HorseFarmer] Stables GUI not open, pressing 'H' to open...")
+    -- Always open Stables GUI if not enabled or data missing
+    if not stablesGui or not stablesGui.Enabled or not animalData or #animalData:GetChildren() == 0 then
+        warn("[HorseFarmer] Stables GUI not open or data missing, opening...")
+        ShowToast("[HorseFarmer] Stables GUI not open or data missing, opening...")
 
-        -- Press 'H' key (virtual keycode 0x48 / 72)
-        pcall(function()
-            keypress(0x48)
-        end)
-        task.wait(2) -- allow time for GUI to populate
-        pcall(function()
-            keypress(0x48)
-        end)
+        -- Force the button's callback to run (guarantees GUI populates)
+        local button = gui:FindFirstChild("HUDGui")
+            and gui.HUDGui.RightFrame.Other.ButtonsFrame.RightFrame.StablesButton.Button
 
+        if button then
+            for _, conn in ipairs(getconnections(button.MouseButton1Click)) do
+                pcall(conn.Function)  -- safely call the connected function
+                task.wait(0.25)
+                pcall(conn.Function)
+            end
+        end
+
+        -- Refresh references
         stablesGui = gui:FindFirstChild("StablesGui")
         animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
     end
@@ -389,8 +393,9 @@ function HorseFarmer:sellAllAnimals()
             end)
         end
     else
-        print("[HorseFarmer] Nothing to sell (all are favorited/equipped/kept).")
-        ShowToast("[HorseFarmer] Nothing to sell (all are favorited/equipped/kept).")
+        print("[HorseFarmer] Nothing to sell... skipping.")
+        ShowToast("[HorseFarmer] Nothing to sell... skipping.")
+        return
     end
 end
 
@@ -421,6 +426,10 @@ function HorseFarmer:processHorse(horse)
     local start = tick()
     local success = false
 
+    self:sellAllAnimals()
+
+    task.wait(0.2)
+
     -- Capture stable count before taming
     local beforeCount = select(1, self:getStableCount())
 
@@ -448,11 +457,6 @@ function HorseFarmer:processHorse(horse)
         warn("[HorseFarmer] ❌ Failed to process: " .. horse.Name)
         ShowToast("[HorseFarmer] ❌ Failed to process: " .. horse.Name)
     end
-
-    task.wait(0.25)
-    self:sellAllAnimals()
-
-    task.wait(0.15)
 end
 
 function HorseFarmer:searchSpawnAreas()
