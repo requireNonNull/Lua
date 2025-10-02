@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.2.3"
+local VERSION = "0.2.4"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -20,21 +20,21 @@ local IGNORE_SUBSTRINGS = {"Boss"}  -- add any others you want to skip
 -- HORSE POINT TABLE
 -----------------------
 local HORSE_POINTS = {
-    {name="Hippocampus", pts=9},
-    {name="Felorse",     pts=9},
-    {name="Flora",       pts=8},
-    {name="Fae",         pts=7},
-    {name="Cactaline",   pts=6},
-    {name="Kelpie",      pts=6},
-    {name="Peryton",     pts=6},
-    {name="Gargoyle",    pts=4},
-    {name="Clydesdale",  pts=4},
-    {name="Unicorn",     pts=4},
-    {name="Caprine",     pts=3},
-    {name="Bisorse",     pts=2},
+    --{name="Hippocampus", pts=9},
+    --{name="Felorse",     pts=9},
+    --{name="Flora",       pts=8},
+    --{name="Fae",         pts=7},
+    --{name="Cactaline",   pts=6},
+    --{name="Kelpie",      pts=6},
+    --{name="Peryton",     pts=6},
+    --{name="Gargoyle",    pts=4},
+    --{name="Clydesdale",  pts=4},
+    --{name="Unicorn",     pts=4},
+    --{name="Caprine",     pts=3},
+    --{name="Bisorse",     pts=2},
     {name="Horse",       pts=1},
-    {name="Pony",        pts=1},
-    {name="Equus",       pts=1},
+    --{name="Pony",        pts=1},
+    --{name="Equus",       pts=1},
 }
 
 -----------------------
