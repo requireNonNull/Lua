@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.2.5"
+local VERSION = "0.2.7"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -117,18 +117,336 @@ end
 -- Fuzzy Horse Name Helper
 -----------------------
 local function normalizeHorseName(name)
+    -- Skip ignored names
     for _, skip in ipairs(IGNORE_SUBSTRINGS) do
         if string.find(name:lower(), skip:lower()) then
             return nil
         end
     end
+
+    -- Try to match to known base types
     for _, entry in ipairs(HORSE_POINTS) do
         local base = entry.name:lower()
         if string.find(name:lower(), base) then
             return entry.name
         end
     end
+
+    -- fallback: return original
     return name
+end
+
+-----------------------
+-- UI / Data Helpers
+-----------------------
+function HorseFarmer:updateCoins()
+    local coinsLabel = self.player:FindFirstChild("PlayerGui")
+        and self.player.PlayerGui:FindFirstChild("HUDGui")
+        and self.player.PlayerGui.HUDGui:FindFirstChild("RightFrame")
+        and self.player.PlayerGui.HUDGui.RightFrame:FindFirstChild("Other")
+        and self.player.PlayerGui.HUDGui.RightFrame.Other:FindFirstChild("Coins")
+        and self.player.PlayerGui.HUDGui.RightFrame.Other.Coins:FindFirstChild("AmountLabel")
+    
+    if not coinsLabel then return end
+
+    -- Remove all non-digit characters (commas, spaces, etc.)
+    local numberOnly = coinsLabel.Text:gsub("%D", "")
+    local newCoins = tonumber(numberOnly)
+    if not newCoins then return end
+
+    if self.previousCoins > 0 then
+        local spent = self.previousCoins - newCoins
+        if spent > 0 then
+            self.totalSpentOnLassos = self.totalSpentOnLassos + spent
+            print(string.format("[HorseFarmer] Coins: %d (Spent on lassos: %d)", newCoins, self.totalSpentOnLassos))
+            ShowToast(string.format("Coins: %d (Spent on lassos: %d)", newCoins, self.totalSpentOnLassos))
+        end
+    end
+
+    self.previousCoins = newCoins
+end
+
+function HorseFarmer:waitForAnimalGui()
+    local gui = self.player:FindFirstChild("PlayerGui")
+    if not gui then return end
+    local display = gui:FindFirstChild("DisplayAnimalGui")
+    if not display then return end
+
+    if self.forceCloseGui then
+        -- ⭐ MODE B: Always disable instantly
+        if display.Enabled then
+            print("[HorseFarmer] Force closing DisplayAnimalGui immediately.")
+            ShowToast("[HorseFarmer] Force closing DisplayAnimalGui immediately.")
+            pcall(function() display.Enabled = false end)
+        end
+        return
+    end
+
+    -- ⭐ MODE A: Wait for GUI to close or timeout
+    local start = tick()
+    while display and display.Enabled and tick() - start < GUI_TIMEOUT do
+        task.wait(0.1)
+        display = gui:FindFirstChild("DisplayAnimalGui")
+    end
+    if display and display.Enabled then
+        warn("[HorseFarmer] GUI timeout, forcing disable.")
+        ShowToast("[HorseFarmer] GUI timeout, forcing disable.")
+        pcall(function() display.Enabled = false end)
+    end
+end
+
+function HorseFarmer:teleportTo(position)
+    local character = self.player.Character
+    if not (character and character.PrimaryPart) then return false end
+
+    local minY, maxY = TELEPORT_HEIGHT_RANGE[1], TELEPORT_HEIGHT_RANGE[2]
+    local randomOffset = math.random(minY, maxY)
+
+    pcall(function()
+        character:SetPrimaryPartCFrame(CFrame.new(
+            position.X,
+            position.Y + randomOffset,
+            position.Z
+        ))
+    end)
+
+    task.wait(TELEPORT_DELAY)
+    return true
+end
+
+function HorseFarmer:teleportToHorse(horse)
+    if not (horse and horse:IsA("BasePart")) then return false end
+    return self:teleportTo(horse.Position)
+end
+
+function HorseFarmer:interactWithHorse(horse)
+    if not (horse and horse:IsA("BasePart")) then return end
+    if typeof(isrbxactive) == "function" and not isrbxactive() then
+        warn("Roblox window not active, skipping interaction.")
+        ShowToast("Roblox window not active, skipping interaction.")
+        return
+    end
+
+    local screenPos, onScreen = self.camera:WorldToScreenPoint(horse.Position)
+    if onScreen then
+        pcall(function() mousemoveabs(screenPos.X, screenPos.Y) end)
+    end
+
+    local tameEvent = horse:FindFirstChild("TameEvent")
+    if not tameEvent then return end
+
+    pcall(function() tameEvent:FireServer("BeginAggro") end)
+    task.wait(FEED_DELAY)
+    pcall(function() tameEvent:FireServer("SuccessfulFeed") end)
+end
+
+-- Helper: check if we need to buy a new lasso
+function HorseFarmer:checkIfNeedsNewLasso()
+    local itemName = ITEM_TO_PURCHASE[1] -- "WesternLasso"
+    local desiredAmount = math.max(ITEM_TO_PURCHASE[2] or 3, 2) -- always at least 2
+    local playerGui = self.player:FindFirstChild("PlayerGui")
+    if not playerGui then return end
+
+    local toolsData = playerGui:FindFirstChild("Data") and playerGui.Data:FindFirstChild("Tools")
+    if not toolsData then return end
+
+    local existingItem = toolsData:FindFirstChild(itemName)
+    if not existingItem then return end
+
+    local currentAmount = existingItem.Value  -- <-- use .Value directly
+
+    if currentAmount < desiredAmount then
+        local remote = self.remotes:FindFirstChild("PurchaseItemRemote")
+        if not remote then
+            warn("PurchaseItemRemote not found!")
+            ShowToast("PurchaseItemRemote not found!")
+            return
+        end
+
+        print("[HorseFarmer] Buying " .. itemName .. " (currently have " .. currentAmount .. ")")
+        ShowToast("[HorseFarmer] Buying " .. itemName .. " (currently have " .. currentAmount .. ")")
+        
+        pcall(function()
+            remote:InvokeServer(unpack(ITEM_TO_PURCHASE))
+        end)
+        
+        task.wait(PURCHASE_DELAY)
+        
+        self:updateCoins()
+    else
+        print("[HorseFarmer] Already have enough " .. itemName .. " (" .. currentAmount .. ")")
+        ShowToast("[HorseFarmer] Already have enough " .. itemName .. " (" .. currentAmount .. ")")
+    end
+end
+
+function HorseFarmer:refreshAnimalData()
+    local gui = self.player:FindFirstChild("PlayerGui")
+    if not gui then return end
+
+    local stablesGui = gui:FindFirstChild("StablesGui")
+    local animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
+
+    -- Always open Stables GUI if not enabled or data missing
+    if not stablesGui or not stablesGui.Enabled or not animalData or #animalData:GetChildren() == 0 then
+        warn("[HorseFarmer] Stables GUI not open or data missing, opening...")
+        ShowToast("[HorseFarmer] Stables GUI not open or data missing, opening...")
+
+        -- Force the button's callback to run (guarantees GUI populates)
+        local button = gui:FindFirstChild("HUDGui")
+            and gui.HUDGui.RightFrame.Other.ButtonsFrame.RightFrame.StablesButton.Button
+
+        if button then
+            for _, conn in ipairs(getconnections(button.MouseButton1Click)) do
+                pcall(conn.Function)  -- safely call the connected function
+                task.wait(0.25)
+                pcall(conn.Function)
+            end
+        end
+
+        -- Refresh references
+        stablesGui = gui:FindFirstChild("StablesGui")
+        animalData = gui:FindFirstChild("Data") and gui.Data:FindFirstChild("Animals")
+    end
+
+    return animalData
+end
+
+function HorseFarmer:sellAllAnimals()
+    if not self.autoSell then return end
+
+    local player = self.player
+    local gui = player:FindFirstChild("PlayerGui")
+    if not gui then return end
+
+    local stablesGui = gui:FindFirstChild("StablesGui")
+    if not stablesGui then return end
+
+    local animalData = self:refreshAnimalData()
+    if not animalData then
+        warn("[HorseFarmer] Still no animal data, skipping cycle...")
+        ShowToast("[HorseFarmer] Still no animal data, skipping cycle...")
+        return
+    end
+
+    local horsesContent = stablesGui
+        and stablesGui:FindFirstChild("ContainerFrame")
+        and stablesGui.ContainerFrame:FindFirstChild("Menu")
+        and stablesGui.ContainerFrame.Menu:FindFirstChild("Content")
+        and stablesGui.ContainerFrame.Menu.Content:FindFirstChild("Horses")
+        and stablesGui.ContainerFrame.Menu.Content.Horses:FindFirstChild("Content")
+
+    if not horsesContent then return end
+
+    -- ✅ Stable capacity check
+    local capLabel = stablesGui.ContainerFrame.Menu.Content:FindFirstChild("StorageCapacity")
+    if capLabel then
+        local txtLabel = capLabel:FindFirstChild("Content") and capLabel.Content:FindFirstChild("TextLabel")
+        if txtLabel and txtLabel.Text then
+            local current, max = string.match(txtLabel.Text, "(%d+)%s*/%s*(%d+)")
+            current, max = tonumber(current), tonumber(max)
+            if current and max then
+                if current < max - 1 then
+                    print(string.format("[HorseFarmer] Storage not full (%d/%d), skipping auto-sell.", current, max))
+                    ShowToast(string.format("[HorseFarmer] Storage not full (%d/%d), skipping auto-sell.", current, max))
+                    return
+                end
+            end
+        end
+    end
+
+    -- ✅ Collect slots that are not favorited or equipped
+    local slotNumbers = {}
+
+    for _, child in ipairs(horsesContent:GetChildren()) do
+        local slotNum = tonumber(child.Name)
+        if slotNum and animalData then
+            local animal = animalData:FindFirstChild(tostring(slotNum))
+            local skip = false
+            if animal then
+                local fav = animal:FindFirstChild("Favorite")
+                if fav and fav.Value then
+                    print("[HorseFarmer] Skipping favorite animal in slot "..slotNum)
+                    ShowToast("[HorseFarmer] Skipping favorite animal in slot "..slotNum)
+                    skip = true
+                end
+
+                local equipped = animal:FindFirstChild("Equipped")
+                if equipped and equipped.Value then
+                    print("[HorseFarmer] Skipping equipped animal in slot "..slotNum)
+                    ShowToast("[HorseFarmer] Skipping equipped animal in slot "..slotNum)
+                    skip = true
+                end
+            end
+
+            if not skip then
+                table.insert(slotNumbers, slotNum)
+            end
+        end
+    end
+
+    -- ✅ Perform sell if we have slots left
+    if #slotNumbers > 0 then
+        local remote = self.remotes:FindFirstChild("SellSlotsRemote")
+        if remote then
+            print("[HorseFarmer] Auto-selling slots:", table.concat(slotNumbers, ", "))
+            ShowToast("[HorseFarmer] Auto-selling slots: " .. table.concat(slotNumbers, ", "))
+            pcall(function()
+                remote:InvokeServer(slotNumbers)
+            end)
+        end
+    else
+        print("[HorseFarmer] Nothing to sell... skipping.")
+        ShowToast("[HorseFarmer] Nothing to sell... skipping.")
+        return
+    end
+end
+
+function HorseFarmer:getStableCount()
+    local gui = self.player:FindFirstChild("PlayerGui")
+    if not gui then return nil, nil end
+
+    local stablesGui = gui:FindFirstChild("StablesGui")
+    if not stablesGui then return nil, nil end
+
+    local capLabel = stablesGui.ContainerFrame
+        and stablesGui.ContainerFrame:FindFirstChild("Menu")
+        and stablesGui.ContainerFrame.Menu:FindFirstChild("Content")
+        and stablesGui.ContainerFrame.Menu.Content:FindFirstChild("StorageCapacity")
+
+    if capLabel then
+        local txtLabel = capLabel:FindFirstChild("Content") and capLabel.Content:FindFirstChild("TextLabel")
+        if txtLabel and txtLabel.Text then
+            local current, max = string.match(txtLabel.Text, "(%d+)%s*/%s*(%d+)")
+            return tonumber(current), tonumber(max)
+        end
+    end
+
+    return nil, nil
+end
+
+-----------------------
+-- Search spawn areas for target horses
+-----------------------
+function HorseFarmer:searchSpawnAreas()
+    for _, pos in ipairs(self.spawnPositions) do
+        if not self.running then return end
+
+        -- re-check for horses before each teleport
+        local horses = {}
+        for _, h in ipairs(self.horseFolder:GetChildren()) do
+            if table.find(self.targetHorseTypes, h.Name) then
+                print("[HorseFarmer] Found horse in folder:", h.Name)
+                table.insert(horses, h)
+            end
+        end
+
+        if #horses > 0 then
+            return horses -- return immediately to process them
+        end
+
+        self:teleportTo(pos)
+        task.wait(SEARCH_DELAY)
+    end
 end
 
 -----------------------
@@ -136,12 +454,15 @@ end
 -----------------------
 function HorseFarmer:processHorse(horse)
     local start = tick()
+    local success = false
 
     self:sellAllAnimals()
-    task.wait(0.2)
+    task.wait(62)
 
+    -- Capture stable count before taming
     local beforeCount = select(1, self:getStableCount())
 
+    -- Try to tame for HORSE_TIMEOUT seconds
     while self.running and horse.Parent == self.horseFolder and tick() - start < HORSE_TIMEOUT do
         if not self:teleportToHorse(horse) then break end
         self:checkIfNeedsNewLasso()
@@ -149,14 +470,18 @@ function HorseFarmer:processHorse(horse)
         self:interactWithHorse(horse)
     end
 
+    -- Wait for GUI to close, force disable if timed out
     task.wait(0.2)
     self:waitForAnimalGui()
     task.wait(0.5)
 
+    -- Capture stable count after taming
     local afterCount = select(1, self:getStableCount())
 
     if beforeCount and afterCount and afterCount > beforeCount then
-        -- ⭐ success → add points
+        success = true
+
+        -- Find base type & points
         local baseName = normalizeHorseName(horse.Name)
         local pts = 0
         for _, entry in ipairs(HORSE_POINTS) do
@@ -170,6 +495,7 @@ function HorseFarmer:processHorse(horse)
         print(string.format("[HorseFarmer] ✅ Stable count increased (%d → %d). +%d pts (Total: %d)", beforeCount, afterCount, pts, self.totalPoints))
         ShowToast(string.format("✅ +%d pts (Total: %d)", pts, self.totalPoints))
 
+        -- Stop if goal reached
         if self.totalPoints >= GOAL_POINTS then
             print("[HorseFarmer] 🎉 Goal reached: " .. GOAL_POINTS .. " points. Stopping farmer.")
             ShowToast("🎉 Goal reached: " .. GOAL_POINTS .. " points. Stopping farmer.")
@@ -197,36 +523,41 @@ function HorseFarmer:start()
     task.spawn(function()
         while self.running do
             task.wait(LOOP_INTERVAL)
-            if self.totalPoints >= GOAL_POINTS then break end
+
+            if self.totalPoints >= GOAL_POINTS then
+                print("[HorseFarmer] Goal already reached, stopping loop.")
+                break
+            end
 
             self.horseFolder = workspace:FindFirstChild(HORSE_FOLDER_NAME)
             if not self.horseFolder then
                 warn("MobFolder missing, retrying in 5s...")
                 ShowToast("MobFolder missing, retrying in 5s...")
                 task.wait(5)
-                continue
-            end
-
-            local horses = {}
-            for _, h in ipairs(self.horseFolder:GetChildren()) do
-                local baseName = normalizeHorseName(h.Name)
-                if baseName and table.find(self.targetHorseTypes, baseName) then
-                    print("[HorseFarmer] Found horse:", h.Name)
-                    ShowToast("[HorseFarmer] Found horse: " .. h.Name)
-                    table.insert(horses, h)
-                end
-            end
-
-            if #horses == 0 then
-                print("[HorseFarmer] No target horses found. Searching spawn areas...")
-                ShowToast("[HorseFarmer] No target horses found. Searching spawn areas...")
-                horses = self:searchSpawnAreas() or {}
-                task.wait(EMPTY_FOLDER_WAIT)
             else
-                for _, horse in ipairs(horses) do
-                    if not self.running then break end
-                    self:processHorse(horse)
-                    task.wait()
+                local horses = {}
+                for _, h in ipairs(self.horseFolder:GetChildren()) do
+                    local baseName = normalizeHorseName(h.Name)
+                    if baseName and table.find(self.targetHorseTypes, baseName) then
+                        print("[HorseFarmer] Found horse:", h.Name)
+                        ShowToast("[HorseFarmer] Found horse: " .. h.Name)
+                        table.insert(horses, h)
+                    end
+                end
+
+                if #horses == 0 then
+                    print("[HorseFarmer] No target horses found. Searching spawn areas...")
+                    ShowToast("[HorseFarmer] No target horses found. Searching spawn areas...")
+                    horses = self:searchSpawnAreas() or {}
+                    task.wait(EMPTY_FOLDER_WAIT)
+                else
+                    for _, horse in ipairs(horses) do
+                        if not self.running then break end
+                        print("[HorseFarmer] Farming horse:", horse.Name)
+                        ShowToast("[HorseFarmer] Farming horse: " .. horse.Name)
+                        self:processHorse(horse)
+                        task.wait()
+                    end
                 end
             end
         end
@@ -255,3 +586,18 @@ local farmer = HorseFarmer.new({
 })
 
 farmer:start()
+
+--[[
+-- If you still want a timed fallback, uncomment and adjust:
+local STOP_MODES = {
+    oneMinute    = 60,
+    fiveMinutes  = 300,
+    tenMinutes   = 600,
+    thirtyMinutes = 1800,
+    oneHour      = 3600,
+    twelveHours  = 43200
+}
+task.delay(STOP_MODES["twelveHours"], function()
+    farmer:stop()
+end)
+--]]
