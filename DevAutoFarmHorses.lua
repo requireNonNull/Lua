@@ -1,7 +1,7 @@
 -----------------------
 -- CONFIG
 -----------------------
-local VERSION = "0.2.7"
+local VERSION = "0.2.8"
 local HORSE_FOLDER_NAME = "MobFolder"            -- Folder where live horse NPCs spawn
 local MOB_SPAWN_FOLDER  = "MobSpawns"            -- Folder containing spawn area parts
 local ITEM_TO_PURCHASE  = {"WesternLasso", 1}    -- Args for PurchaseItemRemote
@@ -457,7 +457,7 @@ function HorseFarmer:processHorse(horse)
     local success = false
 
     self:sellAllAnimals()
-    task.wait(62)
+    task.wait(2)
 
     -- Capture stable count before taming
     local beforeCount = select(1, self:getStableCount())
@@ -494,6 +494,7 @@ function HorseFarmer:processHorse(horse)
         self.totalPoints = self.totalPoints + pts
         print(string.format("[HorseFarmer] ✅ Stable count increased (%d → %d). +%d pts (Total: %d)", beforeCount, afterCount, pts, self.totalPoints))
         ShowToast(string.format("✅ +%d pts (Total: %d)", pts, self.totalPoints))
+        task.wait(63)
 
         -- Stop if goal reached
         if self.totalPoints >= GOAL_POINTS then
